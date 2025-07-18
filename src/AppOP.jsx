@@ -1,7 +1,6 @@
 // Master for OP (Host and Admin)
 // ===== LIBRARIES ===== //
-import { useEffect } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 
 // ===== LAYOUTS ===== //
 import NavOP from "@/layouts/NavOP";
@@ -16,8 +15,6 @@ import { Toaster } from "@/components/ui/sonner";
 // import { setupInterceptors } from "./api";
 
 export default function App() {
-  const navigate = useNavigate();
-  
   // ===== AUTHENTICATION INTERCEPTORS ===== //
   // const auth = useAuth();
   // useEffect(() => {
@@ -25,7 +22,7 @@ export default function App() {
   // }, [auth, navigate]);
 
   return (
-    <SidebarProvider>
+    <SidebarProvider key="host-sidebar">
       <div className="flex min-h-screen w-full">
         {/* ===== SIDEBAR NAVIGATION ===== */}
         <NavOP />

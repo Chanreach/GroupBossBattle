@@ -49,11 +49,11 @@ const EditEvent = () => {
     status: "",
   });
 
+  const [originalEventData, setOriginalEventData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
     const fetchEventData = async () => {
@@ -69,13 +69,16 @@ const EditEvent = () => {
           return date.toISOString().slice(0, 16);
         };
 
-        setEventData({
+        const formattedData = {
           name: event.name || "",
           description: event.description || "",
           startTime: formatForInput(event.startTime),
           endTime: formatForInput(event.endTime),
           status: event.status || "upcoming",
-        });
+        };
+
+        setEventData(formattedData);
+        setOriginalEventData(formattedData);
       } catch (error) {
         console.error("Error fetching event:", error);
         toast.error("Failed to fetch event details");
@@ -94,8 +97,22 @@ const EditEvent = () => {
       ...prev,
       [field]: value,
     }));
-    setHasChanges(true);
   };
+
+  // Check if current data is different from original data
+  const hasChanges =
+    originalEventData &&
+    (eventData.name !== originalEventData.name ||
+      eventData.description !== originalEventData.description ||
+      eventData.startTime !== originalEventData.startTime ||
+      eventData.endTime !== originalEventData.endTime);
+
+  // Check if save should be enabled
+  const isSaveEnabled =
+    hasChanges &&
+    eventData.name.trim() &&
+    eventData.startTime &&
+    eventData.endTime;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -116,7 +133,6 @@ const EditEvent = () => {
 
       await apiClient.put(`/events/${eventId}`, updateData);
       toast.success("Event updated successfully");
-      setHasChanges(false);
       navigate(`/host/events/assign_boss?eventId=${eventId}`);
     } catch (error) {
       console.error("Error updating event:", error);
@@ -155,7 +171,12 @@ const EditEvent = () => {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="text-center py-8">Loading event details...</div>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading event details...</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -232,7 +253,10 @@ const EditEvent = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-2">
-                    <Label htmlFor="start-datetime" className="flex items-center gap-2">
+                    <Label
+                      htmlFor="start-datetime"
+                      className="flex items-center gap-2"
+                    >
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                       Start Date & Time <span className="text-red-500">*</span>
                     </Label>
@@ -251,7 +275,9 @@ const EditEvent = () => {
                         type="button"
                         variant="outline"
                         onClick={() =>
-                          document.getElementById("start-datetime").showPicker?.()
+                          document
+                            .getElementById("start-datetime")
+                            .showPicker?.()
                         }
                         className="rounded-l-none border-l-0"
                       >
@@ -261,7 +287,10 @@ const EditEvent = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="end-datetime" className="flex items-center gap-2">
+                    <Label
+                      htmlFor="end-datetime"
+                      className="flex items-center gap-2"
+                    >
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                       End Date & Time <span className="text-red-500">*</span>
                     </Label>
@@ -307,13 +336,7 @@ const EditEvent = () => {
               <Button
                 type="submit"
                 className="w-full sm:w-auto sm:min-w-[120px]"
-                disabled={
-                  isSubmitting ||
-                  !eventData.name.trim() ||
-                  !eventData.startTime ||
-                  !eventData.endTime ||
-                  !hasChanges
-                }
+                disabled={isSubmitting || !isSaveEnabled}
               >
                 {isSubmitting ? (
                   <>

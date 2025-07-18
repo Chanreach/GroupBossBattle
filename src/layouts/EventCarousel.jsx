@@ -11,6 +11,18 @@ const EventCarousel = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+      hour:"numeric",
+      minute: '2-digit',
+      hour12: true, // Use 12-hour format to show AM/PM
+    });
+  };
+
   // Fetch events from database
   useEffect(() => {
     const fetchEvents = async () => {
@@ -27,8 +39,8 @@ const EventCarousel = () => {
           name: event.name,
           title: "Interactive Boss Battle Experience",
           description: event.description || "Join forces with other participants and put your knowledge to the test! Answer questions, deal damage, and work together to defeat powerful bosses.",
-          startTime: event.startTimeFormatted?.formatted || 'TBD',
-          endTime: event.endTimeFormatted?.formatted || 'TBD',
+          startTime: formatDate(event.startTime) || 'TBD',
+          endTime: formatDate(event.endTime) || 'TBD',
           image: "/src/assets/Swords.png",
           isActive: event.status === 'active' || event.status === 'ongoing',
           status: event.status || 'upcoming',
@@ -127,7 +139,7 @@ const EventCarousel = () => {
   };
 
   const getStatusDisplay = (event) => {
-    if (event.isPlaceholder) {
+    if (event.status === "upcoming") {
       return (
         <div className="inline-flex items-center bg-blue-500/20 text-blue-300 px-3 py-2 rounded-full text-sm sm:text-base font-medium">
           <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
@@ -136,7 +148,7 @@ const EventCarousel = () => {
       );
     }
     
-    if (event.isActive) {
+    if (event.status === "ongoing") {
       return (
         <div className="inline-flex items-center bg-green-500/20 text-green-300 px-3 py-2 rounded-full text-sm sm:text-base font-medium">
           <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
@@ -147,7 +159,7 @@ const EventCarousel = () => {
       return (
         <div className="inline-flex items-center bg-yellow-500/20 text-yellow-300 px-3 py-2 rounded-full text-sm sm:text-base font-medium">
           <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-          Coming Soon
+          Ended
         </div>
       );
     }

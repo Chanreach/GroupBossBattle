@@ -383,8 +383,8 @@ const QuestionBankView = () => {
             // Loading State
             <Card className="border-0 shadow-sm">
               <CardContent className="p-8 text-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent mx-auto mb-4" />
-                <p className="text-gray-600 dark:text-gray-400">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
+                <p className="text-muted-foreground">
                   Loading {viewMode === "category" ? "categories" : "questions"}
                   ...
                 </p>

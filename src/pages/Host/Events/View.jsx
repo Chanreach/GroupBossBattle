@@ -45,16 +45,16 @@ const ViewEvents = () => {
   // Get status badge style
   const getStatusBadgeStyle = (status) => {
     switch (status?.toLowerCase()) {
-      case 'active':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'upcoming':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'completed':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800 border-red-200';
+      case "active":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "upcoming":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "completed":
+        return "bg-gray-100 text-gray-800 border-gray-200";
+      case "cancelled":
+        return "bg-red-100 text-red-800 border-red-200";
       default:
-        return 'bg-green-100 text-green-800 border-green-200';
+        return "bg-green-100 text-green-800 border-green-200";
     }
   };
 
@@ -65,7 +65,12 @@ const ViewEvents = () => {
   if (loading) {
     return (
       <div className="container mx-auto px-4 sm:px-6 py-6 max-w-4xl">
-        <div className="text-center py-8">Loading events...</div>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading events...</p>
+          </div>
+        </div>
       </div>
     );
   }

@@ -14,14 +14,16 @@ const Join = () => {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    const code = searchParams.get('code');
-    
+    const code = searchParams.get("code");
+
     if (code) {
       // Redirect to boss preview with join code
-      navigate(`/boss-preview?joinCode=${encodeURIComponent(code)}`, { replace: true });
+      navigate(`/boss-preview?joinCode=${encodeURIComponent(code)}`, {
+        replace: true,
+      });
     } else {
       // No code provided, redirect to home
-      navigate('/', { replace: true });
+      navigate("/", { replace: true });
     }
   }, [navigate, searchParams]);
 
@@ -30,7 +32,7 @@ const Join = () => {
       <div className="container mx-auto p-6 max-w-md">
         <Card>
           <CardContent className="p-6 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4"></div>
             <p className="text-muted-foreground">Joining boss battle...</p>
           </CardContent>
         </Card>
