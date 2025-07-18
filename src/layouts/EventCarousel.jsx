@@ -16,7 +16,7 @@ const EventCarousel = () => {
     const fetchEvents = async () => {
       try {
         setLoading(true);
-        const response = await apiClient.get('/events');
+        const response = await apiClient.get('/public/events');
         const eventsData = response.data || [];
         
         // Format events for the carousel

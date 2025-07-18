@@ -87,14 +87,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Routes>
               {/* ===== LANDING ROUTES ===== */}
               <Route path="/landing" element={<AppLanding />}>
-                <Route
-                  index
-                  element={
-                    <PreventAuthenticatedAccess>
-                      <Authentication />
-                    </PreventAuthenticatedAccess>
-                  }
-                />
+                <Route index element={<Landing />} />
               </Route>
 
               <Route path="/about" element={<AppLanding />}>

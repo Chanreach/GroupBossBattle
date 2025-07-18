@@ -21,7 +21,7 @@ import { useAuth } from "@/context/useAuth";
 import { apiClient } from "@/api";
 
 const Authentication = () => {
-  const { login } = useAuth();
+  const { login, setUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -158,16 +158,22 @@ const Authentication = () => {
       localStorage.setItem("guestToken", token);
       localStorage.setItem("guestUser", JSON.stringify(user));
 
-      toast.success("Logging in as guest...");
+      // Set the user in auth context immediately
+      setUser(user);
+      
+      // Set authorization header for future requests
+      apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+      toast.success("Logged in as guest!");
       
       // Check for returnUrl parameter
       const params = new URLSearchParams(location.search);
       const returnUrl = params.get("returnUrl");
       
       if (returnUrl) {
-        setTimeout(() => navigate(decodeURIComponent(returnUrl)), 1000);
+        setTimeout(() => navigate(decodeURIComponent(returnUrl)), 500);
       } else {
-        setTimeout(() => navigate("/"), 1000);
+        setTimeout(() => navigate("/"), 500);
       }
     } catch (err) {
       let message = "Failed to create guest session";
