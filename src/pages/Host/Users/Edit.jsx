@@ -198,7 +198,7 @@ const Edit = () => {
         <div className="container mx-auto max-w-2xl">
           <Card>
             <CardContent className="p-8 text-center">
-              <p className="text-red-500 dark:text-red-400 mb-4">{error}</p>
+              <p className="text-destructive mb-4">{error}</p>
               <div className="flex gap-3 justify-center">
                 <Button 
                   variant="outline" 
@@ -229,15 +229,15 @@ const Edit = () => {
               variant="ghost"
               size="sm"
               onClick={() => navigate('/host/users/view')}
-              className="p-2 hover:bg-accent/50"
+              className="p-2"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-2xl font-bold">
                 Edit User
               </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-muted-foreground">
                 Update user information and role
               </p>
             </div>
@@ -275,41 +275,37 @@ const Edit = () => {
           </CardHeader>
           <CardContent>
             {error && (
-              <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+              <div className="mb-6 p-4 bg-destructive/15 border border-destructive/20 rounded-lg">
+                <p className="text-sm text-destructive">{error}</p>
               </div>
             )}
 
             <form id="user-edit-form" onSubmit={handleSave} className="space-y-6">
               {/* Username Field */}
               <div className="space-y-2">
-                <Label htmlFor="username" className="text-sm font-medium text-gray-900 dark:text-white">
-                  Username <span className="text-red-500 dark:text-red-400">*</span>
+                <Label htmlFor="username" className="text-sm font-medium">
+                  Username <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="username"
                   type="text"
                   value={form.username}
                   onChange={handleChange}
-                  className={`bg-white dark:bg-black dark:text-white ${
-                    validationErrors.username ? 'border-red-500 dark:border-red-400' : 'border-gray-200 dark:border-gray-700'
-                  }`}
+                  className={validationErrors.username ? 'border-destructive focus-visible:ring-destructive' : ''}
                   placeholder="Enter username"
                 />
                 {validationErrors.username && (
-                  <p className="text-xs text-red-600 dark:text-red-400">{validationErrors.username}</p>
+                  <p className="text-xs text-destructive">{validationErrors.username}</p>
                 )}
               </div>
 
               {/* Role Field */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-900 dark:text-white">
-                  Role <span className="text-red-500 dark:text-red-400">*</span>
+                <Label className="text-sm font-medium">
+                  Role <span className="text-destructive">*</span>
                 </Label>
                 <Select value={form.role} onValueChange={handleRoleChange}>
-                  <SelectTrigger className={`bg-white dark:bg-black dark:text-white ${
-                    validationErrors.role ? 'border-red-500 dark:border-red-400' : 'border-gray-200 dark:border-gray-700'
-                  }`}>
+                  <SelectTrigger className={validationErrors.role ? 'border-destructive focus:ring-destructive' : 'dark:bg-muted'}>
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
                   <SelectContent>
@@ -318,7 +314,7 @@ const Edit = () => {
                   </SelectContent>
                 </Select>
                 {validationErrors.role && (
-                  <p className="text-xs text-red-600 dark:text-red-400">{validationErrors.role}</p>
+                  <p className="text-xs text-destructive">{validationErrors.role}</p>
                 )}
               </div>
             </form>
@@ -361,17 +357,17 @@ const Edit = () => {
           <AlertDialogContent className="max-w-md">
             <AlertDialogHeader>
               <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
-                  <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                <div className="w-10 h-10 rounded-full bg-destructive/15 flex items-center justify-center">
+                  <AlertTriangle className="h-5 w-5 text-destructive" />
                 </div>
-                <AlertDialogTitle className="text-lg font-semibold text-gray-900 dark:text-white">
+                <AlertDialogTitle className="text-lg font-semibold">
                   Delete User
                 </AlertDialogTitle>
               </div>
-              <AlertDialogDescription className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                Are you sure you want to delete <span className="font-medium text-gray-900 dark:text-white">"{form.username}"</span>? 
+              <AlertDialogDescription className="text-muted-foreground leading-relaxed">
+                Are you sure you want to delete <span className="font-medium text-foreground">"{form.username}"</span>? 
                 <br />
-                <span className="text-red-600 dark:text-red-400 font-medium">This action cannot be undone.</span>
+                <span className="text-destructive font-medium">This action cannot be undone.</span>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="gap-3 mt-6">
@@ -380,7 +376,7 @@ const Edit = () => {
               </AlertDialogCancel>
               <AlertDialogAction 
                 onClick={confirmDelete}
-                className="flex-1 bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 text-white"
+                className="flex-1 bg-destructive hover:bg-destructive/90 text-destructive-foreground"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Delete User

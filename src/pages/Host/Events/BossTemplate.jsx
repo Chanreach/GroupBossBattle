@@ -16,14 +16,32 @@ const BossTemplate = () => {
   const [searchParams] = useSearchParams();
   const eventId = searchParams.get("eventId");
 
+  const [event, setEvent] = useState(null);
   const [selectedBosses, setSelectedBosses] = useState([]);
   const [availableBosses, setAvailableBosses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
 
+
+  // Fetch event details and available bosses
   useEffect(() => {
+    if (eventId) {
+      fetchEventDetails();
+    }
     fetchAvailableBosses();
-  }, []);
+  }, [eventId]);
+
+  // Function to fetch event details
+  const fetchEventDetails = async () => {
+    try {
+      const response = await apiClient.get(`/events/${eventId}`);
+      setEvent(response.data);
+    } catch (error) {
+      console.error("Error fetching event details:", error);
+      toast.error("Failed to fetch event details");
+    }
+  };
+
 
   const fetchAvailableBosses = async () => {
     try {
@@ -134,19 +152,19 @@ const BossTemplate = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold">
-                  Event: Adventure Quest 2024
+                  {event?.name || "Loading..."}
+                  <Badge
+                    variant="outline"
+                    className="bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800 ml-4 mt-auto"
+                  >
+                    <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full mr-2"></div>
+                    {event.status || "Active"}
+                  </Badge>
                 </h2>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground mt-3">
                   Select bosses to add to this active event
                 </p>
               </div>
-              <Badge
-                variant="outline"
-                className="bg-green-50 text-green-700 border-green-200"
-              >
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                Live
-              </Badge>
             </div>
           </CardHeader>
         </Card>

@@ -310,8 +310,17 @@ const AssignBoss = () => {
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
+
                   <div className="flex items-center justify-between mb-2">
-                    <h2 className="text-lg font-semibold">{event.name}</h2>
+                    <h2 className="text-lg font-semibold">{event.name}
+                        <Badge
+                          variant="outline"
+                          className="bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800 ml-4 mt-auto"
+                        >
+                          <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full mr-2"></div>
+                          {event.status || "Active"}
+                        </Badge>
+                      </h2>
                     {user?.role === "admin" && (
                       <Button
                         variant="outline"
@@ -324,11 +333,13 @@ const AssignBoss = () => {
                       </Button>
                     )}
                   </div>
+
                   {event.description && (
                     <p className="text-sm text-muted-foreground mt-1 mb-2">
                       {event.description}
                     </p>
                   )}
+                  
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <span>
                       <strong>Start:</strong>{" "}
@@ -357,13 +368,7 @@ const AssignBoss = () => {
                     </span>
                   </div>
                 </div>
-                <Badge
-                  variant="outline"
-                  className="bg-green-50 text-green-700 border-green-200 ml-4"
-                >
-                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                  {event.status || "Active"}
-                </Badge>
+                
               </div>
             </CardHeader>
           </Card>

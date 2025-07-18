@@ -255,7 +255,7 @@ const View = () => {
             )}
 
             {users.length > 0 ? (
-              <div className="divide-y divide-gray-200 dark:divide-gray-700">
+              <div className="divide-y divide-gray-200 dark:divide-accent">
                 {users.map((user) => (
                   <div key={user.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200 ease-in-out">
                     <div className="flex items-center justify-between gap-4">
