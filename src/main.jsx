@@ -6,9 +6,11 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 // ===== COMPONENTS ===== //
 import { ThemeProvider } from "./theme/theme-provider";
 import { AuthProvider } from "./context/AuthProvider";
+import { BossJoinProvider } from "./context/BossJoinContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import { AuthenticationCheck } from "./components/AuthenticationCheck";
+import { BossPreviewAuthGuard } from "./components/BossPreviewAuthGuard";
 import PreventAuthenticatedAccess from "./components/PreventAuthenticatedAccess";
 import { MessageProvider } from "./context/MessageProvider";
 import ScrollToTop from "./components/ScrollToTop";
@@ -36,6 +38,10 @@ import PlayerBadges from "./pages/Player/Badges";
 import PlayerLeaderboard from "./pages/Player/Leaderboard";
 import PlayerProfile from "./pages/Player/Profile";
 import PlayerQR from "./pages/Player/QR";
+import PlayerQRTest from "./pages/Player/QRTest";
+import PlayerJoin from "./pages/Player/Join";
+import PlayerJoinTest from "./pages/Player/JoinTest";
+import PlayerApiTest from "./pages/Player/ApiTest";
 import PlayerBossPreview from "./pages/Player/BossPreview";
 import PlayerBossBattle from "./pages/Player/BossBattle";
 import PlayerBossPodium from "./pages/Player/BossPodium";
@@ -74,13 +80,21 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ThemeProvider>
       <AuthProvider>
-        <BrowserRouter>
-          <ScrollToTop />
-          <MessageProvider>
+        <BossJoinProvider>
+          <BrowserRouter>
+            <ScrollToTop />
+            <MessageProvider>
             <Routes>
               {/* ===== LANDING ROUTES ===== */}
               <Route path="/landing" element={<AppLanding />}>
-                <Route index element={<Landing />} />
+                <Route
+                  index
+                  element={
+                    <PreventAuthenticatedAccess>
+                      <Authentication />
+                    </PreventAuthenticatedAccess>
+                  }
+                />
               </Route>
 
               <Route path="/about" element={<AppLanding />}>
@@ -132,6 +146,24 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                 />
               </Route>
 
+              <Route path="/player/join" element={<PlayerJoin />} />
+              <Route path="/boss-preview/join" element={<PlayerJoin />} />
+
+              <Route path="/join-test" element={<PlayerJoinTest />} />
+
+              <Route path="/api-test" element={<PlayerApiTest />} />
+
+              <Route path="/qr-test" element={<App />}>
+                <Route
+                  index
+                  element={
+                    <AuthenticationCheck>
+                      <PlayerQRTest />
+                    </AuthenticationCheck>
+                  }
+                />
+              </Route>
+
               <Route path="/badges" element={<App />}>
                 <Route
                   index
@@ -166,13 +198,13 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               </Route>
 
               <Route path="/boss-preview" element={<App />}>
-                <Route
-                  index
+                <Route 
+                  index 
                   element={
-                    <AuthenticationCheck>
+                    <BossPreviewAuthGuard>
                       <PlayerBossPreview />
-                    </AuthenticationCheck>
-                  }
+                    </BossPreviewAuthGuard>
+                  } 
                 />
               </Route>
 
@@ -340,6 +372,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             </Routes>
           </MessageProvider>
         </BrowserRouter>
+        </BossJoinProvider>
       </AuthProvider>
     </ThemeProvider>
   </React.StrictMode>

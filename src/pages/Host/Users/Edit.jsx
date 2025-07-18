@@ -28,8 +28,14 @@ const Edit = () => {
   
   const [form, setForm] = useState({ 
     username: '', 
+    email: '', // Store email but don't show in UI
     role: 'player' 
   });
+  const [originalForm, setOriginalForm] = useState({ 
+    username: '', 
+    email: '', 
+    role: 'player' 
+  }); // Store original values for comparison
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -44,10 +50,13 @@ const Edit = () => {
         setLoading(true);
         setError(null);
         const res = await apiClient.get(`/users/${id}`);
-        setForm({
+        const userData = {
           username: res.data.username || '',
+          email: res.data.email || '', // Store existing email
           role: res.data.role || 'player',
-        });
+        };
+        setForm(userData);
+        setOriginalForm(userData); // Store original values
       } catch (err) {
         console.error('Error fetching user:', err);
         const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch user';
@@ -138,12 +147,22 @@ const Edit = () => {
       return;
     }
 
+    // Check if any changes were made
+    const hasChanges = form.username.trim() !== originalForm.username.trim() || 
+                      form.role !== originalForm.role;
+    
+    if (!hasChanges) {
+      toast.info('No changes made');
+      return;
+    }
+
     setSaving(true);
     setError(null);
     
     try {
       await apiClient.put(`/users/${id}`, {
         username: form.username.trim(),
+        email: form.email.trim(), // Include existing email
         role: form.role
       });
       

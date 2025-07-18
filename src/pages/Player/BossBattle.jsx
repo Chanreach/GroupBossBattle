@@ -1,7 +1,10 @@
 // ===== LIBRARIES ===== //
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Users, Heart, Timer, Trophy, LogOut, Sun, Moon, Smartphone, Ambulance, Skull } from "lucide-react";
+
+// ===== HOOKS ===== //
+import { useBossJoin } from "@/context/BossJoinContext";
 
 // ===== COMPONENTS ===== //
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -24,6 +27,12 @@ import heartbeatsSound from "@/assets/Audio/heartbeats.mp3";
 
 const BossBattle = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { leaveBoss } = useBossJoin();
+  
+  // Get boss/event IDs from URL params
+  const bossId = searchParams.get('bossId');
+  const eventId = searchParams.get('eventId');
   
   // ===== TIMING CONFIGURATION ===== //
   const BOSS_DEFEAT_MESSAGE_DELAY_MS = 1000;
@@ -271,7 +280,15 @@ const BossBattle = () => {
   };
 
   const handleLeave = () => {
-    navigate("/boss-preview");
+    // Clear the global boss join state
+    leaveBoss();
+    
+    // Redirect back to boss preview with boss/event IDs if available
+    if (bossId && eventId) {
+      navigate(`/boss-preview?bossId=${bossId}&eventId=${eventId}`);
+    } else {
+      navigate("/boss-preview");
+    }
   };
 
   const handleLiveLeaderboard = () => {
@@ -572,9 +589,24 @@ const BossBattle = () => {
 
         {/* Top Controls */}
         <div className="flex items-center justify-between mb-3 flex-shrink-0 relative">
-          <Button onClick={handleLeave} variant="outline" size="sm" className="flex items-center justify-center">
-            <LogOut className="w-4 h-4 rotate-180" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={handleLeave} variant="outline" size="sm" className="flex items-center justify-center">
+              <LogOut className="w-4 h-4 rotate-180" />
+            </Button>
+            {/* Testing button to clear join state */}
+            <Button 
+              onClick={() => {
+                leaveBoss();
+                navigate("/");
+              }} 
+              variant="destructive" 
+              size="sm" 
+              className="flex items-center justify-center text-xs px-2"
+              title="Clear join state and go home (testing only)"
+            >
+              Clear
+            </Button>
+          </div>
 
           {/* Boss Name - Centered */}
           <div className="absolute left-1/2 transform -translate-x-1/2">

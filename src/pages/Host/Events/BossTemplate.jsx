@@ -191,6 +191,21 @@ const BossTemplate = () => {
                       {boss.description && (
                         <p className="text-xs text-muted-foreground">{boss.description}</p>
                       )}
+                      
+                      {/* Categories */}
+                      {boss.Categories && boss.Categories.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {boss.Categories.map((category) => (
+                            <Badge
+                              key={category.id}
+                              variant="outline"
+                              className="text-xs px-1.5 py-0.5 bg-blue-50 text-blue-700 border-blue-200"
+                            >
+                              {category.name}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* Boss Stats */}

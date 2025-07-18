@@ -28,6 +28,8 @@ export function PageTitle({ className = "text-lg font-semibold text-foreground" 
       '/qr': 'QR',
       '/boss-preview': 'Boss Preview',
       '/boss-battle': 'Boss Battle',
+      '/player/join': 'Joining Battle',
+      '/boss-preview/join': 'Joining Battle',
       '/profile': 'Profile',
       '/authentication': 'Authentication',
     };
