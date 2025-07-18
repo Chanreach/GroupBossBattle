@@ -3,7 +3,12 @@ import { useAuth } from "../context/useAuth.jsx";
 import { isGuestUser } from "../utils/guestUtils";
 
 export const AuthenticationCheck = ({ children }) => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+
+  // Wait for authentication to load before making decisions
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   // Check if user is either authenticated or is a guest
   const hasAuthentication = user || isGuestUser();

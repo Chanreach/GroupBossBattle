@@ -1,7 +1,15 @@
 // ===== LIBRARIES ===== //
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Users, X, Trophy, User, TrendingUp, Clock } from "lucide-react";
+import {
+  ArrowLeft,
+  Users,
+  X,
+  Trophy,
+  User,
+  TrendingUp,
+  Clock,
+} from "lucide-react";
 
 // ===== HOOKS ===== //
 import { useBossPreviewSocket } from "@/hooks/useBossPreviewSocket";
@@ -20,11 +28,25 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext } from "@/components/ui/pagination";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+} from "@/components/ui/pagination";
 import { toast } from "sonner";
 
 // ===== STYLES ===== //
@@ -34,20 +56,24 @@ const BossPreview = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const { joinedBoss, isJoinedToAnyBoss, joinBoss, leaveBoss, canJoinBoss } = useBossJoin();
-  
+  const { joinedBoss, isJoinedToAnyBoss, joinBoss, leaveBoss, canJoinBoss } =
+    useBossJoin();
+
   // Get URL parameters
-  const bossId = searchParams.get('bossId');
-  const eventId = searchParams.get('eventId');
-  const joinCode = searchParams.get('joinCode');
-  
+  const bossId = searchParams.get("bossId");
+  const eventId = searchParams.get("eventId");
+  const joinCode = searchParams.get("joinCode");
+
   // State for resolving join code to boss/event IDs
   const [resolvedBossId, setResolvedBossId] = useState(bossId);
   const [resolvedEventId, setResolvedEventId] = useState(eventId);
-  
+
   // Socket connection (use resolved IDs or original IDs)
-  const { socket, connectionStatus, isConnected } = useBossPreviewSocket(resolvedBossId, resolvedEventId);
-  
+  const { socket, connectionStatus, isConnected } = useBossPreviewSocket(
+    resolvedBossId,
+    resolvedEventId
+  );
+
   // Get user token and nickname based on auth status
   const getUserToken = () => {
     if (user?.accessToken) {
@@ -62,7 +88,7 @@ const BossPreview = () => {
     }
     return getGuestDisplayName();
   };
-  
+
   // Component state
   const [nickname, setNickname] = useState("");
   const [userToken] = useState(getUserToken());
@@ -75,74 +101,253 @@ const BossPreview = () => {
   const [bossData, setBossData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState({ teams: 1, individual: 1, alltime: 1 });
+  const [currentPage, setCurrentPage] = useState({
+    teams: 1,
+    individual: 1,
+    alltime: 1,
+  });
   const PAGE_SIZE = 10;
 
   // Enhanced leaderboard data
   const [teamLeaderboard, setTeamLeaderboard] = useState([
-    { rank: 1, team: 'Kangaroo', dmg: 100, correct: 9, avatar: '/src/assets/Placeholder/Profile1.jpg' },
-    { rank: 2, team: 'Koala', dmg: 85, correct: 8, avatar: '/src/assets/Placeholder/Profile2.jpg' },
-    { rank: 3, team: 'Shellfish', dmg: 68, correct: 7, avatar: '/src/assets/Placeholder/Profile3.jpg' },
-    { rank: 4, team: 'Dolphins', dmg: 55, correct: 6, avatar: '/src/assets/Placeholder/Profile4.jpg' },
+    {
+      rank: 1,
+      team: "Kangaroo",
+      dmg: 100,
+      correct: 9,
+      avatar: "/src/assets/Placeholder/Profile1.jpg",
+    },
+    {
+      rank: 2,
+      team: "Koala",
+      dmg: 85,
+      correct: 8,
+      avatar: "/src/assets/Placeholder/Profile2.jpg",
+    },
+    {
+      rank: 3,
+      team: "Shellfish",
+      dmg: 68,
+      correct: 7,
+      avatar: "/src/assets/Placeholder/Profile3.jpg",
+    },
+    {
+      rank: 4,
+      team: "Dolphins",
+      dmg: 55,
+      correct: 6,
+      avatar: "/src/assets/Placeholder/Profile4.jpg",
+    },
   ]);
 
   const [individualLeaderboard, setIndividualLeaderboard] = useState([
-    { rank: 1, player: 'Sovitep', dmg: 100, correct: 9, avatar: '/src/assets/Placeholder/Profile1.jpg' },
-    { rank: 2, player: 'Visoth', dmg: 90, correct: 8, avatar: '/src/assets/Placeholder/Profile2.jpg' },
-    { rank: 3, player: 'Roth', dmg: 75, correct: 7, avatar: '/src/assets/Placeholder/Profile3.jpg' },
-    { rank: 4, player: 'Alice', dmg: 65, correct: 6, avatar: '/src/assets/Placeholder/Profile4.jpg' },
-    { rank: 5, player: 'Bob', dmg: 55, correct: 5, avatar: '/src/assets/Placeholder/Profile5.jpg' },
-    { rank: 6, player: 'Charlie', dmg: 45, correct: 4, avatar: '/src/assets/Placeholder/Profile1.jpg' },
-    { rank: 7, player: 'David', dmg: 35, correct: 3, avatar: '/src/assets/Placeholder/Profile2.jpg' },
-    { rank: 8, player: 'Emma', dmg: 30, correct: 3, avatar: '/src/assets/Placeholder/Profile3.jpg' },
-    { rank: 9, player: 'Frank', dmg: 25, correct: 2, avatar: '/src/assets/Placeholder/Profile4.jpg' },
-    { rank: 10, player: 'Grace', dmg: 20, correct: 2, avatar: '/src/assets/Placeholder/Profile5.jpg' },
-    { rank: 11, player: 'Henry', dmg: 15, correct: 1, avatar: '/src/assets/Placeholder/Profile1.jpg' },
-    { rank: 12, player: 'Ivy', dmg: 10, correct: 1, avatar: '/src/assets/Placeholder/Profile2.jpg' }
+    {
+      rank: 1,
+      player: "Sovitep",
+      dmg: 100,
+      correct: 9,
+      avatar: "/src/assets/Placeholder/Profile1.jpg",
+    },
+    {
+      rank: 2,
+      player: "Visoth",
+      dmg: 90,
+      correct: 8,
+      avatar: "/src/assets/Placeholder/Profile2.jpg",
+    },
+    {
+      rank: 3,
+      player: "Roth",
+      dmg: 75,
+      correct: 7,
+      avatar: "/src/assets/Placeholder/Profile3.jpg",
+    },
+    {
+      rank: 4,
+      player: "Alice",
+      dmg: 65,
+      correct: 6,
+      avatar: "/src/assets/Placeholder/Profile4.jpg",
+    },
+    {
+      rank: 5,
+      player: "Bob",
+      dmg: 55,
+      correct: 5,
+      avatar: "/src/assets/Placeholder/Profile5.jpg",
+    },
+    {
+      rank: 6,
+      player: "Charlie",
+      dmg: 45,
+      correct: 4,
+      avatar: "/src/assets/Placeholder/Profile1.jpg",
+    },
+    {
+      rank: 7,
+      player: "David",
+      dmg: 35,
+      correct: 3,
+      avatar: "/src/assets/Placeholder/Profile2.jpg",
+    },
+    {
+      rank: 8,
+      player: "Emma",
+      dmg: 30,
+      correct: 3,
+      avatar: "/src/assets/Placeholder/Profile3.jpg",
+    },
+    {
+      rank: 9,
+      player: "Frank",
+      dmg: 25,
+      correct: 2,
+      avatar: "/src/assets/Placeholder/Profile4.jpg",
+    },
+    {
+      rank: 10,
+      player: "Grace",
+      dmg: 20,
+      correct: 2,
+      avatar: "/src/assets/Placeholder/Profile5.jpg",
+    },
+    {
+      rank: 11,
+      player: "Henry",
+      dmg: 15,
+      correct: 1,
+      avatar: "/src/assets/Placeholder/Profile1.jpg",
+    },
+    {
+      rank: 12,
+      player: "Ivy",
+      dmg: 10,
+      correct: 1,
+      avatar: "/src/assets/Placeholder/Profile2.jpg",
+    },
   ]);
 
   const [allTimeLeaderboard, setAllTimeLeaderboard] = useState([
-    { rank: 1, player: 'Python', dmg: 300, correct: 25, avatar: '/src/assets/Placeholder/Profile1.jpg' },
-    { rank: 2, player: 'Sovitep', dmg: 280, correct: 22, avatar: '/src/assets/Placeholder/Profile2.jpg' },
-    { rank: 3, player: 'Visoth', dmg: 250, correct: 20, avatar: '/src/assets/Placeholder/Profile3.jpg' },
-    { rank: 4, player: 'Alice', dmg: 220, correct: 18, avatar: '/src/assets/Placeholder/Profile4.jpg' },
-    { rank: 5, player: 'Bob', dmg: 200, correct: 16, avatar: '/src/assets/Placeholder/Profile5.jpg' },
-    { rank: 6, player: 'Charlie', dmg: 180, correct: 14, avatar: '/src/assets/Placeholder/Profile1.jpg' },
-    { rank: 7, player: 'Master', dmg: 160, correct: 12, avatar: '/src/assets/Placeholder/Profile2.jpg' },
-    { rank: 8, player: 'Legend', dmg: 140, correct: 11, avatar: '/src/assets/Placeholder/Profile3.jpg' },
-    { rank: 9, player: 'Hero', dmg: 120, correct: 10, avatar: '/src/assets/Placeholder/Profile4.jpg' },
-    { rank: 10, player: 'Champion', dmg: 100, correct: 9, avatar: '/src/assets/Placeholder/Profile5.jpg' },
-    { rank: 11, player: 'Warrior', dmg: 90, correct: 8, avatar: '/src/assets/Placeholder/Profile1.jpg' },
-    { rank: 12, player: 'Fighter', dmg: 80, correct: 7, avatar: '/src/assets/Placeholder/Profile2.jpg' },
+    {
+      rank: 1,
+      player: "Python",
+      dmg: 300,
+      correct: 25,
+      avatar: "/src/assets/Placeholder/Profile1.jpg",
+    },
+    {
+      rank: 2,
+      player: "Sovitep",
+      dmg: 280,
+      correct: 22,
+      avatar: "/src/assets/Placeholder/Profile2.jpg",
+    },
+    {
+      rank: 3,
+      player: "Visoth",
+      dmg: 250,
+      correct: 20,
+      avatar: "/src/assets/Placeholder/Profile3.jpg",
+    },
+    {
+      rank: 4,
+      player: "Alice",
+      dmg: 220,
+      correct: 18,
+      avatar: "/src/assets/Placeholder/Profile4.jpg",
+    },
+    {
+      rank: 5,
+      player: "Bob",
+      dmg: 200,
+      correct: 16,
+      avatar: "/src/assets/Placeholder/Profile5.jpg",
+    },
+    {
+      rank: 6,
+      player: "Charlie",
+      dmg: 180,
+      correct: 14,
+      avatar: "/src/assets/Placeholder/Profile1.jpg",
+    },
+    {
+      rank: 7,
+      player: "Master",
+      dmg: 160,
+      correct: 12,
+      avatar: "/src/assets/Placeholder/Profile2.jpg",
+    },
+    {
+      rank: 8,
+      player: "Legend",
+      dmg: 140,
+      correct: 11,
+      avatar: "/src/assets/Placeholder/Profile3.jpg",
+    },
+    {
+      rank: 9,
+      player: "Hero",
+      dmg: 120,
+      correct: 10,
+      avatar: "/src/assets/Placeholder/Profile4.jpg",
+    },
+    {
+      rank: 10,
+      player: "Champion",
+      dmg: 100,
+      correct: 9,
+      avatar: "/src/assets/Placeholder/Profile5.jpg",
+    },
+    {
+      rank: 11,
+      player: "Warrior",
+      dmg: 90,
+      correct: 8,
+      avatar: "/src/assets/Placeholder/Profile1.jpg",
+    },
+    {
+      rank: 12,
+      player: "Fighter",
+      dmg: 80,
+      correct: 7,
+      avatar: "/src/assets/Placeholder/Profile2.jpg",
+    },
   ]);
 
   // Resolve join code to boss and event IDs
   useEffect(() => {
     const resolveJoinCode = async () => {
       if (!joinCode) return; // No join code, use direct IDs
-      
+
       try {
         setIsLoading(true);
         setError(null);
-        
+
         console.log("Resolving join code:", joinCode);
         const response = await bossPreviewAPI.getEventBossByJoinCode(joinCode);
         console.log("Join code response:", response);
-        
+
         if (response.success && response.data) {
           const resolvedBoss = response.data.boss_id.toString();
           const resolvedEvent = response.data.event_id.toString();
-          console.log("Resolved IDs:", { bossId: resolvedBoss, eventId: resolvedEvent });
-          
+          console.log("Resolved IDs:", {
+            bossId: resolvedBoss,
+            eventId: resolvedEvent,
+          });
+
           setResolvedBossId(resolvedBoss);
           setResolvedEventId(resolvedEvent);
         } else {
-          setError("Invalid join code. This boss battle may not exist or has expired.");
+          setError(
+            "Invalid join code. This boss battle may not exist or has expired."
+          );
           setIsLoading(false);
         }
       } catch (err) {
         console.error("Error resolving join code:", err);
-        setError("Failed to join boss battle. Please check the QR code and try again.");
+        setError(
+          "Failed to join boss battle. Please check the QR code and try again."
+        );
         setIsLoading(false);
       }
     };
@@ -156,17 +361,17 @@ const BossPreview = () => {
       // Wait for join code resolution if needed
       const finalBossId = resolvedBossId || bossId;
       const finalEventId = resolvedEventId || eventId;
-      
-      console.log("Loading boss data with IDs:", { 
-        finalBossId, 
-        finalEventId, 
-        joinCode, 
-        resolvedBossId, 
+
+      console.log("Loading boss data with IDs:", {
+        finalBossId,
+        finalEventId,
+        joinCode,
+        resolvedBossId,
         resolvedEventId,
         bossId,
-        eventId 
+        eventId,
       });
-      
+
       if (!finalBossId || !finalEventId) {
         // Only show error if no join code is being processed AND we have no direct IDs
         if (!joinCode && (!bossId || !eventId)) {
@@ -181,9 +386,15 @@ const BossPreview = () => {
       try {
         setIsLoading(true);
         setError(null);
-        console.log("Fetching boss preview data for:", { eventId: finalEventId, bossId: finalBossId });
-        const response = await bossPreviewAPI.getBossPreview(finalEventId, finalBossId);
-        
+        console.log("Fetching boss preview data for:", {
+          eventId: finalEventId,
+          bossId: finalBossId,
+        });
+        const response = await bossPreviewAPI.getBossPreview(
+          finalEventId,
+          finalBossId
+        );
+
         if (response.success) {
           setBossData(response.data.boss);
           setCooldownInfo(response.data.cooldown);
@@ -222,7 +433,7 @@ const BossPreview = () => {
     // Auto-join boss preview when socket connects (just for viewing, no nickname needed)
     if (currentBossId && currentEventId && !isJoined && userToken) {
       console.log("Auto-joining boss preview as viewer...");
-      
+
       socket.emit("boss-preview:view", {
         bossId: currentBossId,
         eventId: currentEventId,
@@ -237,7 +448,10 @@ const BossPreview = () => {
       setPlayersOnline(data.session.totalPlayers);
       setReadyPlayers(data.session.readyPlayers);
       setCooldownInfo(data.session.cooldown);
-      console.log("Updated player count from viewing event:", data.session.totalPlayers);
+      console.log(
+        "Updated player count from viewing event:",
+        data.session.totalPlayers
+      );
     });
 
     socket.on("boss-preview:joined", (data) => {
@@ -245,7 +459,7 @@ const BossPreview = () => {
       const finalBossId = resolvedBossId || bossId;
       const finalEventId = resolvedEventId || eventId;
       const serverNickname = data.player?.nickname || nickname.trim();
-      
+
       setIsJoined(true); // Set joined status
       setIsReady(true); // Automatically ready when joined
       setBossData(data.boss);
@@ -253,38 +467,53 @@ const BossPreview = () => {
       setReadyPlayers(data.session.readyPlayers);
       setCooldownInfo(data.session.cooldown);
       setNickname(serverNickname); // Use server nickname
-      
+
       // Update global join context with server nickname
       joinBoss(finalBossId, finalEventId, serverNickname);
-      
+
       toast.success("Successfully joined boss battle!");
-      console.log("Updated player count from joined event:", data.session.totalPlayers);
+      console.log(
+        "Updated player count from joined event:",
+        data.session.totalPlayers
+      );
     });
 
     socket.on("boss-preview:viewer-joined", (data) => {
       console.log("Another viewer joined:", data);
       setPlayersOnline(data.totalPlayers);
-      console.log("Updated player count from viewer-joined event:", data.totalPlayers);
+      console.log(
+        "Updated player count from viewer-joined event:",
+        data.totalPlayers
+      );
     });
 
     socket.on("boss-preview:player-joined", (data) => {
       console.log("Another player joined:", data);
       setPlayersOnline(data.totalPlayers);
       setReadyPlayers(data.readyPlayers || 0); // Update ready count too
-      console.log("Updated player count from player-joined event:", data.totalPlayers);
+      console.log(
+        "Updated player count from player-joined event:",
+        data.totalPlayers
+      );
     });
 
     socket.on("boss-preview:viewer-left", (data) => {
       console.log("Viewer left:", data);
       setPlayersOnline(data.session.totalPlayers);
-      console.log("Updated player count from viewer-left event:", data.session.totalPlayers);
+      console.log(
+        "Updated player count from viewer-left event:",
+        data.session.totalPlayers
+      );
     });
 
     socket.on("boss-preview:player-left", (data) => {
       console.log("Player left:", data);
       setPlayersOnline(data.session.totalPlayers);
       setReadyPlayers(data.session.readyPlayers);
-      console.log("Updated player count from player-left event:", data.session.totalPlayers);
+      console.log(
+        "Updated player count from player-left event:",
+        data.session.totalPlayers
+      );
     });
 
     socket.on("boss-preview:player-ready", (data) => {
@@ -313,9 +542,11 @@ const BossPreview = () => {
     socket.on("boss-preview:leaderboard-data", (data) => {
       console.log("Received leaderboard data:", data);
       if (data.teamLeaderboard) setTeamLeaderboard(data.teamLeaderboard);
-      if (data.individualLeaderboard) setIndividualLeaderboard(data.individualLeaderboard);
-      if (data.allTimeLeaderboard) setAllTimeLeaderboard(data.allTimeLeaderboard);
-      
+      if (data.individualLeaderboard)
+        setIndividualLeaderboard(data.individualLeaderboard);
+      if (data.allTimeLeaderboard)
+        setAllTimeLeaderboard(data.allTimeLeaderboard);
+
       // Update session info if available and player hasn't joined yet
       if (data.session && !isJoined) {
         setPlayersOnline(data.session.totalPlayers);
@@ -332,10 +563,10 @@ const BossPreview = () => {
       setCooldownInfo(null); // Reset cooldown info
       setPlayersOnline(data.session?.totalPlayers || 0);
       setReadyPlayers(data.session?.readyPlayers || 0);
-      
+
       // Update global join context
       leaveBoss();
-      
+
       // Restart viewing mode since user is still on the page
       const finalBossId = resolvedBossId || bossId;
       const finalEventId = resolvedEventId || eventId;
@@ -347,18 +578,23 @@ const BossPreview = () => {
           token: userToken,
         });
       }
-      
+
       toast.success("Left the battle");
     });
 
     socket.on("boss-preview:error", (data) => {
       console.error("Boss preview error:", data.message);
       toast.error(data.message);
-      
+
       // If error indicates player is not in the session but we think they are,
       // reset the local state
-      if (data.message.includes("not found") || data.message.includes("session")) {
-        console.log("Detected state inconsistency, resetting local join state...");
+      if (
+        data.message.includes("not found") ||
+        data.message.includes("session")
+      ) {
+        console.log(
+          "Detected state inconsistency, resetting local join state..."
+        );
         setIsJoined(false);
         setIsReady(false);
         setNickname("");
@@ -375,11 +611,11 @@ const BossPreview = () => {
     // Request leaderboard data (send boss/event IDs for cases where player hasn't joined yet)
     const finalBossId = resolvedBossId || bossId;
     const finalEventId = resolvedEventId || eventId;
-    
+
     if (finalBossId && finalEventId) {
       socket.emit("boss-preview:get-leaderboard", {
         bossId: finalBossId,
-        eventId: finalEventId
+        eventId: finalEventId,
       });
     }
 
@@ -400,12 +636,20 @@ const BossPreview = () => {
       socket.off("boss-preview:leaderboard-data");
       socket.off("boss-preview:error");
     };
-  }, [socket, isConnected, navigate, resolvedBossId, resolvedEventId, bossId, eventId]);
+  }, [
+    socket,
+    isConnected,
+    navigate,
+    resolvedBossId,
+    resolvedEventId,
+    bossId,
+    eventId,
+  ]);
 
   // Sync local state with global boss join context
   useEffect(() => {
     const finalBossId = resolvedBossId || bossId;
-    
+
     // If the user is joined to this specific boss in global context, sync local state
     if (joinedBoss && joinedBoss.bossId === finalBossId) {
       setIsJoined(true);
@@ -413,7 +657,11 @@ const BossPreview = () => {
       setNickname(joinedBoss.nickname);
     }
     // If the user is joined to a different boss, make sure local state reflects not joined
-    else if (isJoinedToAnyBoss && joinedBoss && joinedBoss.bossId !== finalBossId) {
+    else if (
+      isJoinedToAnyBoss &&
+      joinedBoss &&
+      joinedBoss.bossId !== finalBossId
+    ) {
       setIsJoined(false);
       setIsReady(false);
     }
@@ -424,26 +672,36 @@ const BossPreview = () => {
   const teamLeaderboard = [
     // ... removed duplicate data
   ];
-  */ 
+  */
 
   // Join boss preview when nickname is provided
   const handleJoinPreview = () => {
     const finalBossId = resolvedBossId || bossId;
     const finalEventId = resolvedEventId || eventId;
-    
+
     // Check if user can join this boss (not already joined to another)
     if (!canJoinBoss(finalBossId)) {
-      toast.error(`You are already joined to another boss battle. Please leave that battle first.`);
+      toast.error(
+        `You are already joined to another boss battle. Please leave that battle first.`
+      );
       return;
     }
-    
-    if (nickname.trim() && socket && isConnected && !isJoined && finalBossId && finalEventId && userToken) {
-      console.log("Joining boss preview with:", { 
-        bossId: finalBossId, 
-        eventId: finalEventId, 
-        nickname: nickname.trim() 
+
+    if (
+      nickname.trim() &&
+      socket &&
+      isConnected &&
+      !isJoined &&
+      finalBossId &&
+      finalEventId &&
+      userToken
+    ) {
+      console.log("Joining boss preview with:", {
+        bossId: finalBossId,
+        eventId: finalEventId,
+        nickname: nickname.trim(),
       });
-      
+
       socket.emit("boss-preview:join", {
         bossId: finalBossId,
         eventId: finalEventId,
@@ -458,7 +716,7 @@ const BossPreview = () => {
         isJoined,
         finalBossId,
         finalEventId,
-        userToken: !!userToken
+        userToken: !!userToken,
       });
     }
   };
@@ -492,43 +750,47 @@ const BossPreview = () => {
     const totalSeconds = Math.ceil(timeRemaining / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    return `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   // Check if join button should be disabled
   const isJoinButtonDisabled = () => {
     const finalBossId = resolvedBossId || bossId;
-    
+
     if (cooldownInfo?.isOnCooldown) return true;
     if (!nickname.trim()) return true;
     if (isJoined) return true; // Already joined
-    
+
     // Check if user is joined to a different boss
     if (isJoinedToAnyBoss && !canJoinBoss(finalBossId)) return true;
-    
+
     return false;
   };
 
   // Get button text based on state
   const getButtonText = () => {
     const finalBossId = resolvedBossId || bossId;
-    
+
     if (cooldownInfo?.isOnCooldown) {
       return `Boss is on cooldown. Time remaining: ${cooldownInfo.formattedTime}`;
     }
-    
+
     // Check if user is joined to a different boss
     if (isJoinedToAnyBoss && !canJoinBoss(finalBossId)) {
       return `Already joined to another boss battle`;
     }
-    
+
     if (!isJoined) {
       return "Join Boss Battle";
     }
     if (battleCountdown !== null) {
       return `Battle starting in ${battleCountdown}...`;
     }
-    return `Waiting for ${Math.max(0, 2 - readyPlayers)} more player${readyPlayers === 1 ? '' : 's'}...`;
+    return `Waiting for ${Math.max(0, 2 - readyPlayers)} more player${
+      readyPlayers === 1 ? "" : "s"
+    }...`;
   };
 
   // Pagination helpers
@@ -540,14 +802,29 @@ const BossPreview = () => {
   };
 
   const handlePageChange = (tabKey, newPage) => {
-    setCurrentPage(prev => ({ ...prev, [tabKey]: newPage }));
+    setCurrentPage((prev) => ({ ...prev, [tabKey]: newPage }));
   };
 
   const getRankBadge = (rank) => {
-    if (rank === 1) return <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white">1st</Badge>;
-    if (rank === 2) return <Badge className="bg-gray-400 hover:bg-gray-500 text-white">2nd</Badge>;
-    if (rank === 3) return <Badge className="bg-amber-600 hover:bg-amber-700 text-white">3rd</Badge>;
-    return <span className="text-sm font-medium text-muted-foreground">#{rank}</span>;
+    if (rank === 1)
+      return (
+        <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white">
+          1st
+        </Badge>
+      );
+    if (rank === 2)
+      return (
+        <Badge className="bg-gray-400 hover:bg-gray-500 text-white">2nd</Badge>
+      );
+    if (rank === 3)
+      return (
+        <Badge className="bg-amber-600 hover:bg-amber-700 text-white">
+          3rd
+        </Badge>
+      );
+    return (
+      <span className="text-sm font-medium text-muted-foreground">#{rank}</span>
+    );
   };
 
   // Pagination component
@@ -565,7 +842,9 @@ const BossPreview = () => {
                   e.preventDefault();
                   onPageChange(currentPageNum > 1 ? currentPageNum - 1 : 1);
                 }}
-                className={currentPageNum === 1 ? "pointer-events-none opacity-50" : ""}
+                className={
+                  currentPageNum === 1 ? "pointer-events-none opacity-50" : ""
+                }
               />
             </PaginationItem>
             {[...Array(totalPages)].map((_, idx) => (
@@ -587,9 +866,17 @@ const BossPreview = () => {
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  onPageChange(currentPageNum < totalPages ? currentPageNum + 1 : totalPages);
+                  onPageChange(
+                    currentPageNum < totalPages
+                      ? currentPageNum + 1
+                      : totalPages
+                  );
                 }}
-                className={currentPageNum === totalPages ? "pointer-events-none opacity-50" : ""}
+                className={
+                  currentPageNum === totalPages
+                    ? "pointer-events-none opacity-50"
+                    : ""
+                }
               />
             </PaginationItem>
           </PaginationContent>
@@ -608,8 +895,12 @@ const BossPreview = () => {
           </Button>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="mx-auto">
-              <h1 className="text-2xl sm:text-3xl font-bold text-center">Boss Battle</h1>
-              <p className="text-muted-foreground text-center">Join the battle and defeat the boss</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-center">
+                Boss Battle
+              </h1>
+              <p className="text-muted-foreground text-center">
+                Join the battle and defeat the boss
+              </p>
             </div>
           </div>
         </div>
@@ -619,7 +910,7 @@ const BossPreview = () => {
           <div className="max-w-sm mx-auto">
             <Card className="overflow-hidden">
               <CardContent className="p-6 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4"></div>
                 <p className="text-muted-foreground">Loading boss data...</p>
               </CardContent>
             </Card>
@@ -636,7 +927,10 @@ const BossPreview = () => {
                 </div>
                 <h3 className="font-semibold text-red-700 mb-2">Error</h3>
                 <p className="text-red-600 text-sm mb-4">{error}</p>
-                <Button onClick={() => window.location.reload()} variant="outline">
+                <Button
+                  onClick={() => window.location.reload()}
+                  variant="outline"
+                >
                   Try Again
                 </Button>
               </CardContent>
@@ -648,339 +942,451 @@ const BossPreview = () => {
         {!isLoading && !error && (
           <>
             <div className="max-w-sm mx-auto">
-          <Card className="overflow-hidden">
-            {/* Boss Name Header */}
-            <CardHeader className="text-center pb-4">
-              <CardTitle className="text-xl font-bold">
-                {bossData?.name || "CS BOSS"}
-              </CardTitle>
-              {connectionStatus === "disconnected" && (
-                <p className="text-sm text-red-500">Connecting...</p>
-              )}
-            </CardHeader>
+              <Card className="overflow-hidden">
+                {/* Boss Name Header */}
+                <CardHeader className="text-center pb-4">
+                  <CardTitle className="text-xl font-bold">
+                    {bossData?.name || "CS BOSS"}
+                  </CardTitle>
+                  {connectionStatus === "disconnected" && (
+                    <p className="text-sm text-red-500">Connecting...</p>
+                  )}
+                </CardHeader>
 
-            <CardContent className="space-y-4 px-6 pb-6">
-              {/* Boss Image */}
-              <div className="relative">
-                <div className="w-full aspect-square bg-muted rounded-lg overflow-hidden">
-                  <img
-                    src={getBossImageUrl(bossData?.image)}
-                    alt={bossData?.name || "CS Boss"}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.src = "/placeholder-boss.png"; // Fallback image from public folder
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Socket Connection Status */}
-              <div className="text-center py-2">
-                <div className="flex items-center justify-center text-xs">
-                  <div className={`w-2 h-2 rounded-full mr-2 ${
-                    connectionStatus === 'connected' ? 'bg-green-500' : 
-                    connectionStatus === 'connecting' ? 'bg-yellow-500' : 
-                    'bg-red-500'
-                  }`}></div>
-                  <span className={`${
-                    connectionStatus === 'connected' ? 'text-green-600' : 
-                    connectionStatus === 'connecting' ? 'text-yellow-600' : 
-                    'text-red-600'
-                  }`}>
-                    {connectionStatus === 'connected' ? 'Connected' : 
-                     connectionStatus === 'connecting' ? 'Connecting...' : 
-                     'Disconnected'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Players Online */}
-              <div className="text-center py-2">
-                <div className="flex items-center justify-center text-muted-foreground text-sm">
-                  <Users className="w-4 h-4 mr-2" />
-                  <span>Users viewing: {playersOnline}</span>
-                </div>
-                {readyPlayers > 0 && (
-                  <div className="flex items-center justify-center text-green-600 text-sm mt-1">
-                    <span>Ready for battle: {readyPlayers}</span>
+                <CardContent className="space-y-4 px-6 pb-6">
+                  {/* Boss Image */}
+                  <div className="relative">
+                    <div className="w-full aspect-square bg-muted rounded-lg overflow-hidden">
+                      <img
+                        src={getBossImageUrl(bossData?.image)}
+                        alt={bossData?.name || "CS Boss"}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.src = "/placeholder-boss.png"; // Fallback image from public folder
+                        }}
+                      />
+                    </div>
                   </div>
-                )}
-              </div>
 
-              {/* Battle Countdown */}
-              {battleCountdown !== null && (
-                <div className="text-center py-2">
-                  <div className="text-lg font-bold text-orange-600">
-                    Battle starting in {battleCountdown}...
+                  {/* Socket Connection Status */}
+                  <div className="text-center py-2">
+                    <div className="flex items-center justify-center text-xs">
+                      <div
+                        className={`w-2 h-2 rounded-full mr-2 ${
+                          connectionStatus === "connected"
+                            ? "bg-green-500"
+                            : connectionStatus === "connecting"
+                            ? "bg-yellow-500"
+                            : "bg-red-500"
+                        }`}
+                      ></div>
+                      <span
+                        className={`${
+                          connectionStatus === "connected"
+                            ? "text-green-600"
+                            : connectionStatus === "connecting"
+                            ? "text-yellow-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {connectionStatus === "connected"
+                          ? "Connected"
+                          : connectionStatus === "connecting"
+                          ? "Connecting..."
+                          : "Disconnected"}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              )}
 
-              {/* Join Button or Wait Status */}
-              {!isJoined ? (
-                <Button
-                  onClick={handleJoinOrReady}
-                  className="w-full"
-                  disabled={isJoinButtonDisabled()}
-                  variant={cooldownInfo?.isOnCooldown ? "secondary" : "default"}
-                >
-                  {getButtonText()}
-                </Button>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Button
-                    className="flex-1"
-                    disabled
-                    variant="secondary"
-                  >
-                    {getButtonText()}
-                  </Button>
-                  <Button
-                    onClick={handleLeaveBattle}
-                    variant="outline"
-                    size="icon"
-                    className="flex-shrink-0"
-                    title="Leave Battle"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              )}
+                  {/* Players Online */}
+                  <div className="text-center py-2">
+                    <div className="flex items-center justify-center text-muted-foreground text-sm">
+                      <Users className="w-4 h-4 mr-2" />
+                      <span>Users viewing: {playersOnline}</span>
+                    </div>
+                    {readyPlayers > 0 && (
+                      <div className="flex items-center justify-center text-green-600 text-sm mt-1">
+                        <span>Ready for battle: {readyPlayers}</span>
+                      </div>
+                    )}
+                  </div>
 
-              {/* Testing buttons for development */}
-              <div className="flex gap-2 mt-2">
-                <Button
-                  onClick={() => {
-                    leaveBoss();
-                    setIsJoined(false);
-                    setIsReady(false);
-                    setNickname("");
-                    setBattleCountdown(null);
-                    setCooldownInfo(null);
-                    setPlayersOnline(0);
-                    setReadyPlayers(0);
-                    toast.success("Reset join state");
-                  }}
-                  variant="destructive"
-                  size="sm"
-                  className="text-xs"
-                >
-                  Reset State
-                </Button>
-                <Button
-                  onClick={() => {
-                    const finalBossId = resolvedBossId || bossId;
-                    const finalEventId = resolvedEventId || eventId;
-                    if (finalBossId && finalEventId) {
-                      navigate(`/boss-battle?bossId=${finalBossId}&eventId=${finalEventId}`);
-                    }
-                  }}
-                  variant="outline"
-                  size="sm"
-                  className="text-xs"
-                >
-                  Go to Battle
-                </Button>
-              </div>
+                  {/* Battle Countdown */}
+                  {battleCountdown !== null && (
+                    <div className="text-center py-2">
+                      <div className="text-lg font-bold text-orange-600">
+                        Battle starting in {battleCountdown}...
+                      </div>
+                    </div>
+                  )}
 
-              {/* Nickname Input - Only show when not joined */}
-              {!isJoined && (
-                <div className="space-y-2">
-                  <Label htmlFor="nickname" className="text-sm">
-                    Enter nickname to join battle:
-                  </Label>
-                  <Input
-                    id="nickname"
-                    type="text"
-                    value={nickname}
-                    onChange={(e) => setNickname(e.target.value)}
-                    placeholder="Enter your nickname"
-                    disabled={cooldownInfo?.isOnCooldown}
-                    maxLength={20}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter' && !isJoinButtonDisabled()) {
-                        handleJoinOrReady();
+                  {/* Join Button or Wait Status */}
+                  {!isJoined ? (
+                    <Button
+                      onClick={handleJoinOrReady}
+                      className="w-full"
+                      disabled={isJoinButtonDisabled()}
+                      variant={
+                        cooldownInfo?.isOnCooldown ? "secondary" : "default"
                       }
-                    }}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Nickname required to participate in battle (2-20 characters)
+                    >
+                      {getButtonText()}
+                    </Button>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Button className="flex-1" disabled variant="secondary">
+                        {getButtonText()}
+                      </Button>
+                      <Button
+                        onClick={handleLeaveBattle}
+                        variant="outline"
+                        size="icon"
+                        className="flex-shrink-0"
+                        title="Leave Battle"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Testing buttons for development */}
+                  <div className="flex gap-2 mt-2">
+                    <Button
+                      onClick={() => {
+                        leaveBoss();
+                        setIsJoined(false);
+                        setIsReady(false);
+                        setNickname("");
+                        setBattleCountdown(null);
+                        setCooldownInfo(null);
+                        setPlayersOnline(0);
+                        setReadyPlayers(0);
+                        toast.success("Reset join state");
+                      }}
+                      variant="destructive"
+                      size="sm"
+                      className="text-xs"
+                    >
+                      Reset State
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        const finalBossId = resolvedBossId || bossId;
+                        const finalEventId = resolvedEventId || eventId;
+                        if (finalBossId && finalEventId) {
+                          navigate(
+                            `/boss-battle?bossId=${finalBossId}&eventId=${finalEventId}`
+                          );
+                        }
+                      }}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs"
+                    >
+                      Go to Battle
+                    </Button>
+                  </div>
+
+                  {/* Nickname Input - Only show when not joined */}
+                  {!isJoined && (
+                    <div className="space-y-2">
+                      <Label htmlFor="nickname" className="text-sm">
+                        Enter nickname to join battle:
+                      </Label>
+                      <Input
+                        id="nickname"
+                        type="text"
+                        value={nickname}
+                        onChange={(e) => setNickname(e.target.value)}
+                        placeholder="Enter your nickname"
+                        disabled={cooldownInfo?.isOnCooldown}
+                        maxLength={20}
+                        onKeyPress={(e) => {
+                          if (e.key === "Enter" && !isJoinButtonDisabled()) {
+                            handleJoinOrReady();
+                          }
+                        }}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Nickname required to participate in battle (2-20
+                        characters)
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Joined Status */}
+                  {isJoined && (
+                    <div className="text-center py-2">
+                      <div className="flex items-center justify-center text-green-600 text-sm">
+                        <span>
+                          ✓ Ready for battle as:{" "}
+                          <strong>{nickname || "(No nickname)"}</strong>
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Leaderboard Card */}
+            <div className="max-w-4xl mx-auto mt-8">
+              <Card className="h-[840px] relative">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Trophy className="w-5 h-5" />
+                    Live Leaderboard Rankings
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    View performance across different categories
                   </p>
-                </div>
-              )}
-
-              {/* Joined Status */}
-              {isJoined && (
-                <div className="text-center py-2">
-                  <div className="flex items-center justify-center text-green-600 text-sm">
-                    <span>✓ Ready for battle as: <strong>{nickname || '(No nickname)'}</strong></span>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Leaderboard Card */}
-        <div className="max-w-4xl mx-auto mt-8">
-          <Card className="h-[840px] relative">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trophy className="w-5 h-5" />
-                Live Leaderboard Rankings
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">View performance across different categories</p>
-            </CardHeader>
-            <CardContent className="relative h-full">
-              <Tabs defaultValue="teams" className="space-y-3">
-                
-                {/* Tabs List */}
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="teams" className="flex items-center gap-2">
-                    <Users className="w-4 h-4" />
-                    <span className="hidden sm:inline">Team Rankings</span>
-                    <span className="sm:hidden">Teams</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="individual" className="flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    <span className="hidden sm:inline">Individual Rankings</span>
-                    <span className="sm:hidden">Players</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="alltime" className="flex items-center gap-2">
-                    <Trophy className="w-4 h-4" />
-                    <span className="hidden sm:inline">All-Time</span>
-                    <span className="sm:hidden">All-Time</span>
-                  </TabsTrigger>
-                </TabsList>
-
-                {/* Team Leaderboard */}
-                <TabsContent value="teams" className="space-y-4">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">Team Rankings</h3>
-                    <p className="text-sm text-muted-foreground mb-4">Current event team performance</p>
-                  </div>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-16">Rank</TableHead>
-                        <TableHead className="whitespace-normal">Team</TableHead>
-                        <TableHead className="text-right whitespace-normal">DMG</TableHead>
-                        <TableHead className="text-right whitespace-normal">Correct</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {getPaginatedData(teamLeaderboard, 'teams').paginatedData.map((team) => (
-                        <TableRow key={team.rank} className="hover:bg-muted/50">
-                          <TableCell className="font-medium">
-                            {getRankBadge(team.rank)}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-3">
-                              <Avatar className="w-8 h-8">
-                                <AvatarImage src={team.avatar} alt={team.team} />
-                                <AvatarFallback>{team.team[0]}</AvatarFallback>
-                              </Avatar>
-                              <span className="font-medium">{team.team}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right font-medium">{team.dmg}</TableCell>
-                          <TableCell className="text-right">{team.correct}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                  <PaginationControls
-                    {...getPaginatedData(teamLeaderboard, 'teams')}
-                    onPageChange={(page) => handlePageChange('teams', page)}
-                  />
-                </TabsContent>
-
-                {/* Individual Leaderboard */}
-                <TabsContent value="individual" className="space-y-4">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">Individual Rankings</h3>
-                    <p className="text-sm text-muted-foreground mb-4">Current event individual player performance</p>
-                  </div>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-16">Rank</TableHead>
-                        <TableHead className="whitespace-normal">Player</TableHead>
-                        <TableHead className="text-right whitespace-normal">DMG</TableHead>
-                        <TableHead className="text-right whitespace-normal">Correct</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {getPaginatedData(individualLeaderboard, 'individual').paginatedData.map((player) => (
-                        <TableRow key={player.rank} className="hover:bg-muted/50">
-                          <TableCell className="font-medium">
-                            {getRankBadge(player.rank)}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-3">
-                              <Avatar className="w-8 h-8">
-                                <AvatarImage src={player.avatar} alt={player.player} />
-                                <AvatarFallback>{player.player[0]}</AvatarFallback>
-                              </Avatar>
-                              <span className="font-medium">{player.player}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right font-medium">{player.dmg}</TableCell>
-                          <TableCell className="text-right">{player.correct}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                  <PaginationControls
-                    {...getPaginatedData(individualLeaderboard, 'individual')}
-                    onPageChange={(page) => handlePageChange('individual', page)}
-                  />
-                </TabsContent>
-
-                {/* All-Time Leaderboard */}
-                <TabsContent value="alltime" className="space-y-4">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">All-Time Rankings</h3>
-                    <p className="text-sm text-muted-foreground mb-4">Historical player performance across all events</p>
-                  </div>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-16">Rank</TableHead>
-                        <TableHead className="whitespace-normal">Player</TableHead>
-                        <TableHead className="text-right whitespace-normal">Total DMG</TableHead>
-                        <TableHead className="text-right whitespace-normal">Total Correct</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {getPaginatedData(allTimeLeaderboard, 'alltime').paginatedData.map((player) => (
-                        <TableRow key={player.rank} className="hover:bg-muted/50">
-                          <TableCell className="font-medium">
-                            {getRankBadge(player.rank)}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-3">
-                              <Avatar className="w-8 h-8">
-                                <AvatarImage src={player.avatar} alt={player.player} />
-                                <AvatarFallback>{player.player[0]}</AvatarFallback>
-                              </Avatar>
-                              <span className="font-medium">{player.player}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right font-medium">{player.dmg}</TableCell>
-                          <TableCell className="text-right">{player.correct}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                  <PaginationControls
-                    {...getPaginatedData(allTimeLeaderboard, 'alltime')}
-                    onPageChange={(page) => handlePageChange('alltime', page)}
-                  />
-                </TabsContent>            </Tabs>
-            </CardContent>
-          </Card>
-        </div>
+                </CardHeader>
+                <CardContent className="relative h-full">
+                  <Tabs defaultValue="teams" className="space-y-3">
+                    {/* Tabs List */}
+                    <TabsList className="grid w-full grid-cols-3">
+                      <TabsTrigger
+                        value="teams"
+                        className="flex items-center gap-2"
+                      >
+                        <Users className="w-4 h-4" />
+                        <span className="hidden sm:inline">Team Rankings</span>
+                        <span className="sm:hidden">Teams</span>
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="individual"
+                        className="flex items-center gap-2"
+                      >
+                        <User className="w-4 h-4" />
+                        <span className="hidden sm:inline">
+                          Individual Rankings
+                        </span>
+                        <span className="sm:hidden">Players</span>
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="alltime"
+                        className="flex items-center gap-2"
+                      >
+                        <Trophy className="w-4 h-4" />
+                        <span className="hidden sm:inline">All-Time</span>
+                        <span className="sm:hidden">All-Time</span>
+                      </TabsTrigger>
+                    </TabsList>
+                    {/* Team Leaderboard */}
+                    <TabsContent value="teams" className="space-y-4">
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">
+                          Team Rankings
+                        </h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Current event team performance
+                        </p>
+                      </div>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-16">Rank</TableHead>
+                            <TableHead className="whitespace-normal">
+                              Team
+                            </TableHead>
+                            <TableHead className="text-right whitespace-normal">
+                              DMG
+                            </TableHead>
+                            <TableHead className="text-right whitespace-normal">
+                              Correct
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {getPaginatedData(
+                            teamLeaderboard,
+                            "teams"
+                          ).paginatedData.map((team) => (
+                            <TableRow
+                              key={team.rank}
+                              className="hover:bg-muted/50"
+                            >
+                              <TableCell className="font-medium">
+                                {getRankBadge(team.rank)}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  <Avatar className="w-8 h-8">
+                                    <AvatarImage
+                                      src={team.avatar}
+                                      alt={team.team}
+                                    />
+                                    <AvatarFallback>
+                                      {team.team[0]}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="font-medium">
+                                    {team.team}
+                                  </span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right font-medium">
+                                {team.dmg}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {team.correct}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                      <PaginationControls
+                        {...getPaginatedData(teamLeaderboard, "teams")}
+                        onPageChange={(page) => handlePageChange("teams", page)}
+                      />
+                    </TabsContent>
+                    {/* Individual Leaderboard */}
+                    <TabsContent value="individual" className="space-y-4">
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">
+                          Individual Rankings
+                        </h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Current event individual player performance
+                        </p>
+                      </div>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-16">Rank</TableHead>
+                            <TableHead className="whitespace-normal">
+                              Player
+                            </TableHead>
+                            <TableHead className="text-right whitespace-normal">
+                              DMG
+                            </TableHead>
+                            <TableHead className="text-right whitespace-normal">
+                              Correct
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {getPaginatedData(
+                            individualLeaderboard,
+                            "individual"
+                          ).paginatedData.map((player) => (
+                            <TableRow
+                              key={player.rank}
+                              className="hover:bg-muted/50"
+                            >
+                              <TableCell className="font-medium">
+                                {getRankBadge(player.rank)}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  <Avatar className="w-8 h-8">
+                                    <AvatarImage
+                                      src={player.avatar}
+                                      alt={player.player}
+                                    />
+                                    <AvatarFallback>
+                                      {player.player[0]}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="font-medium">
+                                    {player.player}
+                                  </span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right font-medium">
+                                {player.dmg}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {player.correct}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                      <PaginationControls
+                        {...getPaginatedData(
+                          individualLeaderboard,
+                          "individual"
+                        )}
+                        onPageChange={(page) =>
+                          handlePageChange("individual", page)
+                        }
+                      />
+                    </TabsContent>
+                    {/* All-Time Leaderboard */}
+                    <TabsContent value="alltime" className="space-y-4">
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">
+                          All-Time Rankings
+                        </h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Historical player performance across all events
+                        </p>
+                      </div>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-16">Rank</TableHead>
+                            <TableHead className="whitespace-normal">
+                              Player
+                            </TableHead>
+                            <TableHead className="text-right whitespace-normal">
+                              Total DMG
+                            </TableHead>
+                            <TableHead className="text-right whitespace-normal">
+                              Total Correct
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {getPaginatedData(
+                            allTimeLeaderboard,
+                            "alltime"
+                          ).paginatedData.map((player) => (
+                            <TableRow
+                              key={player.rank}
+                              className="hover:bg-muted/50"
+                            >
+                              <TableCell className="font-medium">
+                                {getRankBadge(player.rank)}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  <Avatar className="w-8 h-8">
+                                    <AvatarImage
+                                      src={player.avatar}
+                                      alt={player.player}
+                                    />
+                                    <AvatarFallback>
+                                      {player.player[0]}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="font-medium">
+                                    {player.player}
+                                  </span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right font-medium">
+                                {player.dmg}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {player.correct}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                      <PaginationControls
+                        {...getPaginatedData(allTimeLeaderboard, "alltime")}
+                        onPageChange={(page) =>
+                          handlePageChange("alltime", page)
+                        }
+                      />
+                    </TabsContent>{" "}
+                  </Tabs>
+                </CardContent>
+              </Card>
+            </div>
           </>
         )}
       </div>

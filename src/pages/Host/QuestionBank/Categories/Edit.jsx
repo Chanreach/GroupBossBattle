@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Trash2, AlertTriangle } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { apiClient } from '@/api';
-import { useAuth } from '@/context/useAuth';
-import { toast } from 'sonner';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft, Save, Trash2, AlertTriangle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { apiClient } from "@/api";
+import { useAuth } from "@/context/useAuth";
+import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,14 +18,15 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from "@/components/ui/alert-dialog";
 
 const EditCategory = () => {
   const navigate = useNavigate();
   const { id: categoryId } = useParams();
   const { user } = useAuth();
-  
-  const [categoryName, setCategoryName] = useState('');
+
+  const [categoryName, setCategoryName] = useState("");
+  const [originalCategoryName, setOriginalCategoryName] = useState("");
   const [category, setCategory] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -35,7 +36,7 @@ const EditCategory = () => {
 
   // Check if user can edit this category
   const canEdit = () => {
-    return user?.role === 'admin' || category?.creatorId === user?.id;
+    return user?.role === "admin" || category?.creatorId === user?.id;
   };
 
   // Fetch category data
@@ -47,10 +48,11 @@ const EditCategory = () => {
         const categoryData = response.data;
         setCategory(categoryData);
         setCategoryName(categoryData.name);
+        setOriginalCategoryName(categoryData.name);
       } catch (err) {
-        console.error('Error fetching category:', err);
-        toast.error('Failed to fetch category');
-        navigate('/host/questionbank/categories/view');
+        console.error("Error fetching category:", err);
+        toast.error("Failed to fetch category");
+        navigate("/host/questionbank/categories/view");
       } finally {
         setIsLoading(false);
       }
@@ -63,15 +65,15 @@ const EditCategory = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!categoryName.trim()) {
-      newErrors.categoryName = 'Category name is required';
+      newErrors.categoryName = "Category name is required";
     } else if (categoryName.trim().length < 2) {
-      newErrors.categoryName = 'Category name must be at least 2 characters';
+      newErrors.categoryName = "Category name must be at least 2 characters";
     } else if (categoryName.trim().length > 50) {
-      newErrors.categoryName = 'Category name must be 50 characters or less';
+      newErrors.categoryName = "Category name must be 50 characters or less";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -79,25 +81,33 @@ const EditCategory = () => {
   // Check if form is valid for button styling (same as Create)
   const isFormValid = categoryName.trim().length >= 2;
 
+  // Check if current data is different from original data
+  const hasChanges =
+    originalCategoryName && categoryName !== originalCategoryName;
+
+  // Check if save should be enabled
+  const isSaveEnabled = hasChanges && isFormValid;
+
   const handleSave = async () => {
     if (!validateForm() || !canEdit()) return;
-    
+
     setIsSaving(true);
     try {
       await apiClient.put(`/categories/${categoryId}`, {
-        name: categoryName.trim()
+        name: categoryName.trim(),
       });
-      
-      toast.success('Category updated successfully');
-      navigate('/host/questionbank/categories/view');
+
+      toast.success("Category updated successfully");
+      navigate("/host/questionbank/categories/view");
     } catch (error) {
-      console.error('Error updating category:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to update category';
+      console.error("Error updating category:", error);
+      const errorMessage =
+        error.response?.data?.message || "Failed to update category";
       toast.error(errorMessage);
-      
+
       // Handle validation errors from server
       if (error.response?.data?.errors) {
-        setErrors({ categoryName: error.response.data.errors.join(', ') });
+        setErrors({ categoryName: error.response.data.errors.join(", ") });
       }
     } finally {
       setIsSaving(false);
@@ -105,21 +115,22 @@ const EditCategory = () => {
   };
 
   const handleCancel = () => {
-    navigate('/host/questionbank/categories/view');
+    navigate("/host/questionbank/categories/view");
   };
 
   const handleDelete = async () => {
     if (!canEdit()) return;
-    
+
     setIsDeleting(true);
     try {
       await apiClient.delete(`/categories/${categoryId}`);
-      toast.success('Category deleted successfully');
+      toast.success("Category deleted successfully");
       setShowDeleteDialog(false);
-      navigate('/host/questionbank/categories/view');
+      navigate("/host/questionbank/categories/view");
     } catch (error) {
-      console.error('Error deleting category:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to delete category';
+      console.error("Error deleting category:", error);
+      const errorMessage =
+        error.response?.data?.message || "Failed to delete category";
       toast.error(errorMessage);
     } finally {
       setIsDeleting(false);
@@ -130,7 +141,12 @@ const EditCategory = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 py-8 px-4">
         <div className="max-w-2xl mx-auto">
-          <div className="text-center py-8 text-gray-500">Loading category...</div>
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
+              <p className="text-muted-foreground">Loading category...</p>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -141,8 +157,13 @@ const EditCategory = () => {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 py-8 px-4">
         <div className="max-w-2xl mx-auto">
           <div className="text-center py-8">
-            <p className="text-red-500 dark:text-red-400 mb-4">Category not found or access denied</p>
-            <Button onClick={() => navigate('/host/questionbank/categories/view')} variant="outline">
+            <p className="text-red-500 dark:text-red-400 mb-4">
+              Category not found or access denied
+            </p>
+            <Button
+              onClick={() => navigate("/host/questionbank/categories/view")}
+              variant="outline"
+            >
               Back to Categories
             </Button>
           </div>
@@ -157,9 +178,9 @@ const EditCategory = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={handleCancel}
               className="p-2 hover:bg-accent/50"
             >
@@ -174,7 +195,7 @@ const EditCategory = () => {
               </p>
             </div>
           </div>
-          
+
           {/* Delete Button - Top Right */}
           <Button
             variant="outline"
@@ -197,11 +218,14 @@ const EditCategory = () => {
             </h3>
           </CardHeader>
           <CardContent className="space-y-6">
-            
             {/* Category Name */}
             <div className="space-y-2">
-              <Label htmlFor="categoryName" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Category Name <span className="text-red-500 dark:text-red-400">*</span>
+              <Label
+                htmlFor="categoryName"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Category Name{" "}
+                <span className="text-red-500 dark:text-red-400">*</span>
               </Label>
               <Input
                 id="categoryName"
@@ -209,18 +233,31 @@ const EditCategory = () => {
                 onChange={(e) => {
                   setCategoryName(e.target.value);
                   if (errors.categoryName) {
-                    setErrors(prev => ({ ...prev, categoryName: '' }));
+                    setErrors((prev) => ({ ...prev, categoryName: "" }));
                   }
                 }}
                 placeholder="e.g., Computer Science, Art, Business"
                 maxLength={50}
-                className={`${errors.categoryName ? 'border-red-500 focus:border-red-500' : isFormValid ? 'border-green-500 focus:border-green-500' : ''} dark:bg-background dark:border-gray-600 dark:text-white transition-colors`}
+                className={`${
+                  errors.categoryName
+                    ? "border-red-500 focus:border-red-500"
+                    : isFormValid
+                    ? "border-green-500 focus:border-green-500"
+                    : ""
+                } dark:bg-background dark:border-gray-600 dark:text-white transition-colors`}
               />
               {errors.categoryName && (
-                <p className="text-sm text-red-500 dark:text-red-400">{errors.categoryName}</p>
+                <p className="text-sm text-red-500 dark:text-red-400">
+                  {errors.categoryName}
+                </p>
               )}
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {categoryName.length}/50 characters {isFormValid && !errors.categoryName && <span className="text-green-600 dark:text-green-400">✓ Valid</span>}
+                {categoryName.length}/50 characters{" "}
+                {isFormValid && !errors.categoryName && (
+                  <span className="text-green-600 dark:text-green-400">
+                    ✓ Valid
+                  </span>
+                )}
               </p>
             </div>
 
@@ -231,7 +268,7 @@ const EditCategory = () => {
               </Label>
               <div className="p-3 bg-muted rounded-md border">
                 <p className="text-sm text-gray-600 dark:text-gray-300">
-                  {category?.creator?.username || 'Unknown'}
+                  {category?.creator?.username || "Unknown"}
                 </p>
               </div>
             </div>
@@ -251,14 +288,14 @@ const EditCategory = () => {
           <Button
             onClick={handleSave}
             className="flex items-center gap-2 w-full sm:w-auto sm:min-w-[120px]"
-            disabled={!isFormValid || isSaving || isDeleting}
+            disabled={!isSaveEnabled || isSaving || isDeleting}
           >
             {isSaving ? (
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
             ) : (
               <Save className="h-4 w-4" />
             )}
-            {isSaving ? 'Saving...' : 'Save Changes'}
+            {isSaving ? "Saving..." : "Save Changes"}
           </Button>
         </div>
 
@@ -271,16 +308,21 @@ const EditCategory = () => {
                 Delete Category
               </AlertDialogTitle>
               <AlertDialogDescription className="text-gray-600">
-                Are you sure you want to delete the category{' '}
-                <span className="font-semibold text-gray-900 dark:text-white">"{categoryName}"</span>?
-                <br /><br />
+                Are you sure you want to delete the category{" "}
+                <span className="font-semibold text-gray-900 dark:text-white">
+                  "{categoryName}"
+                </span>
+                ?
+                <br />
+                <br />
                 <span className="text-red-600 dark:text-red-400 font-medium">
-                  This action cannot be undone and will permanently remove all associated questions.
+                  This action cannot be undone and will permanently remove all
+                  associated questions.
                 </span>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="gap-2">
-              <AlertDialogCancel 
+              <AlertDialogCancel
                 onClick={() => setShowDeleteDialog(false)}
                 disabled={isLoading}
               >
@@ -297,7 +339,7 @@ const EditCategory = () => {
                     Deleting...
                   </div>
                 ) : (
-                  'Delete Category'
+                  "Delete Category"
                 )}
               </AlertDialogAction>
             </AlertDialogFooter>

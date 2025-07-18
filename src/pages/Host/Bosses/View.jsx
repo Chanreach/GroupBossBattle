@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Sword, Plus, User } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { apiClient } from '@/api';
-import { useAuth } from '@/context/useAuth';
-import { toast } from 'sonner';
-import { getBossImageUrl } from '@/utils/imageUtils';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Sword, Plus, User } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { apiClient } from "@/api";
+import { useAuth } from "@/context/useAuth";
+import { toast } from "sonner";
+import { getBossImageUrl } from "@/utils/imageUtils";
 
 const ViewBosses = () => {
   const navigate = useNavigate();
@@ -22,11 +22,11 @@ const ViewBosses = () => {
   const fetchBosses = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get('/bosses');
+      const response = await apiClient.get("/bosses");
       setBosses(response.data);
     } catch (error) {
-      console.error('Error fetching bosses:', error);
-      toast.error('Failed to fetch bosses');
+      console.error("Error fetching bosses:", error);
+      toast.error("Failed to fetch bosses");
     } finally {
       setLoading(false);
     }
@@ -38,7 +38,7 @@ const ViewBosses = () => {
   };
 
   const handleCreateBoss = () => {
-    navigate('/host/bosses/create');
+    navigate("/host/bosses/create");
   };
 
   if (loading) {
@@ -46,7 +46,7 @@ const ViewBosses = () => {
       <div className="container mx-auto max-w-6xl">
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4"></div>
             <p className="text-muted-foreground">Loading bosses...</p>
           </div>
         </div>
@@ -64,7 +64,7 @@ const ViewBosses = () => {
             <h1 className="text-2xl font-bold tracking-tight">Bosses</h1>
           </div>
         </div>
-        <Button 
+        <Button
           onClick={handleCreateBoss}
           className="bg-primary hover:bg-primary/90 flex items-center gap-2 w-full sm:w-auto"
         >
@@ -80,11 +80,14 @@ const ViewBosses = () => {
           <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
             <Sword className="h-8 w-8 text-muted-foreground" />
           </div>
-          <h2 className="text-xl font-semibold text-foreground mb-2">No Bosses Found</h2>
+          <h2 className="text-xl font-semibold text-foreground mb-2">
+            No Bosses Found
+          </h2>
           <p className="text-muted-foreground text-center max-w-md mb-6">
-            No bosses have been created yet. Create your first boss to get started with organizing boss fights.
+            No bosses have been created yet. Create your first boss to get
+            started with organizing boss fights.
           </p>
-          <Button 
+          <Button
             onClick={handleCreateBoss}
             className="bg-primary hover:bg-primary/90"
           >
@@ -104,8 +107,8 @@ const ViewBosses = () => {
                 {/* Boss Image */}
                 <div className="relative overflow-hidden aspect-square">
                   {boss.image ? (
-                    <img 
-                      src={getBossImageUrl(boss.image)} 
+                    <img
+                      src={getBossImageUrl(boss.image)}
                       alt={boss.name}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                     />
@@ -113,15 +116,21 @@ const ViewBosses = () => {
                     <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
                       <div className="text-center">
                         <Sword className="h-12 w-12 text-primary/60 mx-auto mb-2" />
-                        <span className="text-sm text-muted-foreground">No Image</span>
+                        <span className="text-sm text-muted-foreground">
+                          No Image
+                        </span>
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Overlay on hover */}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <Button size="sm" variant="secondary" className="bg-white/90 hover:bg-white text-black">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="bg-white/90 hover:bg-white text-black"
+                      >
                         Edit Boss
                       </Button>
                     </div>
@@ -134,7 +143,7 @@ const ViewBosses = () => {
                     <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
                       {boss.name}
                     </h3>
-                    {user?.role === 'admin' && boss.creator && (
+                    {user?.role === "admin" && boss.creator && (
                       <Badge variant="outline" className="text-xs">
                         <User className="h-3 w-3 mr-1" />
                         {boss.creator.username}
@@ -149,7 +158,11 @@ const ViewBosses = () => {
                   {boss.Categories && boss.Categories.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-2">
                       {boss.Categories.map((category) => (
-                        <Badge key={category.id} variant="outline" className="text-xs px-1.5 py-0.5 bg-blue-50 text-blue-700 border-blue-200">
+                        <Badge
+                          key={category.id}
+                          variant="outline"
+                          className="text-xs px-1.5 py-0.5 bg-blue-50 text-blue-700 border-blue-200"
+                        >
                           {category.name}
                         </Badge>
                       ))}

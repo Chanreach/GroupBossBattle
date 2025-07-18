@@ -243,7 +243,12 @@ const AssignBoss = () => {
   if (loading) {
     return (
       <div className="container mx-auto px-4 sm:px-6 py-6 max-w-4xl">
-        <div className="text-center py-8">Loading event details...</div>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading event details...</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -482,7 +487,7 @@ const AssignBoss = () => {
                               {boss.description}
                             </p>
                           )}
-                          
+
                           {/* Categories */}
                           {boss.categories && boss.categories.length > 0 && (
                             <div className="flex flex-wrap gap-1 mb-2">
@@ -606,7 +611,7 @@ const AssignBoss = () => {
               <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
                 {qrDialog.loading ? (
                   <div className="w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
                   </div>
                 ) : qrDialog.qrCode ? (
                   <img

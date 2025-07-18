@@ -1,7 +1,7 @@
 "use client";
 
 // ===== LIBRARIES ===== //
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Sun,
@@ -63,11 +63,51 @@ export function NavSidebar({ ...props }) {
   const handleLogout = useCallback(async () => {
     try {
       logout();
+      // Clear the viewAsPlayer flag on logout
+      localStorage.removeItem("viewAsPlayer");
+      localStorage.removeItem("viewAsPlayerTimestamp");
       navigate("/auth");
     } catch (error) {
       console.error("Logout failed:", error);
     }
   }, [logout, navigate]);
+
+  // Clear any mobile overlay state when component mounts
+  useEffect(() => {
+    // Force close any mobile overlays that might be stuck
+    const sheets = document.querySelectorAll(
+      '[data-state="open"][role="dialog"]'
+    );
+    sheets.forEach((sheet) => {
+      const closeButton = sheet.querySelector('button[aria-label="Close"]');
+      if (closeButton) {
+        closeButton.click();
+      }
+    });
+
+    // Clear any overlay backgrounds
+    const overlays = document.querySelectorAll("[data-radix-collection-item]");
+    overlays.forEach((overlay) => {
+      if (overlay.style.display === "block") {
+        overlay.style.display = "none";
+      }
+    });
+
+    // Remove any stuck overlay styles
+    document.body.style.pointerEvents = "";
+    document.body.style.overflow = "";
+
+    // Clear any radix-ui portal overlays
+    const portals = document.querySelectorAll("[data-radix-portal]");
+    portals.forEach((portal) => {
+      const dialogs = portal.querySelectorAll('[role="dialog"]');
+      dialogs.forEach((dialog) => {
+        if (dialog.getAttribute("data-state") === "open") {
+          dialog.style.display = "none";
+        }
+      });
+    });
+  }, []);
 
   // ===== NAVIGATION DATA ===== //
   const navigationItems = useMemo(
@@ -287,7 +327,11 @@ export function NavSidebar({ ...props }) {
                   {/* User Management for admin/host only */}
                   {(user?.role === "admin" || user?.role === "host") && (
                     <DropdownMenuItem
-                      onClick={() => navigate("/host/events/view")}
+                      onClick={() => {
+                        localStorage.removeItem("viewAsPlayer");
+                        localStorage.removeItem("viewAsPlayerTimestamp");
+                        navigate("/host/events/view");
+                      }}
                     >
                       <Users className="mr-2 h-4 w-4" />
                       <span>View as Host</span>

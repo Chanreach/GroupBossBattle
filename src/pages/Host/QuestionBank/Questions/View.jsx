@@ -185,7 +185,8 @@ const ViewQuestionDetail = () => {
                 Question
               </Label>
               <div className="text-lg font-bold mt-2 p-4 bg-muted rounded-lg border whitespace-pre-wrap break-words">
-                Q: {question.questionText}
+                {/* Q: {question.questionText} */}
+                {question.questionText}
               </div>
             </div>
 
@@ -195,47 +196,50 @@ const ViewQuestionDetail = () => {
                 Answer Options
               </Label>
               <div className="space-y-2">
-                {question.answerChoices?.map((answer, index) => (
-                  <div
-                    key={answer.id}
-                    className={`flex items-center gap-3 p-3 border rounded-lg transition-colors ${
-                      answer.isCorrect
-                        ? "border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/20"
-                        : "border bg-card"
-                    }`}
-                  >
-                    {/* Correct Answer Indicator */}
+                {question.answerChoices
+                  ?.sort((a, b) => a.choiceText.localeCompare(b.choiceText))
+                  .map((answer) => (
                     <div
-                      className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                      key={answer.id}
+                      className={`flex items-center gap-3 p-3 border rounded-lg transition-colors ${
                         answer.isCorrect
-                          ? "bg-green-500"
-                          : "border-2 border-gray-300 dark:border-gray-500"
+                          ? "border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/20"
+                          : "border bg-card"
                       }`}
                     >
+                      {/* Correct Answer Indicator */}
+                      <div
+                        className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                          answer.isCorrect
+                            ? "bg-green-500"
+                            : "border-2 border-gray-300 dark:border-gray-500"
+                        }`}
+                      >
+                        {answer.isCorrect && (
+                          <div className="w-2 h-2 bg-white rounded-full"></div>
+                        )}
+                      </div>
+
+                      {/* Answer Text */}
+                      <div
+                        className={`text-sm flex-1 ${
+                          answer.isCorrect
+                            ? "text-green-800 dark:text-green-200 font-medium"
+                            : "text-gray-900 dark:text-white"
+                        }`}
+                      >
+                        {/* A{index + 1}: {answer.choiceText} */}
+                        {answer.choiceText}
+                      </div>
+
+                      {/* Correct Badge */}
                       {answer.isCorrect && (
-                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                        <Badge className="bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 text-xs">
+                          Correct
+                        </Badge>
                       )}
                     </div>
-
-                    {/* Answer Text */}
-                    <div
-                      className={`text-sm flex-1 ${
-                        answer.isCorrect
-                          ? "text-green-800 dark:text-green-200 font-medium"
-                          : "text-gray-900 dark:text-white"
-                      }`}
-                    >
-                      A{index + 1}: {answer.choiceText}
-                    </div>
-
-                    {/* Correct Badge */}
-                    {answer.isCorrect && (
-                      <Badge className="bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 text-xs">
-                        Correct
-                      </Badge>
-                    )}
-                  </div>
-                )) || (
+                  )) || (
                   <div className="text-center text-gray-500 dark:text-gray-400 py-4">
                     No answer choices available
                   </div>

@@ -1,7 +1,6 @@
 // Master for Player
 // ===== LIBRARIES ===== //
-import { useEffect } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 
 // ===== LAYOUTS ===== //
 import Nav from "@/layouts/Nav";
@@ -14,10 +13,8 @@ import PageTitle from "@/layouts/PageTitle";
 import { Toaster } from "@/components/ui/sonner";
 
 export default function App() {
-  const navigate = useNavigate();
-
   return (
-    <SidebarProvider>
+    <SidebarProvider key="player-sidebar">
       <div className="flex min-h-screen w-full">
         {/* ===== SIDEBAR NAVIGATION ===== */}
         <Nav />

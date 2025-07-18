@@ -216,10 +216,8 @@ const Profile = () => {
       <div className="container mx-auto p-3 sm:p-6 max-w-4xl">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400">
-              Loading profile...
-            </p>
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading profile...</p>
           </div>
         </div>
       </div>

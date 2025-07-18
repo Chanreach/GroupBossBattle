@@ -1,15 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Save, Trash2, AlertTriangle } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { apiClient } from '@/api';
-import { useAuth } from '@/context/useAuth';
-import { toast } from 'sonner';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { ArrowLeft, Save, Trash2, AlertTriangle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { apiClient } from "@/api";
+import { useAuth } from "@/context/useAuth";
+import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,19 +25,19 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from "@/components/ui/alert-dialog";
 
 const EditQuestion = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const questionId = searchParams.get('id');
+  const questionId = searchParams.get("id");
   const { user } = useAuth();
-  
+
   const [categories, setCategories] = useState([]);
   const [question, setQuestion] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [timeLimit, setTimeLimit] = useState('30');
-  const [questionText, setQuestionText] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [timeLimit, setTimeLimit] = useState("30");
+  const [questionText, setQuestionText] = useState("");
   const [answers, setAnswers] = useState([]);
   const [correctAnswerId, setCorrectAnswerId] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,9 +46,12 @@ const EditQuestion = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [errors, setErrors] = useState({});
 
+  // Original data for change tracking
+  const [originalData, setOriginalData] = useState(null);
+
   // Check if user can edit this question
   const canEdit = () => {
-    return user?.role === 'admin' || question?.authorId === user?.id;
+    return user?.role === "admin" || question?.authorId === user?.id;
   };
 
   // Fetch categories and question data
@@ -50,45 +59,64 @@ const EditQuestion = () => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        
+
         // Fetch categories
-        const categoriesResponse = await apiClient.get('/categories');
+        const categoriesResponse = await apiClient.get("/categories");
         // Extract categories from response object
-        const categoriesData = categoriesResponse.data?.categories || categoriesResponse.data;
+        const categoriesData =
+          categoriesResponse.data?.categories || categoriesResponse.data;
         setCategories(Array.isArray(categoriesData) ? categoriesData : []);
-        
+
         // Fetch question
-        const questionResponse = await apiClient.get(`/questions/${questionId}`);
+        const questionResponse = await apiClient.get(
+          `/questions/${questionId}`
+        );
         const questionData = questionResponse.data;
         setQuestion(questionData);
-        
+
         // Populate form fields
-        setSelectedCategory(questionData.categoryId?.toString() || '');
-        setTimeLimit(questionData.timeLimit?.toString() || '30');
-        setQuestionText(questionData.questionText || ''); // Fixed: use questionText not text
-        
+        setSelectedCategory(questionData.categoryId?.toString() || "");
+        setTimeLimit(questionData.timeLimit?.toString() || "30");
+        setQuestionText(questionData.questionText || ""); // Fixed: use questionText not text
+
         // Populate answers with 8 slots
         const answerChoices = questionData.answerChoices || [];
+        // Sort answer choices alphabetically by choiceText
+        const sortedAnswerChoices = answerChoices.sort((a, b) =>
+          a.choiceText.localeCompare(b.choiceText)
+        );
         const formattedAnswers = Array.from({ length: 8 }, (_, index) => {
-          const choice = answerChoices[index];
+          const choice = sortedAnswerChoices[index];
           return {
             id: index + 1,
-            text: choice?.choiceText || '', // Fixed: use choiceText not text
-            isCorrect: choice?.isCorrect || false
+            text: choice?.choiceText || "", // Fixed: use choiceText not text
+            isCorrect: choice?.isCorrect || false,
           };
         });
         setAnswers(formattedAnswers);
-        
-        // Set correct answer ID
-        const correctChoice = answerChoices.find(choice => choice.isCorrect);
+
+        // Set correct answer ID - find the correct answer after sorting
+        const correctChoice = sortedAnswerChoices.find(
+          (choice) => choice.isCorrect
+        );
         if (correctChoice) {
-          const correctIndex = answerChoices.indexOf(correctChoice);
+          const correctIndex = sortedAnswerChoices.indexOf(correctChoice);
           setCorrectAnswerId(correctIndex + 1);
         }
-        
+
+        // Store original data for comparison
+        setOriginalData({
+          categoryId: questionData.categoryId?.toString() || "",
+          timeLimit: questionData.timeLimit?.toString() || "30",
+          questionText: questionData.questionText || "",
+          answers: formattedAnswers,
+          correctAnswerId: correctChoice
+            ? sortedAnswerChoices.indexOf(correctChoice) + 1
+            : 1,
+        });
       } catch (err) {
-        console.error('Error fetching data:', err);
-        toast.error('Failed to fetch question data');
+        console.error("Error fetching data:", err);
+        toast.error("Failed to fetch question data");
         navigate(-1); // Go back to previous page instead of forcing categories view
       } finally {
         setIsLoading(false);
@@ -102,18 +130,20 @@ const EditQuestion = () => {
 
   // Auto-resize textarea when questionText changes
   useEffect(() => {
-    const textarea = document.getElementById('question');
+    const textarea = document.getElementById("question");
     if (textarea && questionText) {
-      textarea.style.height = 'auto';
-      textarea.style.height = textarea.scrollHeight + 'px';
+      textarea.style.height = "auto";
+      textarea.style.height = textarea.scrollHeight + "px";
     }
   }, [questionText]);
 
   const handleAnswerChange = (answerId, newText) => {
     if (!canEdit()) return;
-    setAnswers(prev => prev.map(answer => 
-      answer.id === answerId ? { ...answer, text: newText } : answer
-    ));
+    setAnswers((prev) =>
+      prev.map((answer) =>
+        answer.id === answerId ? { ...answer, text: newText } : answer
+      )
+    );
   };
 
   const handleCorrectAnswerChange = (answerId) => {
@@ -121,53 +151,74 @@ const EditQuestion = () => {
     setCorrectAnswerId(parseInt(answerId));
   };
 
+  // Check if current data is different from original data
+  const hasChanges =
+    originalData &&
+    (selectedCategory !== originalData.categoryId ||
+      timeLimit !== originalData.timeLimit ||
+      questionText !== originalData.questionText ||
+      correctAnswerId !== originalData.correctAnswerId ||
+      answers.some(
+        (answer, index) =>
+          answer.text !== (originalData.answers[index]?.text || "")
+      ));
+
+  // Check if save should be enabled
+  const isSaveEnabled =
+    hasChanges &&
+    selectedCategory &&
+    timeLimit &&
+    questionText.trim() &&
+    answers.every((answer) => answer.text.trim());
+
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!selectedCategory) {
-      newErrors.category = 'Category is required';
+      newErrors.category = "Category is required";
     }
-    
+
     if (!timeLimit || timeLimit < 5 || timeLimit > 300) {
-      newErrors.timeLimit = 'Time limit must be between 5 and 300 seconds';
+      newErrors.timeLimit = "Time limit must be between 5 and 300 seconds";
     }
-    
+
     if (!questionText.trim()) {
-      newErrors.question = 'Question text is required';
+      newErrors.question = "Question text is required";
     }
-    
-    const hasEmptyAnswers = answers.some(answer => !answer.text.trim());
+
+    const hasEmptyAnswers = answers.some((answer) => !answer.text.trim());
     if (hasEmptyAnswers) {
-      newErrors.answers = 'All answer options must be filled';
+      newErrors.answers = "All answer options must be filled";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSave = async () => {
     if (!validateForm() || !canEdit()) return;
-    
+
     setIsSaving(true);
     try {
-      const answerChoices = answers.map((answer, index) => ({
+      const answerChoices = answers.map((answer) => ({
         choiceText: answer.text.trim(), // Fixed: use choiceText not text
-        isCorrect: answer.id === correctAnswerId
+        isCorrect: answer.id === correctAnswerId,
       }));
 
       const questionData = {
         categoryId: selectedCategory, // Fixed: don't parseInt UUID
         questionText: questionText.trim(), // Fixed: use questionText not text
         timeLimit: parseInt(timeLimit),
-        answerChoices
+        answerChoices,
       };
 
       await apiClient.put(`/questions/${questionId}`, questionData);
-      toast.success('Question updated successfully!');
+      toast.success("Question updated successfully!");
       navigate(`/host/questionbank/questions/view?id=${questionId}`);
     } catch (error) {
-      console.error('Error updating question:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to update question';
+      console.error("Error updating question:", error);
+      const errorMessage =
+        error.response?.data?.message || "Failed to update question";
       toast.error(errorMessage);
     } finally {
       setIsSaving(false);
@@ -176,17 +227,18 @@ const EditQuestion = () => {
 
   const handleDelete = async () => {
     if (!canEdit()) return;
-    
+
     setIsDeleting(true);
     try {
       await apiClient.delete(`/questions/${questionId}`);
-      toast.success('Question deleted successfully');
+      toast.success("Question deleted successfully");
       setShowDeleteDialog(false);
       // Navigate back to previous page or default to categories view
       navigate(-1);
     } catch (error) {
-      console.error('Error deleting question:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to delete question';
+      console.error("Error deleting question:", error);
+      const errorMessage =
+        error.response?.data?.message || "Failed to delete question";
       toast.error(errorMessage);
     } finally {
       setIsDeleting(false);
@@ -223,8 +275,12 @@ const EditQuestion = () => {
     return (
       <div className="min-h-screen bg-background p-4 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-muted-foreground">You don't have permission to edit this question</p>
-          <Button onClick={handleCancel} className="mt-4">Go Back</Button>
+          <p className="text-muted-foreground">
+            You don't have permission to edit this question
+          </p>
+          <Button onClick={handleCancel} className="mt-4">
+            Go Back
+          </Button>
         </div>
       </div>
     );
@@ -235,9 +291,9 @@ const EditQuestion = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={handleCancel}
               className="p-2 hover:bg-accent/50"
             >
@@ -252,7 +308,7 @@ const EditQuestion = () => {
               </p>
             </div>
           </div>
-          
+
           {/* Delete Button - Top Right */}
           <Button
             variant="outline"
@@ -275,25 +331,40 @@ const EditQuestion = () => {
                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Category
                 </Label>
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className={`${errors.category ? 'border-red-500' : ''} g:white dark:bg-muted h-[36px]`}>
+                <Select
+                  value={selectedCategory}
+                  onValueChange={setSelectedCategory}
+                >
+                  <SelectTrigger
+                    className={`${
+                      errors.category ? "border-red-500" : ""
+                    } g:white dark:bg-muted h-[36px]`}
+                  >
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
                     {(categories || []).map((category) => (
-                      <SelectItem key={category.id} value={category.id.toString()}>
+                      <SelectItem
+                        key={category.id}
+                        value={category.id.toString()}
+                      >
                         {category.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 {errors.category && (
-                  <p className="text-red-500 dark:text-red-400 text-xs">{errors.category}</p>
+                  <p className="text-red-500 dark:text-red-400 text-xs">
+                    {errors.category}
+                  </p>
                 )}
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="time-limit" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <Label
+                  htmlFor="time-limit"
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
                   Time Limit (seconds)
                 </Label>
                 <Input
@@ -304,10 +375,14 @@ const EditQuestion = () => {
                   value={timeLimit}
                   onChange={(e) => setTimeLimit(e.target.value)}
                   placeholder="30"
-                  className={`w-full ${errors.timeLimit ? 'border-red-500' : ''}`}
+                  className={`w-full ${
+                    errors.timeLimit ? "border-red-500" : ""
+                  }`}
                 />
                 {errors.timeLimit && (
-                  <p className="text-red-500 dark:text-red-400 text-xs">{errors.timeLimit}</p>
+                  <p className="text-red-500 dark:text-red-400 text-xs">
+                    {errors.timeLimit}
+                  </p>
                 )}
               </div>
             </div>
@@ -318,7 +393,9 @@ const EditQuestion = () => {
                 Question Author
               </Label>
               <Input
-                value={`${question?.creator?.username || 'Unknown'} [${question?.creator?.role || 'User'}]${question?.authorId === user?.id ? ' (You)' : ''}`}
+                value={`${question?.creator?.username || "Unknown"} [${
+                  question?.creator?.role || "User"
+                }]${question?.authorId === user?.id ? " (You)" : ""}`}
                 disabled
                 className="bg-muted text-muted-foreground cursor-not-allowed"
               />
@@ -326,10 +403,18 @@ const EditQuestion = () => {
 
             {/* Question Input */}
             <div className="space-y-2">
-              <Label htmlFor="question" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Question <span className="text-red-500 dark:text-red-400">*</span>
+              <Label
+                htmlFor="question"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Question{" "}
+                <span className="text-red-500 dark:text-red-400">*</span>
               </Label>
-              <div className={`text-lg font-bold mt-2 p-4 bg-muted rounded-lg border ${errors.question ? 'border-red-500' : ''}`}>
+              <div
+                className={`text-lg font-bold mt-2 p-4 bg-muted rounded-lg border ${
+                  errors.question ? "border-red-500" : ""
+                }`}
+              >
                 <textarea
                   id="question"
                   value={questionText}
@@ -337,25 +422,30 @@ const EditQuestion = () => {
                   placeholder="Q: Enter your question here"
                   className="!bg-transparent !border-0 !ring-0 !outline-none !shadow-none focus:!ring-0 focus:!border-0 focus:!outline-none p-0 !text-lg !font-bold dark:text-white w-full resize-none overflow-hidden"
                   rows="1"
-                  style={{ minHeight: '1.75rem' }}
+                  style={{ minHeight: "1.75rem" }}
                   onInput={(e) => {
-                    e.target.style.height = 'auto';
-                    e.target.style.height = e.target.scrollHeight + 'px';
+                    e.target.style.height = "auto";
+                    e.target.style.height = e.target.scrollHeight + "px";
                   }}
                 />
               </div>
               {errors.question && (
-                <p className="text-red-500 dark:text-red-400 text-xs">{errors.question}</p>
+                <p className="text-red-500 dark:text-red-400 text-xs">
+                  {errors.question}
+                </p>
               )}
             </div>
 
             {/* Answer Options */}
             <div>
               <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 block">
-                Answer Options <span className="text-red-500 dark:text-red-400">*</span>
+                Answer Options{" "}
+                <span className="text-red-500 dark:text-red-400">*</span>
               </Label>
               {errors.answers && (
-                <p className="text-red-500 dark:text-red-400 text-xs mb-3">{errors.answers}</p>
+                <p className="text-red-500 dark:text-red-400 text-xs mb-3">
+                  {errors.answers}
+                </p>
               )}
               <div className="space-y-2">
                 {answers.map((answer, index) => (
@@ -380,7 +470,9 @@ const EditQuestion = () => {
                         name="correct-answer"
                         value={answer.id}
                         checked={correctAnswerId === answer.id}
-                        onChange={(e) => handleCorrectAnswerChange(e.target.value)}
+                        onChange={(e) =>
+                          handleCorrectAnswerChange(e.target.value)
+                        }
                         className="absolute opacity-0 w-4 h-4 cursor-pointer"
                       />
                       {correctAnswerId === answer.id && (
@@ -392,7 +484,9 @@ const EditQuestion = () => {
                     <div className="flex-1">
                       <Input
                         value={answer.text}
-                        onChange={(e) => handleAnswerChange(answer.id, e.target.value)}
+                        onChange={(e) =>
+                          handleAnswerChange(answer.id, e.target.value)
+                        }
                         placeholder={`A${index + 1}: Enter answer option`}
                         className="!bg-transparent !border-0 !ring-0 !outline-none !shadow-none focus:!ring-0 focus:!border-0 focus:!outline-none p-0 text-sm dark:text-white"
                       />
@@ -427,14 +521,14 @@ const EditQuestion = () => {
           <Button
             onClick={handleSave}
             className="flex items-center gap-2 w-full sm:w-auto sm:min-w-[120px]"
-            disabled={isSaving}
+            disabled={isSaving || !isSaveEnabled}
           >
             {isSaving ? (
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
             ) : (
               <Save className="h-4 w-4" />
             )}
-            {isSaving ? 'Saving...' : 'Save Changes'}
+            {isSaving ? "Saving..." : "Save Changes"}
           </Button>
         </div>
 
@@ -448,16 +542,20 @@ const EditQuestion = () => {
               </AlertDialogTitle>
               <AlertDialogDescription className="text-gray-600">
                 Are you sure you want to delete this question?
-                <br /><br />
-                <span className="font-semibold text-gray-200">"{questionText}"</span>
-                <br /><br />
+                <br />
+                <br />
+                <span className="font-semibold text-gray-200">
+                  "{questionText}"
+                </span>
+                <br />
+                <br />
                 <span className="text-red-00 font-medium">
                   This action cannot be undone.
                 </span>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="gap-2">
-              <AlertDialogCancel 
+              <AlertDialogCancel
                 onClick={() => setShowDeleteDialog(false)}
                 disabled={isDeleting}
               >
@@ -474,7 +572,7 @@ const EditQuestion = () => {
                     Deleting...
                   </div>
                 ) : (
-                  'Delete Question'
+                  "Delete Question"
                 )}
               </AlertDialogAction>
             </AlertDialogFooter>

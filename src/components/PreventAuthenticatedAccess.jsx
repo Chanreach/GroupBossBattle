@@ -23,7 +23,22 @@ const PreventAuthenticatedAccess = ({ children }) => {
 
   // Check if user is authenticated as a regular user
   if (isAuthenticated && user) {
-    const redirectPath = user.role === 'admin' ? '/host/events/view' : '/';
+    // Check if user explicitly chose to view as player
+    const viewAsPlayer = localStorage.getItem("viewAsPlayer");
+
+    // If user is admin/host and has chosen to view as player, allow access to any route
+    if ((user.role === "admin" || user.role === "host") && viewAsPlayer) {
+      // Only redirect if they're trying to access the auth page specifically
+      if (window.location.pathname === "/auth") {
+        return <Navigate to="/" replace />;
+      }
+      // Otherwise, allow access to the current route
+      return children;
+    }
+
+    // Default redirect behavior for authenticated users
+    const redirectPath =
+      user.role === "admin" || user.role === "host" ? "/host/events/view" : "/";
     return <Navigate to={redirectPath} replace />;
   }
 
