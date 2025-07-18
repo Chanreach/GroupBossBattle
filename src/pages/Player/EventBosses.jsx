@@ -52,7 +52,8 @@ const EventBosses = () => {
         const bosses = eventData.eventBosses?.map(eventBoss => ({
           ...eventBoss.boss,
           status: eventBoss.status || 'active', // Default to active if no status
-          eventBossId: eventBoss.id
+          eventBossId: eventBoss.id,
+          categories: eventBoss.boss.Categories || [] // Include categories
         })) || [];
         
         console.log('EventBosses: Extracted bosses:', bosses);
@@ -244,6 +245,21 @@ const EventBosses = () => {
                           </div>
                           {boss.description && (
                             <p className="text-xs text-muted-foreground mb-2">{boss.description}</p>
+                          )}
+                          
+                          {/* Categories */}
+                          {boss.categories && boss.categories.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mb-2">
+                              {boss.categories.map((category) => (
+                                <Badge
+                                  key={category.id}
+                                  variant="outline"
+                                  className="text-xs px-1.5 py-0.5 bg-blue-50 text-blue-700 border-blue-200"
+                                >
+                                  {category.name}
+                                </Badge>
+                              ))}
+                            </div>
                           )}
                         </div>
 
