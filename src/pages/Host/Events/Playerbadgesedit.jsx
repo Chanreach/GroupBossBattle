@@ -117,7 +117,7 @@ const PlayerBadgesEdit = () => {
                 <span className="hidden sm:inline">Back</span>
               </Button>
               <div className="flex items-center gap-3">
-                <div className="w-1 h-6 bg-primary rounded-full"></div>
+                <div className=" "></div>
                 <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Manage Player Badges</h1>
               </div>
             </div>

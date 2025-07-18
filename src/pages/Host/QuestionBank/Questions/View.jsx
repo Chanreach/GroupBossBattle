@@ -127,18 +127,19 @@ const ViewQuestionDetail = () => {
             </div>
           </div>
 
-          {/* Trash Icon - Top Right */}
-          {canEdit() && (
+          {/* Delete Button - Top Right */}
+          {/* {canEdit() && (
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={() => setShowDeleteDialog(true)}
-              className="p-2 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+              className="flex items-center gap-2 text-destructive hover:text-destructive"
               disabled={isLoading}
             >
-              <Trash2 className="h-5 w-5" />
+              <Trash2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Delete</span>
             </Button>
-          )}
+          )} */}
         </div>
 
         {/* Main Content Card */}
@@ -183,7 +184,7 @@ const ViewQuestionDetail = () => {
               <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Question
               </Label>
-              <div className="text-lg font-bold mt-2 p-4 bg-muted rounded-lg border">
+              <div className="text-lg font-bold mt-2 p-4 bg-muted rounded-lg border whitespace-pre-wrap break-words">
                 Q: {question.questionText}
               </div>
             </div>
@@ -241,30 +242,30 @@ const ViewQuestionDetail = () => {
                 )}
               </div>
             </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-600">
-              <Button
-                variant="outline"
-                onClick={handleBackClick}
-                className="flex-1"
-                disabled={isLoading}
-              >
-                Back
-              </Button>
-              {canEdit() && (
-                <Button
-                  onClick={handleEditClick}
-                  className="flex items-center gap-2 flex-1"
-                  disabled={isLoading}
-                >
-                  <Edit3 className="h-4 w-4" />
-                  Edit
-                </Button>
-              )}
-            </div>
           </div>
         </Card>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-6 pb-2 sm:justify-end">
+          <Button
+            variant="outline"
+            onClick={handleBackClick}
+            className="w-full sm:w-auto sm:min-w-[120px]"
+            disabled={isLoading}
+          >
+            Back
+          </Button>
+          {canEdit() && (
+            <Button
+              onClick={handleEditClick}
+              className="flex items-center gap-2 w-full sm:w-auto sm:min-w-[120px]"
+              disabled={isLoading}
+            >
+              <Edit3 className="h-4 w-4" />
+              Edit
+            </Button>
+          )}
+        </div>
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

@@ -123,22 +123,27 @@ const CreateBoss = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 sm:px-6 py-6 max-w-4xl">
+    <div className="min-h-screen bg-background p-4">
+      <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleCancel}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">Back</span>
-          </Button>
-          <div className="flex items-center gap-3">
-            <div className="w-1 h-6 bg-primary rounded-full"></div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Create Boss</h1>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCancel}
+              className="p-2 hover:bg-accent/50"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Create Boss
+              </h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Add a new boss for battle events
+              </p>
+            </div>
           </div>
         </div>
 
@@ -236,27 +241,25 @@ const CreateBoss = () => {
                 </div>
               </div>
 
-              {/* Categories - UNCHANGED */}
-              <div>
-                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-                  Category
-                </Label>
+              {/* Categories */}
+              <div className="space-y-2">
+                <Label htmlFor="categories">Category</Label>
                 
                 <div className="relative">
                   {/* Category Display Bar with Tags and Dropdown Arrow */}
                   <div 
-                    className="border border-gray-300 dark:border-gray-600 rounded-md p-3 min-h-[40px] flex flex-wrap gap-2 items-center cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 bg-white dark:bg-background"
+                    className="flex h-10 px-2 w-full rounded-md border border-input bg-background dark:bg-input/30 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[40px] flex-wrap gap-2 items-center cursor-pointer hover:border-muted-foreground/50"
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   >
                     {/* Selected Category Tags */}
                     {selectedCategories.map((category) => (
                       <span 
                         key={category.id}
-                        className="inline-flex items-center gap-1 px-2 py-1 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 text-sm rounded-md"
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-secondary text-secondary-foreground text-sm rounded-md"
                       >
                         {category.name}
                         <X 
-                          className="w-3 h-3 cursor-pointer hover:text-red-600 dark:hover:text-red-400" 
+                          className="w-3 h-3 cursor-pointer hover:text-destructive" 
                           onClick={(e) => {
                             e.stopPropagation();
                             handleCategoryRemove(category);
@@ -267,20 +270,20 @@ const CreateBoss = () => {
                     
                     {/* Placeholder when no categories selected */}
                     {selectedCategories.length === 0 && (
-                      <span className="text-gray-500 dark:text-gray-400 text-sm">Select categories</span>
+                      <span className="text-muted-foreground text-sm">Select categories</span>
                     )}
                     
                     {/* Dropdown Arrow */}
-                    <ChevronDown className={`w-4 h-4 text-gray-400 dark:text-gray-500 ml-auto transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 text-muted-foreground ml-auto transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
                   </div>
 
                   {/* Dropdown Options */}
                   {isDropdownOpen && unselectedCategories.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-background border border-gray-300 dark:border-gray-600 rounded-md shadow-lg z-10">
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-md overflow-hidden z-10">
                       {unselectedCategories.map((category) => (
                         <div
                           key={category.id}
-                          className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-sm border-b border-gray-100 dark:border-gray-600 last:border-b-0 text-gray-900 dark:text-white"
+                          className="px-3 py-2 hover:bg-accent hover:text-accent-foreground cursor-pointer text-sm border-b border-border last:border-b-0 text-popover-foreground"
                           onClick={() => handleCategorySelect(category)}
                         >
                           {category.name}
@@ -321,7 +324,7 @@ const CreateBoss = () => {
           </Card>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-4">
+          <div className="flex flex-col sm:flex-row gap-3 pt-0 pb-2 sm:justify-end">
             <Button
               type="button"
               variant="outline"
@@ -338,6 +341,7 @@ const CreateBoss = () => {
               {loading ? 'Creating...' : 'Create Boss'}
             </Button>
           </div>
+          
         </form>
       </div>
     </div>

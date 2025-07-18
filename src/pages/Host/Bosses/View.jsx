@@ -60,7 +60,7 @@ const ViewBosses = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4 px-4 sm:px-6 py-6">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <div className="w-1 h-6 bg-primary rounded-full"></div>
+            <div className=" "></div>
             <h1 className="text-2xl font-bold tracking-tight">Bosses</h1>
           </div>
         </div>

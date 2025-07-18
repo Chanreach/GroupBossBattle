@@ -201,58 +201,58 @@ const Edit = () => {
 
   return (
     <div className="min-h-screen bg-background p-4">
-      <div className="container mx-auto max-w-2xl space-y-6">
+      <div className="max-w-2xl mx-auto">
         
         {/* Header */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/host/users/view')}
+              className="p-2 hover:bg-accent/50"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Edit User
+              </h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Update user information and role
+              </p>
+            </div>
+          </div>
+          
+          {/* Delete Button - Top Right */}
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate('/host/users/view')}
-            className="h-8 w-8 p-0"
+            onClick={handleDelete}
+            className="flex items-center gap-2 text-destructive hover:text-destructive"
+            disabled={saving || deleting}
           >
-            <ArrowLeft className="h-4 w-4" />
+            <Trash2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Delete</span>
           </Button>
-          <div className="flex items-center gap-3">
-            <div className="w-1 h-6 bg-primary rounded-full"></div>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-              Edit User
-            </h1>
-          </div>
         </div>
 
         {/* User Info Card */}
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-3">
-                <Avatar className="h-10 w-10">
-                  <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                    {form.username.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex items-center gap-2">
-                  <span>{form.username}</span>
-                  <Badge variant={getRoleBadgeVariant(form.role)} className="text-xs">
-                    {form.role}
-                  </Badge>
-                </div>
-              </CardTitle>
-              <Button 
-                type="button"
-                variant="outline"
-                size="sm"
-                className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20 h-8 w-8 p-0"
-                onClick={handleDelete}
-                disabled={saving || deleting}
-              >
-                {deleting ? (
-                  <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Trash2 className="w-4 h-4" />
-                )}
-              </Button>
-            </div>
+            <CardTitle className="flex items-center gap-3">
+              <Avatar className="h-10 w-10">
+                <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                  {form.username.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex items-center gap-2">
+                <span>{form.username}</span>
+                <Badge variant={getRoleBadgeVariant(form.role)} className="text-xs">
+                  {form.role}
+                </Badge>
+              </div>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {error && (
@@ -261,7 +261,7 @@ const Edit = () => {
               </div>
             )}
 
-            <form onSubmit={handleSave} className="space-y-6">
+            <form id="user-edit-form" onSubmit={handleSave} className="space-y-6">
               {/* Username Field */}
               <div className="space-y-2">
                 <Label htmlFor="username" className="text-sm font-medium text-gray-900 dark:text-white">
@@ -302,40 +302,40 @@ const Edit = () => {
                   <p className="text-xs text-red-600 dark:text-red-400">{validationErrors.role}</p>
                 )}
               </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3 pt-4">
-                <Button 
-                  type="button"
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={() => navigate('/host/users/view')}
-                  disabled={saving || deleting}
-                >
-                  <X className="w-4 h-4 mr-2" />
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit"
-                  className="flex-1"
-                  disabled={saving || deleting}
-                >
-                  {saving ? (
-                    <div className="flex items-center">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                      Saving...
-                    </div>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Save Changes
-                    </>
-                  )}
-                </Button>
-              </div>
             </form>
           </CardContent>
         </Card>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-6 pb-2 sm:justify-end">
+          <Button 
+            type="button"
+            variant="outline" 
+            className="w-full sm:w-auto sm:min-w-[120px]"
+            onClick={() => navigate('/host/users/view')}
+            disabled={saving || deleting}
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="submit"
+            form="user-edit-form"
+            className="w-full sm:w-auto sm:min-w-[120px]"
+            disabled={saving || deleting}
+          >
+            {saving ? (
+              <div className="flex items-center">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                Saving...
+              </div>
+            ) : (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Save Changes
+              </>
+            )}
+          </Button>
+        </div>
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={deleteDialog} onOpenChange={setDeleteDialog}>

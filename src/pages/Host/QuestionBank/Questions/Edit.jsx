@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { apiClient } from '@/api';
 import { useAuth } from '@/context/useAuth';
@@ -98,6 +99,16 @@ const EditQuestion = () => {
       fetchData();
     }
   }, [questionId, navigate]);
+
+  // Auto-resize textarea when questionText changes
+  useEffect(() => {
+    const textarea = document.getElementById('question');
+    if (textarea && questionText) {
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    }
+  }, [questionText]);
+
   const handleAnswerChange = (answerId, newText) => {
     if (!canEdit()) return;
     setAnswers(prev => prev.map(answer => 
@@ -228,24 +239,30 @@ const EditQuestion = () => {
               variant="ghost" 
               size="sm" 
               onClick={handleCancel}
-              className="p-2 hover:bg-white/50 dark:hover:bg-background/50"
+              className="p-2 hover:bg-accent/50"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div>            <h1 className="text-2xl font-bold">Edit Question</h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Update question details</p>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Edit Question
+              </h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Update question details
+              </p>
             </div>
           </div>
           
-          {/* Trash Icon - Top Right */}
+          {/* Delete Button - Top Right */}
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={() => setShowDeleteDialog(true)}
-            className="p-2 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+            className="flex items-center gap-2 text-destructive hover:text-destructive"
             disabled={isLoading}
           >
-            <Trash2 className="h-5 w-5" />
+            <Trash2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Delete</span>
           </Button>
         </div>
 
@@ -259,7 +276,7 @@ const EditQuestion = () => {
                   Category
                 </Label>
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className={`${errors.category ? 'border-red-500' : ''}`}>
+                  <SelectTrigger className={`${errors.category ? 'border-red-500' : ''} g:white dark:bg-muted h-[36px]`}>
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -287,7 +304,7 @@ const EditQuestion = () => {
                   value={timeLimit}
                   onChange={(e) => setTimeLimit(e.target.value)}
                   placeholder="30"
-                  className={`${errors.timeLimit ? 'border-red-500' : ''} dark:bg-background dark:border-gray-600 dark:text-white`}
+                  className={`w-full ${errors.timeLimit ? 'border-red-500' : ''}`}
                 />
                 {errors.timeLimit && (
                   <p className="text-red-500 dark:text-red-400 text-xs">{errors.timeLimit}</p>
@@ -300,12 +317,11 @@ const EditQuestion = () => {
               <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Question Author
               </Label>
-              <div className="p-3 bg-muted rounded-md border">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {question?.creator?.username || 'Unknown'} [{question?.creator?.role || 'User'}]
-                  {question?.authorId === user?.id ? ' (You)' : ''}
-                </p>
-              </div>
+              <Input
+                value={`${question?.creator?.username || 'Unknown'} [${question?.creator?.role || 'User'}]${question?.authorId === user?.id ? ' (You)' : ''}`}
+                disabled
+                className="bg-muted text-muted-foreground cursor-not-allowed"
+              />
             </div>
 
             {/* Question Input */}
@@ -313,79 +329,114 @@ const EditQuestion = () => {
               <Label htmlFor="question" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Question <span className="text-red-500 dark:text-red-400">*</span>
               </Label>
-              <Input
-                id="question"
-                value={questionText}
-                onChange={(e) => setQuestionText(e.target.value)}
-                placeholder="Enter your question here"
-                className={`${errors.question ? 'border-red-500' : ''} dark:bg-background dark:border-gray-600 dark:text-white`}
-              />
+              <div className={`text-lg font-bold mt-2 p-4 bg-muted rounded-lg border ${errors.question ? 'border-red-500' : ''}`}>
+                <textarea
+                  id="question"
+                  value={questionText}
+                  onChange={(e) => setQuestionText(e.target.value)}
+                  placeholder="Q: Enter your question here"
+                  className="!bg-transparent !border-0 !ring-0 !outline-none !shadow-none focus:!ring-0 focus:!border-0 focus:!outline-none p-0 !text-lg !font-bold dark:text-white w-full resize-none overflow-hidden"
+                  rows="1"
+                  style={{ minHeight: '1.75rem' }}
+                  onInput={(e) => {
+                    e.target.style.height = 'auto';
+                    e.target.style.height = e.target.scrollHeight + 'px';
+                  }}
+                />
+              </div>
               {errors.question && (
                 <p className="text-red-500 dark:text-red-400 text-xs">{errors.question}</p>
               )}
             </div>
 
             {/* Answer Options */}
-            <div className="space-y-3">
-              <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <div>
+              <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 block">
                 Answer Options <span className="text-red-500 dark:text-red-400">*</span>
               </Label>
               {errors.answers && (
-                <p className="text-red-500 dark:text-red-400 text-xs">{errors.answers}</p>
+                <p className="text-red-500 dark:text-red-400 text-xs mb-3">{errors.answers}</p>
               )}
-              
-              <div className="border rounded-lg p-4 bg-muted space-y-3">
+              <div className="space-y-2">
                 {answers.map((answer, index) => (
-                  <div key={answer.id} className="flex items-center gap-3">
+                  <div
+                    key={answer.id}
+                    className={`flex items-center gap-3 px-3 py-1 border rounded-lg transition-colors ${
+                      correctAnswerId === answer.id
+                        ? "border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/20"
+                        : "border bg-card"
+                    }`}
+                  >
+                    {/* Correct Answer Radio Button */}
+                    <div
+                      className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                        correctAnswerId === answer.id
+                          ? "bg-green-500"
+                          : "border-2 border-gray-300 dark:border-gray-500"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="correct-answer"
+                        value={answer.id}
+                        checked={correctAnswerId === answer.id}
+                        onChange={(e) => handleCorrectAnswerChange(e.target.value)}
+                        className="absolute opacity-0 w-4 h-4 cursor-pointer"
+                      />
+                      {correctAnswerId === answer.id && (
+                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                      )}
+                    </div>
+
+                    {/* Answer Input */}
                     <div className="flex-1">
                       <Input
                         value={answer.text}
                         onChange={(e) => handleAnswerChange(answer.id, e.target.value)}
                         placeholder={`A${index + 1}: Enter answer option`}
-                        className="text-sm bg-white dark:bg-background dark:border-gray-500 dark:text-white"
+                        className="!bg-transparent !border-0 !ring-0 !outline-none !shadow-none focus:!ring-0 focus:!border-0 focus:!outline-none p-0 text-sm dark:text-white"
                       />
                     </div>
-                    <input
-                      type="radio"
-                      name="correct-answer"
-                      value={answer.id}
-                      checked={correctAnswerId === answer.id}
-                      onChange={(e) => handleCorrectAnswerChange(e.target.value)}
-                      className="w-4 h-4 text-blue-600 bg-background border-gray-300 focus:ring-blue-500"
-                    />
+
+                    {/* Correct Badge */}
+                    {correctAnswerId === answer.id && (
+                      <Badge className="bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 text-xs">
+                        Correct
+                      </Badge>
+                    )}
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Select the radio button next to the correct answer
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+                Click the circle next to an answer to mark it as correct
               </p>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-600">
-              <Button
-                variant="outline"
-                onClick={handleCancel}
-                className="flex-1"
-                disabled={isLoading}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSave}
-                className="flex items-center gap-2 flex-1"
-                disabled={isSaving}
-              >
-                {isSaving ? (
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                ) : (
-                  <Save className="h-4 w-4" />
-                )}
-                {isSaving ? 'Saving...' : 'Save Changes'}
-              </Button>
             </div>
           </div>
         </Card>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-6 pb-2 sm:justify-end">
+          <Button
+            variant="outline"
+            onClick={handleCancel}
+            className="w-full sm:w-auto sm:min-w-[120px]"
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            className="flex items-center gap-2 w-full sm:w-auto sm:min-w-[120px]"
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            {isSaving ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </div>
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

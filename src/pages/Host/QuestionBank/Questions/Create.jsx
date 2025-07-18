@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { apiClient } from '@/api';
 import { useAuth } from '@/context/useAuth';
@@ -146,18 +147,24 @@ const CreateQuestion = () => {
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleCancel}
-            className="p-2 hover:bg-accent/50"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">Create Question</h1>
-            <p className="text-sm text-muted-foreground">Add a new question to the bank</p>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleCancel}
+              className="p-2 hover:bg-accent/50"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Create Question
+              </h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Add a new question to the bank
+              </p>
+            </div>
           </div>
         </div>
 
@@ -169,18 +176,19 @@ const CreateQuestion = () => {
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Category <span className="text-red-500 dark:text-red-400">*</span>
-                  {isCategoryLocked && (
+                  {/* {isCategoryLocked && (
                     <span className="ml-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded">
                       Auto-selected from {categoryFromUrl}
                     </span>
-                  )}
+                  )} */}
                 </Label>
                 <Select 
+                  className="!h-10"
                   value={selectedCategory} 
                   onValueChange={isCategoryLocked ? undefined : setSelectedCategory}
                   disabled={isCategoryLocked}
                 >
-                  <SelectTrigger className={`${errors.category ? 'border-red-500' : ''} ${isCategoryLocked ? 'bg-muted cursor-not-allowed opacity-75' : ''}`}>
+                  <SelectTrigger className={`${errors.category ? 'border-red-500' : ''} ${isCategoryLocked ? 'bg-muted h-[36px] cursor-not-allowed opacity-75' : 'bg:white dark:bg-muted h-[36px]'}`}>
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -226,11 +234,11 @@ const CreateQuestion = () => {
               <Label className="text-sm font-medium">
                 Question Author
               </Label>
-              <div className="p-3 bg-muted rounded-md border">
-                <p className="text-sm text-muted-foreground">
-                  {user?.username || 'Unknown'} [{user?.role || 'User'}] (You)
-                </p>
-              </div>
+              <Input
+                value={`${user?.username || 'Unknown'} [${user?.role || 'User'}] (You)`}
+                disabled
+                className="bg-muted text-muted-foreground cursor-not-allowed"
+              />
             </div>
 
             {/* Question Input */}
@@ -238,78 +246,114 @@ const CreateQuestion = () => {
               <Label htmlFor="question" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Question <span className="text-red-500">*</span>
               </Label>
-              <Input
-                id="question"
-                value={questionText}
-                onChange={(e) => setQuestionText(e.target.value)}
-                placeholder="Enter your question here"
-                className={`${errors.question ? 'border-red-500' : ''}`}
-              />
+              <div className={`text-lg font-bold mt-2 p-4 bg-muted rounded-lg border ${errors.question ? 'border-red-500' : ''}`}>
+                <textarea
+                  id="question"
+                  value={questionText}
+                  onChange={(e) => setQuestionText(e.target.value)}
+                  placeholder="Enter your question here"
+                  className="!bg-transparent !border-0 !ring-0 !outline-none !shadow-none focus:!ring-0 focus:!border-0 focus:!outline-none p-0 !text-lg !font-bold dark:text-white w-full resize-none overflow-hidden"
+                  rows="1"
+                  style={{ minHeight: '1.75rem' }}
+                  onInput={(e) => {
+                    e.target.style.height = 'auto';
+                    e.target.style.height = e.target.scrollHeight + 'px';
+                  }}
+                />
+              </div>
               {errors.question && (
                 <p className="text-red-500 text-xs">{errors.question}</p>
               )}
             </div>
 
             {/* Answer Options */}
-            <div className="space-y-3">
-              <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <div>
+              <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 block">
                 Answer Options <span className="text-red-500">*</span>
               </Label>
               {errors.answers && (
-                <p className="text-red-500 text-xs">{errors.answers}</p>
+                <p className="text-red-500 text-xs mb-3">{errors.answers}</p>
               )}
-              
-              <div className="border rounded-lg p-4 bg-muted space-y-3">
+              <div className="space-y-2">
                 {answers.map((answer, index) => (
-                  <div key={answer.id} className="flex items-center gap-3">
-                    <div className="flex-1">                        <Input
-                          value={answer.text}
-                          onChange={(e) => handleAnswerChange(answer.id, e.target.value)}
-                          placeholder={`A${index + 1}: Enter answer option`}
-                          className="text-sm bg-card"
-                        />
+                  <div
+                    key={answer.id}
+                    className={`flex items-center gap-3 px-3 py-1 border rounded-lg transition-colors ${
+                      correctAnswerId === answer.id
+                        ? "border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/20"
+                        : "border bg-card"
+                    }`}
+                  >
+                    {/* Correct Answer Radio Button */}
+                    <div
+                      className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                        correctAnswerId === answer.id
+                          ? "bg-green-500"
+                          : "border-2 border-gray-300 dark:border-gray-500"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="correct-answer"
+                        value={answer.id}
+                        checked={correctAnswerId === answer.id}
+                        onChange={(e) => handleCorrectAnswerChange(e.target.value)}
+                        className="absolute opacity-0 w-4 h-4 cursor-pointer"
+                      />
+                      {correctAnswerId === answer.id && (
+                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                      )}
                     </div>
-                    <input
-                      type="radio"
-                      name="correct-answer"
-                      value={answer.id}
-                      checked={correctAnswerId === answer.id}
-                      onChange={(e) => handleCorrectAnswerChange(e.target.value)}
-                      className="w-4 h-4 text-primary bg-background border focus:ring-primary"
-                    />
+
+                    {/* Answer Input */}
+                    <div className="flex-1">
+                      <Input
+                        value={answer.text}
+                        onChange={(e) => handleAnswerChange(answer.id, e.target.value)}
+                        placeholder={`Enter answer option`}
+                        className="!bg-transparent !border-0 !ring-0 !outline-none !shadow-none focus:!ring-0 focus:!border-0 focus:!outline-none p-0 text-sm dark:text-white"
+                      />
+                    </div>
+
+                    {/* Correct Badge */}
+                    {correctAnswerId === answer.id && (
+                      <Badge className="bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 text-xs">
+                        Correct
+                      </Badge>
+                    )}
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Select the radio button next to the correct answer
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+                Click the circle next to an answer to mark it as correct
               </p>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-600">
-              <Button
-                variant="outline"
-                onClick={handleCancel}
-                className="flex-1"
-                disabled={isLoading}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleCreate}
-                className="flex items-center gap-2 flex-1"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                ) : (
-                  <Plus className="h-4 w-4" />
-                )}
-                {isLoading ? 'Creating...' : 'Create Question'}
-              </Button>
             </div>
           </div>
         </Card>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-6 pb-2 sm:justify-end">
+          <Button
+            variant="outline"
+            onClick={handleCancel}
+            className="w-full sm:w-auto sm:min-w-[120px]"
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleCreate}
+            className="flex items-center gap-2 w-full sm:w-auto sm:min-w-[120px]"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            ) : (
+              <Plus className="h-4 w-4" />
+            )}
+            {isLoading ? 'Creating...' : 'Create Question'}
+          </Button>
+        </div>
       </div>
     </div>
   );

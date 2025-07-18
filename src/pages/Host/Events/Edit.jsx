@@ -162,47 +162,43 @@ const EditEvent = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+      <div className="min-h-screen bg-background p-4">
+        <div className="max-w-2xl mx-auto">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleCancel}
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                className="p-2 hover:bg-accent/50"
               >
-                <ArrowLeft className="h-4 w-4" />
-                <span className="hidden sm:inline">Back</span>
+                <ArrowLeft className="h-5 w-5" />
               </Button>
-              <div className="flex items-center gap-3">
-                <div className="w-1 h-8 bg-black dark:bg-white rounded-full"></div>
-                <div>
-                  <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                    Edit Event
-                  </h1>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm">
-                    Modify your event details and schedule
-                  </p>
-                </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Edit Event
+                </h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Modify your event details and schedule
+                </p>
               </div>
             </div>
 
+            {/* Delete Button - Top Right */}
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowDeleteDialog(true)}
-              className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-950/50"
+              className="flex items-center gap-2 text-destructive hover:text-destructive"
+              disabled={loading}
             >
               <Trash2 className="h-4 w-4" />
-              <span className="hidden sm:inline">Delete Event</span>
+              <span className="hidden sm:inline">Delete</span>
             </Button>
           </div>
-        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="max-w-2xl mx-auto space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Event Information Card */}
             <Card className="border-0 shadow-lg bg-card">
               <CardContent className="p-6 space-y-5">
@@ -285,43 +281,39 @@ const EditEvent = () => {
             </Card>
 
             {/* Action Buttons */}
-            <Card className="border-0 shadow-lg bg-card">
-              <CardContent className="p-6">
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleCancel}
-                    className="flex-1 h-11 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="flex-1 h-11 bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 shadow-lg"
-                    disabled={
-                      isSubmitting ||
-                      !eventData.name.trim() ||
-                      !eventData.startTime ||
-                      !eventData.endTime ||
-                      !hasChanges
-                    }
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white dark:border-black border-t-transparent rounded-full animate-spin mr-2"></div>
-                        Saving...
-                      </>
-                    ) : (
-                      "Save Changes"
-                    )}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </form>
+            <div className="flex flex-col sm:flex-row gap-3 pt-0 pb-2 sm:justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                className="w-full sm:w-auto sm:min-w-[120px]"
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="w-full sm:w-auto sm:min-w-[120px]"
+                disabled={
+                  isSubmitting ||
+                  !eventData.name.trim() ||
+                  !eventData.startTime ||
+                  !eventData.endTime ||
+                  !hasChanges
+                }
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white dark:border-black border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
+            </div>
+          </form>
+        </div>
       </div>
 
       {/* Delete Confirmation Dialog */}

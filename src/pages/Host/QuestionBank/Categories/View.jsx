@@ -296,7 +296,6 @@ const QuestionBankView = () => {
               <span className="hidden sm:inline">Back</span>
             </Button>
             <div className="flex items-center gap-3">
-              <div className="w-1 h-5 bg-primary rounded-full"></div>
               <h1 className="text-lg sm:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
                 Question Bank
               </h1>

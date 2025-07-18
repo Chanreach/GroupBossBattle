@@ -176,7 +176,7 @@ const View = () => {
         
         {/* Header */}
         <div className="flex items-center gap-3">
-          <div className="w-1 h-6 bg-primary rounded-full"></div>
+          <div className=" "></div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
             User Management
           </h1>

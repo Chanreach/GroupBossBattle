@@ -66,8 +66,8 @@ const EditCategory = () => {
     
     if (!categoryName.trim()) {
       newErrors.categoryName = 'Category name is required';
-    } else if (categoryName.trim().length < 3) {
-      newErrors.categoryName = 'Category name must be at least 3 characters';
+    } else if (categoryName.trim().length < 2) {
+      newErrors.categoryName = 'Category name must be at least 2 characters';
     } else if (categoryName.trim().length > 50) {
       newErrors.categoryName = 'Category name must be 50 characters or less';
     }
@@ -77,7 +77,7 @@ const EditCategory = () => {
   };
 
   // Check if form is valid for button styling (same as Create)
-  const isFormValid = categoryName.trim().length >= 3;
+  const isFormValid = categoryName.trim().length >= 2;
 
   const handleSave = async () => {
     if (!validateForm() || !canEdit()) return;
@@ -161,37 +161,42 @@ const EditCategory = () => {
               variant="ghost" 
               size="sm" 
               onClick={handleCancel}
-              className="p-2 hover:bg-white/50 dark:hover:bg-background/50"
+              className="p-2 hover:bg-accent/50"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Category</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Update category information</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Edit Category
+              </h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Update category information
+              </p>
             </div>
           </div>
           
-          {/* Trash Icon - Top Right */}
+          {/* Delete Button - Top Right */}
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={() => setShowDeleteDialog(true)}
-            className="p-2 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+            className="flex items-center gap-2 text-destructive hover:text-destructive"
             disabled={isLoading}
           >
-            <Trash2 className="h-5 w-5" />
+            <Trash2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Delete</span>
           </Button>
         </div>
 
         {/* Main Form Card */}
         <Card className="shadow-lg border-0 bg-card backdrop-blur-sm">
-          <CardHeader className="border-b border-gray-200 dark:border-gray-600">
-            <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          <CardHeader>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
               <Save className="h-5 w-5" />
               Category Information
-            </CardTitle>
+            </h3>
           </CardHeader>
-          <CardContent className="p-6 space-y-6">
+          <CardContent className="space-y-6">
             
             {/* Category Name */}
             <div className="space-y-2">
@@ -230,40 +235,32 @@ const EditCategory = () => {
                 </p>
               </div>
             </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-600">
-              <Button
-                variant="outline"
-                onClick={handleCancel}
-                className="flex-1"
-                disabled={isSaving || isDeleting}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSave}
-                className={`flex items-center gap-2 flex-1 transition-all duration-300 ${
-                  isFormValid && !isSaving && !isDeleting
-                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg shadow-blue-500/25 scale-105'
-                    : 'bg-gray-400 hover:bg-gray-500 cursor-not-allowed'
-                } dark:${
-                  isFormValid && !isSaving && !isDeleting
-                    ? 'from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
-                    : 'bg-gray-600 hover:bg-gray-700'
-                }`}
-                disabled={!isFormValid || isSaving || isDeleting}
-              >
-                {isSaving ? (
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                ) : (
-                  <Save className="h-4 w-4" />
-                )}
-                {isSaving ? 'Saving...' : 'Save Changes'}
-              </Button>
-            </div>
           </CardContent>
         </Card>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-6 pb-2 sm:justify-end">
+          <Button
+            variant="outline"
+            onClick={handleCancel}
+            className="w-full sm:w-auto sm:min-w-[120px]"
+            disabled={isSaving || isDeleting}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            className="flex items-center gap-2 w-full sm:w-auto sm:min-w-[120px]"
+            disabled={!isFormValid || isSaving || isDeleting}
+          >
+            {isSaving ? (
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            {isSaving ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </div>
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
