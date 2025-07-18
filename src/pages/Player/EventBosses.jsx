@@ -126,7 +126,7 @@ const EventBosses = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 sm:px-6 py-6 max-w-4xl">
+      <div className="container mx-auto px-4 sm:px-6 py-6 max-w-6xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
@@ -239,7 +239,7 @@ const EventBosses = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {assignedBosses.map((boss) => (
                 <Card
                   key={boss.id}
@@ -276,7 +276,7 @@ const EventBosses = () => {
                     </div>
 
                     {/* Boss Details */}
-                    <div className="p-4 space-y-3">
+                    <div className="pt-4 px-4 space-y-3">
                       <div>
                         <h3 className="font-semibold text-base mb-1">
                           {boss.name}
@@ -297,7 +297,7 @@ const EventBosses = () => {
                               <Badge
                                 key={category.id}
                                 variant="outline"
-                                className="text-xs px-1.5 py-0.5 bg-blue-50 text-blue-700 border-blue-200"
+                                className={`text-xs px-1.5 py-0.5`}
                               >
                                 {category.name}
                               </Badge>
@@ -308,7 +308,7 @@ const EventBosses = () => {
 
                       {/* Boss Stats */}
                       <div className="space-y-2">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between pt-2 border-t">
                           <span className="text-sm text-muted-foreground">
                             Teams Allowed:
                           </span>

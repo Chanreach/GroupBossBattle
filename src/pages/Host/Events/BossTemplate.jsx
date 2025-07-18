@@ -169,7 +169,7 @@ const BossTemplate = () => {
           </div>
 
           {/* Available Bosses Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {availableBosses.map((boss) => (
               <Card
                 key={boss.id}
@@ -182,7 +182,7 @@ const BossTemplate = () => {
               >
                 <CardContent className="p-0">
                   {/* Boss Image */}
-                  <div className="relative h-32 bg-gradient-to-br from-primary/20 to-primary/5">
+                  <div className="relative overflow-hidden aspect-square">
                     <img
                       src={
                         boss.image
@@ -190,7 +190,7 @@ const BossTemplate = () => {
                           : "/src/assets/Placeholder/Falcon.png"
                       }
                       alt={boss.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                     />
                     <div className="absolute top-2 right-2">
                       <div
@@ -208,7 +208,7 @@ const BossTemplate = () => {
                   </div>
 
                   {/* Boss Info */}
-                  <div className="p-4 space-y-3">
+                  <div className="pt-4 px-4 space-y-3">
                     <div>
                       <h3 className="font-semibold text-base mb-1">
                         {boss.name}
@@ -229,7 +229,7 @@ const BossTemplate = () => {
                             <Badge
                               key={category.id}
                               variant="outline"
-                              className="text-xs px-1.5 py-0.5 bg-blue-50 text-blue-700 border-blue-200"
+                              className={`text-xs px-1.5 py-0.5`}
                             >
                               {category.name}
                             </Badge>
@@ -240,7 +240,7 @@ const BossTemplate = () => {
 
                     {/* Boss Stats */}
                     <div className="space-y-2 text-sm">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between pt-2 border-t">
                         <span className="text-muted-foreground flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           Cooldown

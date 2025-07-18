@@ -153,7 +153,8 @@ const ViewQuestionDetail = () => {
                 </Label>
                 <div className="mt-1">
                   <Badge
-                    className={`bg-blue-500 text-white px-3 py-1 text-sm font-medium`}
+                    variant="outline"
+                    className={`text-xs px-1.5 py-0.5`}
                   >
                     {question.category?.name || "Uncategorized"}
                   </Badge>

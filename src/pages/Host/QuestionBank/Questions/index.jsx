@@ -329,9 +329,9 @@ const QuestionsIndex = () => {
             <div className="space-y-3 mb-6">
               {/* Desktop Table */}
               <div className="hidden md:block">
-                <Card className="border-0 shadow-sm">
-                  <CardHeader className="border-b bg-muted/50 py-1.5 px-4">
-                    <div className="grid grid-cols-12 gap-3 text-sm font-semibold text-gray-800 dark:text-gray-200">
+                <Card className="border-0 shadow-sm pt-0 pb-4 gap-0 overflow-hidden">
+                  <CardHeader className="border-b bg-muted/50 px-4 pt-6 flex items-center">
+                    <div className="grid grid-cols-12 text-sm font-semibold text-gray-800 dark:text-gray-200 items-center w-full">
                       <div className="col-span-7">Question</div>
                       <div className="col-span-2 text-center">Category</div>
                       <div className="col-span-2 text-center">Author</div>
@@ -343,10 +343,11 @@ const QuestionsIndex = () => {
                       {paginatedData.map((question) => (
                         <div
                           key={question.id}
-                          className="grid grid-cols-12 gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
+                          className="grid grid-cols-12 gap-3 p-3 border-accent hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer items-center"
                           onClick={() => handleQuestionClick(question.id)}
                         >
-                          <div className="col-span-7">
+                          
+                          <div className="col-span-7 flex items-center">
                             <p
                               className="font-medium text-sm text-gray-900 dark:text-white truncate"
                               title={question.questionText}
@@ -354,7 +355,8 @@ const QuestionsIndex = () => {
                               {question.questionText}
                             </p>
                           </div>
-                          <div className="col-span-2 flex justify-center">
+
+                          <div className="col-span-2 flex justify-center items-center">
                             <Badge
                               variant="outline"
                               className="text-xs px-1.5 py-0.5"
@@ -362,7 +364,8 @@ const QuestionsIndex = () => {
                               {question.category?.name || "No Category"}
                             </Badge>
                           </div>
-                          <div className="col-span-2 flex justify-center">
+
+                          <div className="col-span-2 flex justify-center items-center">
                             <Badge
                               variant="outline"
                               className={`text-xs px-1.5 py-0.5 ${getAuthorBadgeColor()}`}
@@ -370,7 +373,8 @@ const QuestionsIndex = () => {
                               {getQuestionAuthor(question).split(" ")[0]}
                             </Badge>
                           </div>
-                          <div className="col-span-1 flex justify-center">
+
+                          <div className="col-span-1 flex justify-center items-center">
                             {canEditQuestion(question) && (
                               <Button
                                 variant="ghost"
@@ -385,6 +389,7 @@ const QuestionsIndex = () => {
                               </Button>
                             )}
                           </div>
+
                         </div>
                       ))}
                     </div>
