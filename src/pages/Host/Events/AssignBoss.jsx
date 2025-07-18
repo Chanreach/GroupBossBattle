@@ -92,6 +92,7 @@ const AssignBoss = () => {
           joinCode: eventBoss.joinCode,
           creatorId: eventBoss.boss.creatorId,
           creator: eventBoss.boss.creator,
+          categories: eventBoss.boss.Categories || [], // Include categories
         })) || [];
 
       setAssignedBosses(bosses);
@@ -480,6 +481,21 @@ const AssignBoss = () => {
                             <p className="text-xs text-muted-foreground mb-2">
                               {boss.description}
                             </p>
+                          )}
+                          
+                          {/* Categories */}
+                          {boss.categories && boss.categories.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mb-2">
+                              {boss.categories.map((category) => (
+                                <Badge
+                                  key={category.id}
+                                  variant="outline"
+                                  className="text-xs px-1.5 py-0.5 bg-blue-50 text-blue-700 border-blue-200"
+                                >
+                                  {category.name}
+                                </Badge>
+                              ))}
+                            </div>
                           )}
                         </div>
 
