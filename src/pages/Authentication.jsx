@@ -123,11 +123,19 @@ const Authentication = () => {
       }
       login({ accessToken: data.token, user: data.user });
 
-      // Redirect based on user role
-      if (data.user.role === "admin" || data.user.role === "host") {
-        navigate("/host/events/view");
+      // Check for returnUrl parameter
+      const params = new URLSearchParams(location.search);
+      const returnUrl = params.get("returnUrl");
+      
+      if (returnUrl) {
+        navigate(decodeURIComponent(returnUrl));
       } else {
-        navigate("/");
+        // Redirect based on user role
+        if (data.user.role === "admin" || data.user.role === "host") {
+          navigate("/host/events/view");
+        } else {
+          navigate("/");
+        }
       }
     } catch (err) {
       let message = "Login failed";
@@ -151,7 +159,16 @@ const Authentication = () => {
       localStorage.setItem("guestUser", JSON.stringify(user));
 
       toast.success("Logging in as guest...");
-      setTimeout(() => navigate("/"), 1000);
+      
+      // Check for returnUrl parameter
+      const params = new URLSearchParams(location.search);
+      const returnUrl = params.get("returnUrl");
+      
+      if (returnUrl) {
+        setTimeout(() => navigate(decodeURIComponent(returnUrl)), 1000);
+      } else {
+        setTimeout(() => navigate("/"), 1000);
+      }
     } catch (err) {
       let message = "Failed to create guest session";
       if (err.response && err.response.data && err.response.data.message) {

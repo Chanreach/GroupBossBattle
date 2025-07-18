@@ -114,7 +114,7 @@ const AssignBoss = () => {
 
   const handleShowQR = async (boss) => {
     try {
-      const joinUrl = `${window.location.origin}/join?code=${boss.joinCode}`;
+      const joinUrl = `${window.location.origin}/boss-preview/join?code=${boss.joinCode}`;
       setQrDialog({
         isOpen: true,
         bossName: boss.name,
