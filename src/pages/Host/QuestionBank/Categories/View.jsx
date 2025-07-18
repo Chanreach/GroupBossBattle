@@ -211,10 +211,6 @@ const QuestionBankView = () => {
     }
   };
 
-  const handleBack = () => {
-    navigate("/host/events/view");
-  };
-
   const handleEdit = (id) => {
     if (viewMode === "category") {
       navigate(`/host/questionbank/categories/edit/${id}`);
@@ -286,20 +282,9 @@ const QuestionBankView = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleBack}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Back</span>
-            </Button>
-            <div className="flex items-center gap-3">
-              <h1 className="text-lg sm:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-                Question Bank
-              </h1>
-            </div>
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+              Question Bank
+            </h1>
           </div>
           <Button
             onClick={handleAddNew}
@@ -312,39 +297,17 @@ const QuestionBankView = () => {
           </Button>
         </div>
 
-        {/* Ownership Filter */}
-        <div className="mb-4">
-          <div className="flex items-center gap-2">
-            <User className="h-4 w-4 text-gray-400" />
-            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Show:
-            </Label>
-            <Select
-              value={ownershipFilter}
-              onValueChange={handleOwnershipFilterChange}
-            >
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="anyone">Owned by anyone</SelectItem>
-                <SelectItem value="me">Owned by me</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
         {/* Controls */}
         <Card className="mb-4 border-0 shadow-sm">
-          <CardContent className="p-3">
+          <CardContent className="p-4 space-y-4">
             <div className="flex flex-col sm:flex-row gap-3">
               {/* View Mode Select */}
-              <div className="flex items-center gap-2">
-                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+              <div className="flex items-center gap-3">
+                <Label className="text-sm font-medium whitespace-nowrap">
                   View:
                 </Label>
                 <Select value={viewMode} onValueChange={handleViewModeChange}>
-                  <SelectTrigger className="w-28">
+                  <SelectTrigger className="w-32">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -366,19 +329,19 @@ const QuestionBankView = () => {
                   }
                   value={searchQuery}
                   onChange={handleSearchChange}
-                  className="pl-10 h-9 bg-white dark:bg-black border-gray-200 dark:border-gray-700 dark:text-white"
+                  className="pl-10 h-10"
                 />
               </div>
 
               {/* Category Filter (Only for Question view) */}
               {viewMode === "question" && (
-                <div className="flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-gray-400" />
+                <div className="flex items-center gap-3">
                   <Select
                     value={categoryFilter === "" ? "all" : categoryFilter}
                     onValueChange={handleCategoryFilterChange}
                   >
-                    <SelectTrigger className="w-36">
+                    <SelectTrigger className="w-40">
+                      <Filter className="h-4 w-4 text-muted-foreground mr-2" />
                       <SelectValue placeholder="All Categories" />
                     </SelectTrigger>
                     <SelectContent>
@@ -392,6 +355,23 @@ const QuestionBankView = () => {
                   </Select>
                 </div>
               )}
+
+              {/* Ownership Filter */}
+              <div className="flex items-center gap-3">
+                <Select
+                  value={ownershipFilter}
+                  onValueChange={handleOwnershipFilterChange}
+                >
+                  <SelectTrigger className="w-48">
+                    <User className="h-4 w-4 text-muted-foreground mr-2" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="anyone">Owned by anyone</SelectItem>
+                    <SelectItem value="me">Owned by me</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </Card>

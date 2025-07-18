@@ -334,8 +334,8 @@ const EditBoss = () => {
                         </p>
                       </div>
                       {!hasOriginalImage && (
-                        <p className="text-xs text-amber-600 bg-amber-50 px-3 py-2 rounded-md">
-                          Boss image will be removed when you save changes
+                        <p className="text-xs text-red-600 bg-red dark:bg-red-900/10 px-3 py-2 rounded-md">
+                            Boss image is required
                         </p>
                       )}
                     </div>

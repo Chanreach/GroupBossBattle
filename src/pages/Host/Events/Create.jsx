@@ -105,29 +105,21 @@ const CreateEvent = () => {
           <Card className="border-0 shadow-lg bg-card">
             <CardContent className="p-6 space-y-5">
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="event-name"
-                    className="text-sm font-medium text-gray-900 dark:text-gray-100"
-                  >
-                    Event Name *
+                  <Label htmlFor="event-name">
+                    Event Name <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="event-name"
                     value={eventData.name}
                     onChange={(e) => handleInputChange("name", e.target.value)}
                     placeholder="Enter event name..."
-                    className="h-11 bg-background border-gray-200 dark:border-gray-700"
+                    className="w-full"
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="description"
-                    className="text-sm font-medium text-gray-900 dark:text-gray-100"
-                  >
-                    Description
-                  </Label>
+                  <Label htmlFor="description">Description</Label>
                   <textarea
                     id="description"
                     value={eventData.description}
@@ -136,47 +128,68 @@ const CreateEvent = () => {
                     }
                     placeholder="Describe your event..."
                     rows={4}
-                    className="w-full rounded-md border border-gray-200 dark:border-gray-700 bg-background px-3 py-3 text-sm text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 resize-none transition-colors"
+                    className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent resize-none bg-background text-foreground placeholder:text-muted-foreground text-sm"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-2">
-                    <Label
-                      htmlFor="start-datetime"
-                      className="text-sm font-medium text-gray-900 dark:text-gray-100"
-                    >
-                      Start Date & Time *
+                    <Label htmlFor="start-datetime" className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      Start Date & Time <span className="text-red-500">*</span>
                     </Label>
-                    <Input
-                      id="start-datetime"
-                      type="datetime-local"
-                      value={eventData.startDate}
-                      onChange={(e) =>
-                        handleInputChange("startDate", e.target.value)
-                      }
-                      className="h-11 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
-                      required
-                    />
+                    <div className="relative flex">
+                      <Input
+                        id="start-datetime"
+                        type="datetime-local"
+                        value={eventData.startDate}
+                        onChange={(e) =>
+                          handleInputChange("startDate", e.target.value)
+                        }
+                        className="rounded-r-none border-r-0 [&::-webkit-calendar-picker-indicator]:hidden"
+                        required
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() =>
+                          document.getElementById("start-datetime").showPicker?.()
+                        }
+                        className="rounded-l-none border-l-0"
+                      >
+                        <Calendar className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label
-                      htmlFor="end-datetime"
-                      className="text-sm font-medium text-gray-900 dark:text-gray-100"
-                    >
-                      End Date & Time *
+                    <Label htmlFor="end-datetime" className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      End Date & Time <span className="text-red-500">*</span>
                     </Label>
-                    <Input
-                      id="end-datetime"
-                      type="datetime-local"
-                      value={eventData.endDate}
-                      onChange={(e) =>
-                        handleInputChange("endDate", e.target.value)
-                      }
-                      className="h-11 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
-                      required
-                    />
+                    <div className="relative flex">
+                      <Input
+                        id="end-datetime"
+                        type="datetime-local"
+                        value={eventData.endDate}
+                        onChange={(e) =>
+                          handleInputChange("endDate", e.target.value)
+                        }
+                        min={eventData.startDate}
+                        className="rounded-r-none border-r-0 [&::-webkit-calendar-picker-indicator]:hidden"
+                        required
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() =>
+                          document.getElementById("end-datetime").showPicker?.()
+                        }
+                        className="rounded-l-none border-l-0"
+                      >
+                        <Calendar className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
