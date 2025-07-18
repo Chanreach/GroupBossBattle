@@ -19,6 +19,8 @@ const EventCarousel = () => {
         const response = await apiClient.get('/public/events');
         const eventsData = response.data || [];
         
+        console.log('EventCarousel: Fetched events data:', eventsData);
+        
         // Format events for the carousel
         const formattedEvents = eventsData.map(event => ({
           id: event.id,
@@ -29,9 +31,11 @@ const EventCarousel = () => {
           endTime: event.endTimeFormatted?.formatted || 'TBD',
           image: "/src/assets/Swords.png",
           isActive: event.status === 'active' || event.status === 'ongoing',
-          status: event.status || 'upcoming'
+          status: event.status || 'upcoming',
+          eventBosses: event.eventBosses || [] // Include boss data for debugging
         }));
         
+        console.log('EventCarousel: Formatted events:', formattedEvents);
         setEvents(formattedEvents);
       } catch (err) {
         console.error('Error fetching events:', err);
@@ -91,12 +95,16 @@ const EventCarousel = () => {
   };
 
   const handleCardClick = (event) => {
+    console.log('EventCarousel: Card clicked for event:', event);
+    
     // Don't navigate if it's a placeholder event
     if (event.isPlaceholder) {
+      console.log('EventCarousel: Ignoring placeholder event click');
       return;
     }
     
     // Navigate to event-bosses page with the event ID
+    console.log('EventCarousel: Navigating to event-bosses with eventId:', event.id);
     navigate(`/event-bosses?eventId=${event.id}`);
   };
 

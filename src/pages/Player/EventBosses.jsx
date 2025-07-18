@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Trophy, Clock, Zap, Swords } from 'lucide-react';
+import { ArrowLeft, Trophy, Clock, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { getBossImageUrl } from '@/utils/imageUtils';
 import { apiClient } from '@/api';
 import { useAuth } from '@/context/useAuth';
@@ -42,16 +41,22 @@ const EventBosses = () => {
     try {
       setLoading(true);
       
-      // Fetch event details
-      const eventResponse = await apiClient.get(`/api/events/${eventId}`);
-      if (eventResponse.data && eventResponse.data.success) {
-        setEvent(eventResponse.data.data);
-      }
-
-      // Fetch assigned bosses for the event
-      const bossesResponse = await apiClient.get(`/api/events/${eventId}/bosses`);
-      if (bossesResponse.data && bossesResponse.data.success) {
-        setAssignedBosses(bossesResponse.data.data || []);
+      // Fetch event details (includes eventBosses data)
+      const eventResponse = await apiClient.get(`/public/events/${eventId}`);
+      if (eventResponse.data) {
+        const eventData = eventResponse.data;
+        console.log('EventBosses: Fetched event data:', eventData);
+        setEvent(eventData);
+        
+        // Extract bosses from eventBosses association
+        const bosses = eventData.eventBosses?.map(eventBoss => ({
+          ...eventBoss.boss,
+          status: eventBoss.status || 'active', // Default to active if no status
+          eventBossId: eventBoss.id
+        })) || [];
+        
+        console.log('EventBosses: Extracted bosses:', bosses);
+        setAssignedBosses(bosses);
       }
     } catch (error) {
       console.error('Error fetching event details:', error);
@@ -66,16 +71,6 @@ const EventBosses = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleBattleBoss = (boss) => {
-    if (boss.status !== 'active') {
-      toast.error('This boss is currently on cooldown');
-      return;
-    }
-    
-    // Navigate to boss preview or battle page
-    navigate(`/boss-preview?bossId=${boss.id}&eventId=${eventId}`);
   };
 
   const handleBack = () => {
@@ -119,8 +114,7 @@ const EventBosses = () => {
   }
 
   return (
-    <TooltipProvider>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 sm:px-6 py-6 max-w-4xl">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
@@ -267,26 +261,6 @@ const EventBosses = () => {
                           </div>
                         </div>
 
-                        {/* Action Button */}
-                        <div className="flex items-center justify-center pt-2 border-t">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button 
-                                variant={boss.status === 'active' ? 'default' : 'secondary'}
-                                size="sm" 
-                                className="w-full flex items-center gap-2"
-                                onClick={() => handleBattleBoss(boss)}
-                                disabled={boss.status !== 'active'}
-                              >
-                                <Swords className="w-4 h-4" />
-                                {boss.status === 'active' ? 'Battle Boss' : 'On Cooldown'}
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              {boss.status === 'active' ? 'Start battle with this boss' : 'Boss is currently on cooldown'}
-                            </TooltipContent>
-                          </Tooltip>
-                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -296,7 +270,6 @@ const EventBosses = () => {
           )}
         </div>
       </div>
-    </TooltipProvider>
   );
 };
 

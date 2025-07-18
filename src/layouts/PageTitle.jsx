@@ -22,10 +22,12 @@ export function PageTitle({ className = "text-lg font-semibold text-foreground" 
   const getPageTitle = (pathname) => {
     const routes = {
       '/': 'Home',
+      '/landing': 'Landing',
       '/about': 'About',
       '/badges': 'Badges',
       '/leaderboard': 'Leaderboard',
       '/qr': 'QR',
+      '/event-bosses': 'Event Bosses',
       '/boss-preview': 'Boss Preview',
       '/boss-battle': 'Boss Battle',
       '/player/join': 'Joining Battle',

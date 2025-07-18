@@ -87,11 +87,25 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Routes>
               {/* ===== LANDING ROUTES ===== */}
               <Route path="/landing" element={<AppLanding />}>
-                <Route index element={<Landing />} />
+                <Route 
+                  index 
+                  element={
+                    <PreventAuthenticatedAccess>
+                      <Landing />
+                    </PreventAuthenticatedAccess>
+                  } 
+                />
               </Route>
 
               <Route path="/about" element={<AppLanding />}>
-                <Route index element={<About />} />
+                <Route 
+                  index 
+                  element={
+                    <PreventAuthenticatedAccess>
+                      <About />
+                    </PreventAuthenticatedAccess>
+                  } 
+                />
               </Route>
 
               <Route path="/auth" element={<AppLanding />}>
@@ -120,11 +134,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               <Route path="/event-bosses" element={<App />}>
                 <Route
                   index
-                  element={
-                    <AuthenticationCheck>
-                      <PlayerEventBosses />
-                    </AuthenticationCheck>
-                  }
+                  element={<PlayerEventBosses />}
                 />
               </Route>
 
