@@ -215,13 +215,14 @@ const QuestionsIndex = () => {
         <Card className="mb-4 border-0 shadow-sm">
           <CardContent className="p-4">
             <div className="flex flex-col sm:flex-row gap-3">
+              
               {/* View Mode Select */}
               <div className="flex items-center gap-3">
                 <Label className="text-sm font-medium whitespace-nowrap">
                   View:
                 </Label>
                 <Select value={viewMode} onValueChange={handleViewModeChange}>
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger className="sm:w-auto w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -232,7 +233,7 @@ const QuestionsIndex = () => {
               </div>
 
               {/* Search Input */}
-              <div className="relative flex-1">
+              <div className="relative flex-1 sm:w-auto h-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="text"
@@ -249,7 +250,7 @@ const QuestionsIndex = () => {
                   value={categoryFilter === "" ? "all" : categoryFilter}
                   onValueChange={handleCategoryFilterChange}
                 >
-                  <SelectTrigger className="w-40">
+                  <SelectTrigger className="sm:w-auto w-full">
                     <Filter className="h-4 w-4 text-muted-foreground mr-2" />
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
@@ -270,7 +271,7 @@ const QuestionsIndex = () => {
                   value={ownershipFilter}
                   onValueChange={handleOwnershipFilterChange}
                 >
-                  <SelectTrigger className="w-48">
+                  <SelectTrigger className="sm:w-auto w-full">
                     <User className="h-4 w-4 text-muted-foreground mr-2" />
                     <SelectValue />
                   </SelectTrigger>
