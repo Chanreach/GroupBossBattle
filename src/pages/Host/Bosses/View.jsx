@@ -146,10 +146,10 @@ const ViewBosses = () => {
                       {boss.description}
                     </p>
                   )}
-                  {boss.categories && boss.categories.length > 0 && (
+                  {boss.Categories && boss.Categories.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-2">
-                      {boss.categories.map((category) => (
-                        <Badge key={category.id} variant="secondary" className="text-xs">
+                      {boss.Categories.map((category) => (
+                        <Badge key={category.id} variant="outline" className="text-xs px-1.5 py-0.5 bg-blue-50 text-blue-700 border-blue-200">
                           {category.name}
                         </Badge>
                       ))}
