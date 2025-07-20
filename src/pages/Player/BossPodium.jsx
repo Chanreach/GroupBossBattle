@@ -1,16 +1,41 @@
 // ===== LIBRARIES ===== //
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Users, Trophy, User, Crown, Medal, Award } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import {
+  ArrowLeft,
+  Users,
+  Trophy,
+  User,
+  Crown,
+  Medal,
+  Award,
+} from "lucide-react";
 
 // ===== COMPONENTS ===== //
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext } from "@/components/ui/pagination";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+} from "@/components/ui/pagination";
+
+// ===== CONTEXTS ===== //
+import useBossBattle from "@/hooks/useBossBattle";
 
 // ===== UTILITIES ===== //
 import { startConfettiCelebration } from "@/lib/Confetti";
@@ -24,62 +49,92 @@ import "@/index.css";
 
 const BossPodium = () => {
   const navigate = useNavigate();
-  const [currentPage, setCurrentPage] = useState({ teams: 1, individual: 1, alltime: 1 });
+  const { socket, currentBoss } = useBossBattle();
+  const [currentPage, setCurrentPage] = useState({
+    teams: 1,
+    individual: 1,
+    alltime: 1,
+  });
+  const [leaderboardData, setLeaderboardData] = useState({
+    teamLeaderboard: [],
+    individualLeaderboard: [],
+    allTimeLeaderboard: [],
+    winningTeam: null,
+    mvpPlayer: null,
+    battleStats: null,
+    isLoading: true,
+  });
   const PAGE_SIZE = 10;
 
-  // ===== BOSS CONFIGURATION (Backend Integration Ready) ===== //
-  // This will be replaced with data from the bosses API endpoint
-  const bossDataFromBackend = {
-    id: "boss_001",
-    name: "CS Boss",
-    image: "/src/assets/Placeholder/Falcon.png",
-    description: "A challenging computer science boss battle",
-    cooldown_duration: 300,
-    number_of_teams: 4,
-    creator_id: "admin_001",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  };
+  // ===== BOSS CONFIGURATION ===== //
+  const BOSS_NAME = currentBoss?.name || "CS Boss";
 
-  const BOSS_NAME = bossDataFromBackend.name;
+  // ===== EFFECT: Load leaderboard data and set up socket listeners ===== //
+  useEffect(() => {
+    if (!socket) return;
 
-  // Enhanced leaderboard data - final results after boss defeat
-  const teamLeaderboard = [
-    { rank: 1, team: 'Kangaroo', dmg: 100, correctPercent: 90, avatar: '/src/assets/Placeholder/Profile1.jpg' },
-    { rank: 2, team: 'Koala', dmg: 85, correctPercent: 85, avatar: '/src/assets/Placeholder/Profile2.jpg' },
-    { rank: 3, team: 'Shellfish', dmg: 68, correctPercent: 78, avatar: '/src/assets/Placeholder/Profile3.jpg' },
-    { rank: 4, team: 'Dolphins', dmg: 55, correctPercent: 70, avatar: '/src/assets/Placeholder/Profile4.jpg' },
-  ];
+    // Listen for final leaderboards from backend
+    const handleFinalLeaderboards = (data) => {
+      console.log("📊 Received final leaderboards:", data);
 
-  const individualLeaderboard = [
-    { rank: 1, player: 'Sovitep', dmg: 100, correctPercent: 95, avatar: '/src/assets/Placeholder/Profile1.jpg' },
-    { rank: 2, player: 'Visoth', dmg: 90, correctPercent: 88, avatar: '/src/assets/Placeholder/Profile2.jpg' },
-    { rank: 3, player: 'Roth', dmg: 75, correctPercent: 82, avatar: '/src/assets/Placeholder/Profile3.jpg' },
-    { rank: 4, player: 'Alice', dmg: 65, correctPercent: 79, avatar: '/src/assets/Placeholder/Profile4.jpg' },
-    { rank: 5, player: 'Bob', dmg: 55, correctPercent: 75, avatar: '/src/assets/Placeholder/Profile5.jpg' },
-    { rank: 6, player: 'Charlie', dmg: 45, correctPercent: 72, avatar: '/src/assets/Placeholder/Profile1.jpg' },
-    { rank: 7, player: 'David', dmg: 35, correctPercent: 68, avatar: '/src/assets/Placeholder/Profile2.jpg' },
-    { rank: 8, player: 'Emma', dmg: 30, correctPercent: 65, avatar: '/src/assets/Placeholder/Profile3.jpg' },
-    { rank: 9, player: 'Frank', dmg: 25, correctPercent: 62, avatar: '/src/assets/Placeholder/Profile4.jpg' },
-    { rank: 10, player: 'Grace', dmg: 20, correctPercent: 58, avatar: '/src/assets/Placeholder/Profile5.jpg' },
-    { rank: 11, player: 'Henry', dmg: 15, correctPercent: 55, avatar: '/src/assets/Placeholder/Profile1.jpg' },
-    { rank: 12, player: 'Ivy', dmg: 10, correctPercent: 50, avatar: '/src/assets/Placeholder/Profile2.jpg' }
-  ];
+      setLeaderboardData({
+        teamLeaderboard: data.teamLeaderboard || [],
+        individualLeaderboard: data.playerLeaderboard || [],
+        allTimeLeaderboard: [], // Will be loaded separately via API
+        winningTeam: data.winningTeam,
+        mvpPlayer: data.mvpPlayer,
+        battleStats: data.battleStats,
+        isLoading: false,
+      });
+    };
 
-  const allTimeLeaderboard = [
-    { rank: 1, player: 'Python', dmg: 300, correctPercent: 92, avatar: '/src/assets/Placeholder/Profile1.jpg' },
-    { rank: 2, player: 'Sovitep', dmg: 280, correctPercent: 90, avatar: '/src/assets/Placeholder/Profile2.jpg' },
-    { rank: 3, player: 'Visoth', dmg: 250, correctPercent: 87, avatar: '/src/assets/Placeholder/Profile3.jpg' },
-    { rank: 4, player: 'Alice', dmg: 220, correctPercent: 85, avatar: '/src/assets/Placeholder/Profile4.jpg' },
-    { rank: 5, player: 'Bob', dmg: 200, correctPercent: 83, avatar: '/src/assets/Placeholder/Profile5.jpg' },
-    { rank: 6, player: 'Charlie', dmg: 180, correctPercent: 80, avatar: '/src/assets/Placeholder/Profile1.jpg' },
-    { rank: 7, player: 'Master', dmg: 160, correctPercent: 78, avatar: '/src/assets/Placeholder/Profile2.jpg' },
-    { rank: 8, player: 'Legend', dmg: 140, correctPercent: 75, avatar: '/src/assets/Placeholder/Profile3.jpg' },
-    { rank: 9, player: 'Hero', dmg: 120, correctPercent: 72, avatar: '/src/assets/Placeholder/Profile4.jpg' },
-    { rank: 10, player: 'Champion', dmg: 100, correctPercent: 70, avatar: '/src/assets/Placeholder/Profile5.jpg' },
-    { rank: 11, player: 'Warrior', dmg: 90, correctPercent: 68, avatar: '/src/assets/Placeholder/Profile1.jpg' },
-    { rank: 12, player: 'Fighter', dmg: 80, correctPercent: 65, avatar: '/src/assets/Placeholder/Profile2.jpg' },
-  ];
+    socket.on("final-leaderboards", handleFinalLeaderboards);
+
+    // Load all-time leaderboard from API for this specific boss
+    const loadAllTimeLeaderboard = async () => {
+      try {
+        const bossId = currentBoss?.id || 'default';
+        const response = await fetch(
+          `http://localhost:3000/api/leaderboards/all-time?bossId=${bossId}`
+        );
+        if (response.ok) {
+          const allTimeData = await response.json();
+          setLeaderboardData((prev) => ({
+            ...prev,
+            allTimeLeaderboard: allTimeData.leaderboard || [],
+          }));
+          console.log("📈 All-time leaderboard loaded for boss:", bossId);
+        }
+      } catch (error) {
+        console.error("Error loading all-time leaderboard:", error);
+      }
+    };
+
+    loadAllTimeLeaderboard();
+
+    // If no data is received initially, show loading state
+    const timeout = setTimeout(() => {
+      if (leaderboardData.isLoading) {
+        console.log("⏳ Waiting for battle completion data...");
+        // Keep loading state - no mock data
+        setLeaderboardData(prev => ({
+          ...prev,
+          isLoading: false // Stop loading after timeout, show empty state
+        }));
+      }
+    }, 5000); // Wait longer for real data
+
+    return () => {
+      socket.off("final-leaderboards", handleFinalLeaderboards);
+      clearTimeout(timeout);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socket]); // Remove leaderboardData.isLoading dependency to avoid infinite loop
+
+  // ===== RENDER HELPERS ===== //
+  const teamLeaderboard = leaderboardData.teamLeaderboard;
+  const individualLeaderboard = leaderboardData.individualLeaderboard;
+  const allTimeLeaderboard = leaderboardData.allTimeLeaderboard;
 
   const goBack = () => {
     navigate("/qr"); // Go to QR page
@@ -98,21 +153,36 @@ const BossPodium = () => {
   };
 
   const handlePageChange = (tabKey, newPage) => {
-    setCurrentPage(prev => ({ ...prev, [tabKey]: newPage }));
+    setCurrentPage((prev) => ({ ...prev, [tabKey]: newPage }));
   };
 
   const getRankBadge = (rank) => {
-    if (rank === 1) return <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white">1st</Badge>;
-    if (rank === 2) return <Badge className="bg-gray-400 hover:bg-gray-500 text-white">2nd</Badge>;
-    if (rank === 3) return <Badge className="bg-amber-600 hover:bg-amber-700 text-white">3rd</Badge>;
-    return <span className="text-sm font-medium text-muted-foreground">#{rank}</span>;
+    if (rank === 1)
+      return (
+        <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white">
+          1st
+        </Badge>
+      );
+    if (rank === 2)
+      return (
+        <Badge className="bg-gray-400 hover:bg-gray-500 text-white">2nd</Badge>
+      );
+    if (rank === 3)
+      return (
+        <Badge className="bg-amber-600 hover:bg-amber-700 text-white">
+          3rd
+        </Badge>
+      );
+    return (
+      <span className="text-sm font-medium text-muted-foreground">#{rank}</span>
+    );
   };
 
   // Podium helpers
   const getPodiumColor = (rank) => {
     if (rank === 1) return "bg-yellow-500"; // Gold
-    if (rank === 2) return "bg-gray-400";   // Silver
-    if (rank === 3) return "bg-amber-600";  // Bronze
+    if (rank === 2) return "bg-gray-400"; // Silver
+    if (rank === 3) return "bg-amber-600"; // Bronze
     return "bg-gray-500";
   };
 
@@ -125,6 +195,16 @@ const BossPodium = () => {
 
   // Top 3 individual players for podium
   const podiumPlayers = individualLeaderboard.slice(0, 3);
+
+  // Debug logging
+  useEffect(() => {
+    console.log(
+      "🏆 Podium Debug - Individual Leaderboard:",
+      individualLeaderboard
+    );
+    console.log("🏆 Podium Debug - Podium Players:", podiumPlayers);
+    console.log("🏆 Podium Debug - Full Leaderboard Data:", leaderboardData);
+  }, [individualLeaderboard, podiumPlayers, leaderboardData]);
 
   // Audio
   const victoryDrumsAudio = new Audio(victoryDrumsSound);
@@ -149,7 +229,6 @@ const BossPodium = () => {
           await victoryThemeAudio.play();
           console.log("Victory sounds sequence complete!");
         }, 3800); // 4 seconds delay
-
       } catch (error) {
         console.log("Victory audio play failed:", error);
       }
@@ -163,7 +242,7 @@ const BossPodium = () => {
         burstInterval: 1500, // 1.5 seconds between bursts
         onComplete: () => {
           console.log("Victory confetti celebration complete!");
-        }
+        },
       });
     };
 
@@ -199,7 +278,9 @@ const BossPodium = () => {
                   e.preventDefault();
                   onPageChange(currentPageNum > 1 ? currentPageNum - 1 : 1);
                 }}
-                className={currentPageNum === 1 ? "pointer-events-none opacity-50" : ""}
+                className={
+                  currentPageNum === 1 ? "pointer-events-none opacity-50" : ""
+                }
               />
             </PaginationItem>
             {[...Array(totalPages)].map((_, idx) => (
@@ -221,9 +302,17 @@ const BossPodium = () => {
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  onPageChange(currentPageNum < totalPages ? currentPageNum + 1 : totalPages);
+                  onPageChange(
+                    currentPageNum < totalPages
+                      ? currentPageNum + 1
+                      : totalPages
+                  );
                 }}
-                className={currentPageNum === totalPages ? "pointer-events-none opacity-50" : ""}
+                className={
+                  currentPageNum === totalPages
+                    ? "pointer-events-none opacity-50"
+                    : ""
+                }
               />
             </PaginationItem>
           </PaginationContent>
@@ -256,33 +345,88 @@ const BossPodium = () => {
           <CardContent>
             {/* Desktop Podium */}
             <div className="flex items-end justify-center gap-6 py-4">
-              {podiumPlayers.map((player, idx) => {
-                // Height for podium effect
-                let height = player.rank === 1 ? 120 : player.rank === 2 ? 80 : 60;
-                // Animation classes based on rank - only for the avatar
-                let animationClass = player.rank === 1 ? "animate-bounce-excited-first" : 
-                                   player.rank === 2 ? "animate-bounce-excited-second" : 
-                                   "animate-bounce-excited-third";
-                return (
-                  <div key={player.rank} className={`flex flex-col items-center ${idx === 0 ? "order-2" : idx === 1 ? "order-1" : "order-3"}`}>
-                    <div className="mb-2 relative">
-                      <Avatar className={`w-20 h-20 md:w-24 md:h-24 border-4 border-gray-200 dark:border-gray-700 shadow-lg ${animationClass}`}>
-                        <AvatarImage src={player.avatar} alt={player.player} />
-                        <AvatarFallback>{player.player[0]}</AvatarFallback>
-                      </Avatar>
-                      <div className={`absolute -top-3 -right-3 w-8 h-8 rounded-full ${getPodiumColor(player.rank)} flex items-center justify-center shadow-lg border-2 border-white`}>
-                        {getPodiumIcon(player.rank)}
+              {podiumPlayers.length > 0 ? (
+                podiumPlayers.map((player, idx) => {
+                  // Height for podium effect
+                  let height =
+                    player.rank === 1 ? 120 : player.rank === 2 ? 80 : 60;
+                  // Animation classes based on rank - only for the avatar
+                  let animationClass =
+                    player.rank === 1
+                      ? "animate-bounce-excited-first"
+                      : player.rank === 2
+                      ? "animate-bounce-excited-second"
+                      : "animate-bounce-excited-third";
+                  return (
+                    <div
+                      key={player.rank}
+                      className={`flex flex-col items-center ${
+                        idx === 0
+                          ? "order-2"
+                          : idx === 1
+                          ? "order-1"
+                          : "order-3"
+                      }`}
+                    >
+                      <div className="mb-2 relative">
+                        <Avatar
+                          className={`w-20 h-20 md:w-24 md:h-24 border-4 border-gray-200 dark:border-gray-700 shadow-lg ${animationClass}`}
+                        >
+                          <AvatarImage
+                            src={player.avatar}
+                            alt={player.nickname || player.username}
+                          />
+                          <AvatarFallback>
+                            {(player.nickname || player.username || "P")[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div
+                          className={`absolute -top-3 -right-3 w-8 h-8 rounded-full ${getPodiumColor(
+                            player.rank
+                          )} flex items-center justify-center shadow-lg border-2 border-white`}
+                        >
+                          {getPodiumIcon(player.rank)}
+                        </div>
+                      </div>
+                      <div className="font-bold text-lg mb-1">
+                        {player.nickname || player.username}
+                      </div>
+                      <div className="text-xs text-muted-foreground mb-1">
+                        {(player.totalDamage || 0).toLocaleString()} DMG
+                      </div>
+                      <div className="text-xs text-muted-foreground mb-2">
+                        {Math.round(player.accuracy || 0)}% Correct
+                      </div>
+                      <div
+                        className={`w-20 md:w-24 h-6 rounded-t-lg ${getPodiumColor(
+                          player.rank
+                        )} text-white flex items-center justify-center font-bold text-sm shadow-lg`}
+                        style={{ height: `${height}px` }}
+                      >
+                        {player.rank === 1
+                          ? "1st"
+                          : player.rank === 2
+                          ? "2nd"
+                          : "3rd"}
                       </div>
                     </div>
-                    <div className="font-bold text-lg mb-1">{player.player}</div>
-                    <div className="text-xs text-muted-foreground mb-1">{player.dmg.toLocaleString()} DMG</div>
-                    <div className="text-xs text-muted-foreground mb-2">{player.correctPercent}% Correct</div>
-                    <div className={`w-20 md:w-24 h-6 rounded-t-lg ${getPodiumColor(player.rank)} text-white flex items-center justify-center font-bold text-sm shadow-lg`} style={{ height: `${height}px` }}>
-                      {player.rank === 1 ? "1st" : player.rank === 2 ? "2nd" : "3rd"}
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              ) : (
+                <div className="text-center py-8">
+                  <Trophy className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground text-lg font-medium mb-2">
+                    {leaderboardData.isLoading
+                      ? "Loading battle results..."
+                      : "No battle results yet"}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {leaderboardData.isLoading
+                      ? "Please wait while we process the final rankings..."
+                      : "Complete a boss battle to see the victory podium"}
+                  </p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -295,24 +439,34 @@ const BossPodium = () => {
                 <Medal className="w-5 h-5" />
                 Final Battle Results
               </CardTitle>
-              <p className="text-sm text-muted-foreground">Complete performance rankings for this battle</p>
+              <p className="text-sm text-muted-foreground">
+                Complete performance rankings for this battle
+              </p>
             </CardHeader>
             <CardContent className="relative h-full">
               <Tabs defaultValue="teams" className="space-y-3">
-                
                 {/* Tabs List */}
                 <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="teams" className="flex items-center gap-2">
+                  <TabsTrigger
+                    value="teams"
+                    className="flex items-center gap-2"
+                  >
                     <Users className="w-4 h-4" />
                     <span className="hidden sm:inline">Team Results</span>
                     <span className="sm:hidden">Teams</span>
                   </TabsTrigger>
-                  <TabsTrigger value="individual" className="flex items-center gap-2">
+                  <TabsTrigger
+                    value="individual"
+                    className="flex items-center gap-2"
+                  >
                     <User className="w-4 h-4" />
                     <span className="hidden sm:inline">Individual Results</span>
                     <span className="sm:hidden">Players</span>
                   </TabsTrigger>
-                  <TabsTrigger value="alltime" className="flex items-center gap-2">
+                  <TabsTrigger
+                    value="alltime"
+                    className="flex items-center gap-2"
+                  >
                     <Award className="w-4 h-4" />
                     <span className="hidden sm:inline">All-Time Records</span>
                     <span className="sm:hidden">All-Time</span>
@@ -322,20 +476,33 @@ const BossPodium = () => {
                 {/* Team Results */}
                 <TabsContent value="teams" className="space-y-4">
                   <div>
-                    <h3 className="text-lg font-semibold mb-2">Team Final Rankings</h3>
-                    <p className="text-sm text-muted-foreground mb-4">Final team performance for this battle</p>
+                    <h3 className="text-lg font-semibold mb-2">
+                      Team Final Rankings
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Final team performance for this battle
+                    </p>
                   </div>
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-16">Rank</TableHead>
-                        <TableHead className="whitespace-normal">Team</TableHead>
-                        <TableHead className="text-right whitespace-normal">Total DMG</TableHead>
-                        <TableHead className="text-right whitespace-normal">Correct %</TableHead>
+                        <TableHead className="whitespace-normal">
+                          Team
+                        </TableHead>
+                        <TableHead className="text-right whitespace-normal">
+                          Total DMG
+                        </TableHead>
+                        <TableHead className="text-right whitespace-normal">
+                          Correct %
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {getPaginatedData(teamLeaderboard, 'teams').paginatedData.map((team) => (
+                      {getPaginatedData(
+                        teamLeaderboard,
+                        "teams"
+                      ).paginatedData.map((team) => (
                         <TableRow key={team.rank} className="hover:bg-muted/50">
                           <TableCell className="font-medium">
                             {getRankBadge(team.rank)}
@@ -343,108 +510,195 @@ const BossPodium = () => {
                           <TableCell>
                             <div className="flex items-center gap-3">
                               <Avatar className="w-8 h-8">
-                                <AvatarImage src={team.avatar} alt={team.team} />
-                                <AvatarFallback>{team.team[0]}</AvatarFallback>
+                                <AvatarImage
+                                  src={`/src/assets/Placeholder/Profile${
+                                    (team.rank % 5) + 1
+                                  }.jpg`}
+                                  alt={team.teamName}
+                                />
+                                <AvatarFallback>
+                                  {team.teamName?.[0] || "T"}
+                                </AvatarFallback>
                               </Avatar>
-                              <span className="font-medium">{team.team}</span>
-                              {team.rank === 1 && <Crown className="w-4 h-4 text-yellow-500" />}
+                              <span className="font-medium">
+                                {team.teamName || `Team ${team.teamId}`}
+                              </span>
+                              {team.rank === 1 && (
+                                <Crown className="w-4 h-4 text-yellow-500" />
+                              )}
                             </div>
                           </TableCell>
-                          <TableCell className="text-right font-medium">{team.dmg}</TableCell>
-                          <TableCell className="text-right">{team.correctPercent}%</TableCell>
+                          <TableCell className="text-right font-medium">
+                            {team.totalDamage || 0}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {team.players && team.players.length > 0
+                              ? Math.round(
+                                  team.players.reduce(
+                                    (sum, p) => sum + (p.accuracy || 0),
+                                    0
+                                  ) / team.players.length
+                                )
+                              : 0}
+                            %
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
                   <PaginationControls
-                    {...getPaginatedData(teamLeaderboard, 'teams')}
-                    onPageChange={(page) => handlePageChange('teams', page)}
+                    {...getPaginatedData(teamLeaderboard, "teams")}
+                    onPageChange={(page) => handlePageChange("teams", page)}
                   />
                 </TabsContent>
 
                 {/* Individual Results */}
                 <TabsContent value="individual" className="space-y-4">
                   <div>
-                    <h3 className="text-lg font-semibold mb-2">Individual Final Rankings</h3>
-                    <p className="text-sm text-muted-foreground mb-4">Final individual player performance for this battle</p>
+                    <h3 className="text-lg font-semibold mb-2">
+                      Individual Final Rankings
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Final individual player performance for this battle
+                    </p>
                   </div>
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-16">Rank</TableHead>
-                        <TableHead className="whitespace-normal">Player</TableHead>
-                        <TableHead className="text-right whitespace-normal">Total DMG</TableHead>
-                        <TableHead className="text-right whitespace-normal">Correct %</TableHead>
+                        <TableHead className="whitespace-normal">
+                          Player
+                        </TableHead>
+                        <TableHead className="text-right whitespace-normal">
+                          Total DMG
+                        </TableHead>
+                        <TableHead className="text-right whitespace-normal">
+                          Correct %
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {getPaginatedData(individualLeaderboard, 'individual').paginatedData.map((player) => (
-                        <TableRow key={player.rank} className="hover:bg-muted/50">
+                      {getPaginatedData(
+                        individualLeaderboard,
+                        "individual"
+                      ).paginatedData.map((player) => (
+                        <TableRow
+                          key={player.rank}
+                          className="hover:bg-muted/50"
+                        >
                           <TableCell className="font-medium">
                             {getRankBadge(player.rank)}
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-3">
                               <Avatar className="w-8 h-8">
-                                <AvatarImage src={player.avatar} alt={player.player} />
-                                <AvatarFallback>{player.player[0]}</AvatarFallback>
+                                <AvatarImage
+                                  src={`/src/assets/Placeholder/Profile${
+                                    (player.rank % 5) + 1
+                                  }.jpg`}
+                                  alt={player.nickname}
+                                />
+                                <AvatarFallback>
+                                  {player.nickname?.[0] || "P"}
+                                </AvatarFallback>
                               </Avatar>
-                              <span className="font-medium">{player.player}</span>
-                              {player.rank === 1 && <Crown className="w-4 h-4 text-yellow-500" />}
+                              <span className="font-medium">
+                                {player.nickname || player.username}
+                              </span>
+                              {player.rank === 1 && (
+                                <Crown className="w-4 h-4 text-yellow-500" />
+                              )}
                             </div>
                           </TableCell>
-                          <TableCell className="text-right font-medium">{player.dmg}</TableCell>
-                          <TableCell className="text-right">{player.correctPercent}%</TableCell>
+                          <TableCell className="text-right font-medium">
+                            {player.totalDamage || 0}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {Math.round(player.accuracy || 0)}%
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
                   <PaginationControls
-                    {...getPaginatedData(individualLeaderboard, 'individual')}
-                    onPageChange={(page) => handlePageChange('individual', page)}
+                    {...getPaginatedData(individualLeaderboard, "individual")}
+                    onPageChange={(page) =>
+                      handlePageChange("individual", page)
+                    }
                   />
                 </TabsContent>
 
                 {/* All-Time Records */}
                 <TabsContent value="alltime" className="space-y-4">
                   <div>
-                    <h3 className="text-lg font-semibold mb-2">All-Time Records</h3>
-                    <p className="text-sm text-muted-foreground mb-4">Historical player performance across all battles</p>
+                    <h3 className="text-lg font-semibold mb-2">
+                      All-Time Records
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Historical player performance across all battles
+                    </p>
                   </div>
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-16">Rank</TableHead>
-                        <TableHead className="whitespace-normal">Player</TableHead>
-                        <TableHead className="text-right whitespace-normal">Total DMG</TableHead>
-                        <TableHead className="text-right whitespace-normal">Correct %</TableHead>
+                        <TableHead className="whitespace-normal">
+                          Player
+                        </TableHead>
+                        <TableHead className="text-right whitespace-normal">
+                          Total DMG
+                        </TableHead>
+                        <TableHead className="text-right whitespace-normal">
+                          Correct %
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {getPaginatedData(allTimeLeaderboard, 'alltime').paginatedData.map((player) => (
-                        <TableRow key={player.rank} className="hover:bg-muted/50">
+                      {getPaginatedData(
+                        allTimeLeaderboard,
+                        "alltime"
+                      ).paginatedData.map((player) => (
+                        <TableRow
+                          key={player.rank}
+                          className="hover:bg-muted/50"
+                        >
                           <TableCell className="font-medium">
                             {getRankBadge(player.rank)}
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-3">
                               <Avatar className="w-8 h-8">
-                                <AvatarImage src={player.avatar} alt={player.player} />
-                                <AvatarFallback>{player.player[0]}</AvatarFallback>
+                                <AvatarImage
+                                  src={`/src/assets/Placeholder/Profile${
+                                    (player.rank % 5) + 1
+                                  }.jpg`}
+                                  alt={player.nickname}
+                                />
+                                <AvatarFallback>
+                                  {player.nickname?.[0] || "P"}
+                                </AvatarFallback>
                               </Avatar>
-                              <span className="font-medium">{player.player}</span>
-                              {player.rank === 1 && <Crown className="w-4 h-4 text-yellow-500" />}
+                              <span className="font-medium">
+                                {player.nickname || player.username}
+                              </span>
+                              {player.rank === 1 && (
+                                <Crown className="w-4 h-4 text-yellow-500" />
+                              )}
                             </div>
                           </TableCell>
-                          <TableCell className="text-right font-medium">{player.dmg}</TableCell>
-                          <TableCell className="text-right">{player.correctPercent}%</TableCell>
+                          <TableCell className="text-right font-medium">
+                            {player.totalDamage || 0}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {Math.round(player.accuracy || 0)}%
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
                   <PaginationControls
-                    {...getPaginatedData(allTimeLeaderboard, 'alltime')}
-                    onPageChange={(page) => handlePageChange('alltime', page)}
+                    {...getPaginatedData(allTimeLeaderboard, "alltime")}
+                    onPageChange={(page) => handlePageChange("alltime", page)}
                   />
                 </TabsContent>
               </Tabs>

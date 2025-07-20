@@ -1,5 +1,5 @@
 // ===== LIBRARIES ===== //
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Trophy, Users, ChevronDown, ChevronRight } from "lucide-react";
 
 // ===== COMPONENTS ===== //
@@ -7,100 +7,75 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
+// ===== CONTEXT ===== //
+import useBossBattle from "@/hooks/useBossBattle";
+
 // ===== STYLES ===== //
 import "@/index.css";
 
 const BattleLeaderboard = ({ isOpen, onClose }) => {
   const [expandedTeams, setExpandedTeams] = useState(new Set());
+  const [leaderboardData, setLeaderboardData] = useState([]);
+  const [playerLeaderboard, setPlayerLeaderboard] = useState([]);
+  const [battleStats, setBattleStats] = useState(null);
+  const [lastUpdate, setLastUpdate] = useState(null);
+  
+  const { socket } = useBossBattle();
 
-  // Sample leaderboard data with players
-  const leaderboardData = [
+  // Listen for real-time leaderboard updates
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleLeaderboardUpdate = (data) => {
+      console.log("📊 Received leaderboard update:", data);
+      
+      if (data.teamLeaderboard) {
+        setLeaderboardData(data.teamLeaderboard);
+      }
+      
+      if (data.playerLeaderboard) {
+        setPlayerLeaderboard(data.playerLeaderboard);
+      }
+      
+      if (data.battleStats) {
+        setBattleStats(data.battleStats);
+      }
+      
+      setLastUpdate(new Date(data.timestamp));
+    };
+
+    socket.on("leaderboard-update", handleLeaderboardUpdate);
+
+    // Request initial leaderboard data when component opens
+    if (isOpen && socket) {
+      socket.emit("request-leaderboard-data");
+    }
+
+    return () => {
+      socket.off("leaderboard-update", handleLeaderboardUpdate);
+    };
+  }, [socket, isOpen]);
+
+  // Fallback mock data if no real data is available
+  // Fallback mock data if no real data is available
+  const mockLeaderboardData = [
     { 
       rank: 1, 
-      team: 'Kangaroo', 
-      dmg: 450, 
+      teamName: 'Loading...', 
+      totalDamage: 0, 
       players: [
-        { name: 'Player_Alpha', username: '@alpha123', dmg: 200 },
-        { name: 'Player_Beta', username: '@beta456', dmg: 150 },
-        { name: 'Player_Gamma', username: '@gamma789', dmg: 100 }
+        { nickname: 'Loading players...', username: '@loading', totalDamage: 0 }
       ]
-    },
-    { 
-      rank: 2, 
-      team: 'Koala', 
-      dmg: 380, 
-      players: [
-        { name: 'PlayerOne', username: '@player1', dmg: 180 },
-        { name: 'PlayerTwo', username: '@player2', dmg: 120 },
-        { name: 'PlayerThree', username: '@player3', dmg: 80 }
-      ]
-    },
-    { 
-      rank: 3, 
-      team: 'Shellfish', 
-      dmg: 320, 
-      players: [
-        { name: 'User123', username: '@user123', dmg: 170 },
-        { name: 'User456', username: '@user456', dmg: 90 },
-        { name: 'User789', username: '@user789', dmg: 60 }
-      ]
-    },
-    { 
-      rank: 4, 
-      team: 'Dolphins', 
-      dmg: 280, 
-      players: [
-        { name: 'Dolphin_A', username: '@dolphin_a', dmg: 160 },
-        { name: 'Dolphin_B', username: '@dolphin_b', dmg: 70 },
-        { name: 'Dolphin_C', username: '@dolphin_c', dmg: 50 }
-      ]
-    },
-    { 
-      rank: 5, 
-      team: 'Eagles', 
-      dmg: 250, 
-      players: [
-        { name: 'Eagle_One', username: '@eagle1', dmg: 140 },
-        { name: 'Eagle_Two', username: '@eagle2', dmg: 65 },
-        { name: 'Eagle_Three', username: '@eagle3', dmg: 45 }
-      ]
-    },
-    { 
-      rank: 6, 
-      team: 'Lions', 
-      dmg: 220, 
-      players: [
-        { name: 'Lion_King', username: '@lionking', dmg: 130 },
-        { name: 'Lion_Queen', username: '@lionqueen', dmg: 55 },
-        { name: 'Lion_Cub', username: '@lioncub', dmg: 35 }
-      ]
-    },
-    { 
-      rank: 7, 
-      team: 'Tigers', 
-      dmg: 190, 
-      players: [
-        { name: 'Tiger_Roar', username: '@tigerroar', dmg: 110 },
-        { name: 'Tiger_Claw', username: '@tigerclaw', dmg: 50 },
-        { name: 'Tiger_Stripe', username: '@tigerstripe', dmg: 30 }
-      ]
-    },
-    { 
-      rank: 8, 
-      team: 'Bears', 
-      dmg: 160, 
-      players: [
-        { name: 'Bear_Paw', username: '@bearpaw', dmg: 90 },
-        { name: 'Bear_Cub', username: '@bearcub', dmg: 40 },
-        { name: 'Bear_Den', username: '@bearден', dmg: 30 }
-      ]
-    },
+    }
   ];
 
-  // Sort players within each team by damage (descending)
-  const sortedLeaderboardData = leaderboardData.map(team => ({
+  // Use real data if available, otherwise use mock data
+  const displayData = leaderboardData.length > 0 ? leaderboardData : mockLeaderboardData;
+
+  // Sort players within each team by damage (descending) for display
+  const sortedLeaderboardData = displayData.map(team => ({
     ...team,
-    players: [...team.players].sort((a, b) => b.dmg - a.dmg)
+    players: [...team.players].sort((a, b) => (b.totalDamage || b.dmg || 0) - (a.totalDamage || a.dmg || 0))
   }));
 
   const toggleTeamExpansion = (teamName) => {
@@ -198,7 +173,10 @@ const BattleLeaderboard = ({ isOpen, onClose }) => {
 
             <div className="space-y-1">
               {sortedLeaderboardData.map((team) => {
-                const isExpanded = expandedTeams.has(team.team);
+                const isExpanded = expandedTeams.has(team.teamName || team.team);
+                const teamDisplayName = team.teamName || team.team || 'Unknown Team';
+                const teamDamage = team.totalDamage || team.dmg || 0;
+                
                 return (
                   <div key={team.rank}>
                     {/* Team Row */}
@@ -210,7 +188,7 @@ const BattleLeaderboard = ({ isOpen, onClose }) => {
                           : 'bg-muted/20 hover:bg-muted/40 border-border'
                         }
                       `}
-                      onClick={() => toggleTeamExpansion(team.team)}
+                      onClick={() => toggleTeamExpansion(teamDisplayName)}
                     >
                       {/* Rank */}
                       <div className="col-span-2 flex justify-center">
@@ -224,38 +202,53 @@ const BattleLeaderboard = ({ isOpen, onClose }) => {
                         ) : (
                           <ChevronRight className="w-3 h-3 text-muted-foreground" />
                         )}
-                        <p className="font-medium text-sm truncate">{team.team}</p>
+                        <p className="font-medium text-sm truncate">{teamDisplayName}</p>
                         <span className="text-xs text-muted-foreground">({team.players.length})</span>
                       </div>
 
                       {/* Total Team Damage */}
                       <div className="col-span-3 text-right">
-                        <div className="font-bold text-sm">{team.dmg}</div>
+                        <div className="font-bold text-sm">{teamDamage}</div>
                       </div>
                     </div>
 
                     {/* Expanded Player List */}
                     {isExpanded && (
                       <div className="ml-4 mt-1 space-y-1">
-                        {team.players.map((player, playerIndex) => (
-                          <div 
-                            key={playerIndex}
-                            className="grid grid-cols-10 gap-3 items-center py-1 px-2 rounded bg-muted/10"
-                          >
-                            {/* Player Name */}
-                            <div className="col-span-7 pl-4">
-                              <div className="flex flex-col">
-                                <p className="text-xs font-medium truncate text-muted-foreground">{player.name}</p>
-                                <p className="text-xs truncate text-muted-foreground/70">{player.username}</p>
+                        {team.players.map((player, playerIndex) => {
+                          const playerName = player.nickname || player.name || 'Unknown';
+                          const playerUsername = player.username || '@unknown';
+                          const playerDamage = player.totalDamage || player.dmg || 0;
+                          const playerAccuracy = player.accuracy || '0';
+                          
+                          return (
+                            <div 
+                              key={playerIndex}
+                              className="grid grid-cols-10 gap-3 items-center py-1 px-2 rounded bg-muted/10"
+                            >
+                              {/* Player Name */}
+                              <div className="col-span-7 pl-4">
+                                <div className="flex flex-col">
+                                  <p className="text-xs font-medium truncate text-foreground">{playerName}</p>
+                                  <p className="text-xs truncate text-muted-foreground/70">{playerUsername}</p>
+                                  {player.accuracy && (
+                                    <p className="text-xs text-muted-foreground/60">{playerAccuracy}% accuracy</p>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Player Damage */}
+                              <div className="col-span-3 text-right">
+                                <div className="text-xs font-medium">{playerDamage}</div>
+                                {player.questionsAnswered > 0 && (
+                                  <div className="text-xs text-muted-foreground">
+                                    {player.questionsAnswered} Qs
+                                  </div>
+                                )}
                               </div>
                             </div>
-
-                            {/* Player Damage */}
-                            <div className="col-span-3 text-right">
-                              <div className="text-xs font-medium">{player.dmg}</div>
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -268,6 +261,15 @@ const BattleLeaderboard = ({ isOpen, onClose }) => {
               <div className="text-center text-xs text-muted-foreground">
                 <p className="mt-1">Teams: {sortedLeaderboardData.length}</p>
                 <p className="mt-1">Players: {sortedLeaderboardData.reduce((total, team) => total + team.players.length, 0)}</p>
+                {battleStats && (
+                  <>
+                    <p className="mt-1">Boss HP: {battleStats.bossHpRemaining}/{battleStats.bossMaxHp} ({battleStats.bossHpPercentage}%)</p>
+                    <p className="mt-1">Total Damage: {battleStats.totalDamageDealt}</p>
+                  </>
+                )}
+                {lastUpdate && (
+                  <p className="mt-1 text-xs">Updated: {lastUpdate.toLocaleTimeString()}</p>
+                )}
               </div>
             </div>
           </CardContent>

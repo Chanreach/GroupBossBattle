@@ -77,11 +77,14 @@ import HostCategoriesQuestionsEdit from "./pages/Host/QuestionBank/Questions/Edi
 // Profile
 import HostProfile from "./pages/Host/Profile/Profile";
 
+import BossBattleProvider from "./context/BossBattleProvider";
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ThemeProvider>
       <AuthProvider>
-        <BossJoinProvider>
+        {/* <BossJoinProvider> */}
+        <BossBattleProvider>
           <BrowserRouter>
             <ScrollToTop />
             <MessageProvider>
@@ -200,18 +203,14 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   />
                 </Route>
 
-                <Route path="/boss-preview" element={<App />}>
-                  <Route
-                    index
-                    element={
-                      <BossPreviewAuthGuard>
-                        <PlayerBossPreview />
-                      </BossPreviewAuthGuard>
-                    }
-                  />
+                <Route
+                  path="/boss-preview/:eventBossId/:joinCode"
+                  element={<App />}
+                >
+                  <Route index element={<PlayerBossPreview />} />
                 </Route>
 
-                <Route path="/boss-battle" element={<AppBattle />}>
+                <Route path="/boss-battle/:eventBossId/:joinCode" element={<AppBattle />}>
                   <Route
                     index
                     element={
@@ -381,7 +380,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               </Routes>
             </MessageProvider>
           </BrowserRouter>
-        </BossJoinProvider>
+          {/* </BossJoinProvider> */}
+        </BossBattleProvider>
       </AuthProvider>
     </ThemeProvider>
   </React.StrictMode>
