@@ -164,7 +164,7 @@ const NavOP = (props) => {
             >
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 text-sidebar-primary-foreground">
                 <img
-                  src="/src/assets/Swords.png"
+                  src="https://em-content.zobj.net/source/microsoft-3D-fluent/406/crossed-swords_2694-fe0f.png"
                   alt="UniRAID"
                   className="size-6 object-contain"
                 />

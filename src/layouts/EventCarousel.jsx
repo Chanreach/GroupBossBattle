@@ -41,7 +41,7 @@ const EventCarousel = () => {
           description: event.description || "Join forces with other participants and put your knowledge to the test! Answer questions, deal damage, and work together to defeat powerful bosses.",
           startTime: formatDate(event.startTime) || 'TBD',
           endTime: formatDate(event.endTime) || 'TBD',
-          image: "/src/assets/Swords.png",
+          image: "https://em-content.zobj.net/source/microsoft-3D-fluent/406/crossed-swords_2694-fe0f.png",
           isActive: event.status === 'active' || event.status === 'ongoing',
           status: event.status || 'upcoming',
           eventBosses: event.eventBosses || [] // Include boss data for debugging
@@ -71,7 +71,7 @@ const EventCarousel = () => {
       description: "Amazing boss battle events are being planned! Check back soon for exciting interactive experiences where you can team up with others to defeat powerful bosses.",
       startTime: "Coming Soon",
       endTime: "Stay Tuned",
-      image: "/src/assets/Swords.png",
+      image: "https://em-content.zobj.net/source/microsoft-3D-fluent/406/crossed-swords_2694-fe0f.png",
       isActive: false,
       status: 'coming-soon',
       isPlaceholder: true
