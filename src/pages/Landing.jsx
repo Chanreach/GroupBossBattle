@@ -107,7 +107,7 @@ const Landing = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-2xl mx-auto px-2">
+            {/* <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-2xl mx-auto px-2">
               <div className="text-center p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-800 backdrop-blur-sm border border-gray-200 dark:border-gray-700">
                 <div className="text-2xl sm:text-3xl font-bold mb-1 text-gray-900 dark:text-white">
                   50
@@ -132,7 +132,7 @@ const Landing = () => {
                   Unique Players
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </section>
