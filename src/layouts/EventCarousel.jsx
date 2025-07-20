@@ -198,17 +198,17 @@ const EventCarousel = () => {
       <div className="relative w-full max-w-7xl mx-auto px-4">
         {/* Navigation Arrows - Only show if more than 1 event */}
         {displayEvents.length > 1 && (
-          <div className="absolute inset-0 h-[300px] flex items-center justify-between z-20 px-4">
+          <div className="absolute inset-0 h-[300px] flex items-center justify-between px-4">
             <button
               onClick={goToPrevious}
-              className="bg-white/10 dark:bg-gray-800/20 backdrop-blur-sm rounded-full w-12 h-12 flex items-center justify-center text-white/30 sm:text-purple-500 dark:text-white hover:scale-90 dark:hover:bg-gray-700/20 duration-200 shadow-lg"
+              className="z-11 bg-white/10 dark:bg-gray-800/20 backdrop-blur-sm rounded-full w-12 h-12 flex items-center justify-center text-white/30 sm:text-purple-500 dark:text-white hover:scale-90 dark:hover:bg-gray-700/20 duration-200 shadow-lg"
               aria-label="Previous event"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
             <button
               onClick={goToNext}
-              className="bg-white/10 dark:bg-gray-800/20 backdrop-blur-sm rounded-full w-12 h-12 flex items-center justify-center text-white/30 sm:text-purple-500 dark:text-white hover:scale-90 dark:hover:bg-gray-700/20 duration-200 shadow-lg"
+              className="z-11 bg-white/10 dark:bg-gray-800/20 backdrop-blur-sm rounded-full w-12 h-12 flex items-center justify-center text-white/30 sm:text-purple-500 dark:text-white hover:scale-90 dark:hover:bg-gray-700/20 duration-200 shadow-lg"
               aria-label="Next event"
             >
               <ChevronRight className="w-6 h-6" />

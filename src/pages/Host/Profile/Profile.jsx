@@ -12,6 +12,7 @@ import {
   Eye,
   EyeOff,
   ArrowLeft,
+  LogOut,
 } from "lucide-react";
 
 // ===== COMPONENTS (Shadcn.ui) ===== //
@@ -22,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import AlertLogout from "@/layouts/AlertLogout";
 
 // ===== CONTEXTS ===== //
 import { useAuth } from "@/context/useAuth";
@@ -30,12 +32,13 @@ import { toast } from "sonner";
 
 const HostProfile = () => {
   const navigate = useNavigate();
-  const { user, setUser } = useAuth();
+  const { user, logout, setUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [profileData, setProfileData] = useState(null);
 
   const [editData, setEditData] = useState({
@@ -136,6 +139,19 @@ const HostProfile = () => {
     }
   };
 
+  const handleBack = () => {
+    navigate("/host/events/view");
+  };
+
+  const handleLogout = async () => {
+    try {
+      logout();
+      navigate("/landing");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
   const handleCancel = () => {
     setIsEditing(false);
     setShowPassword(false);
@@ -147,10 +163,6 @@ const HostProfile = () => {
       confirmPassword: "",
       profileImage: null,
     });
-  };
-
-  const handleBack = () => {
-    navigate("/host/events/view");
   };
 
   const handleInputChange = (field, value) => {
@@ -192,7 +204,7 @@ const HostProfile = () => {
   // Show loading state
   if (loading) {
     return (
-      <div className="container mx-auto p-4 max-w-4xl">
+      <div className="container mx-auto p-3 sm:p-6 max-w-4xl">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
@@ -206,10 +218,10 @@ const HostProfile = () => {
   // Show error state if no profile data
   if (!profileData) {
     return (
-      <div className="container mx-auto p-4 max-w-4xl">
+      <div className="container mx-auto p-3 sm:p-6 max-w-4xl">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <p className="text-red-500 mb-4">Failed to load profile data</p>
+            <p className="text-destructive mb-4">Failed to load profile data</p>
             <Button onClick={fetchProfile} variant="outline">
               Try Again
             </Button>
@@ -219,166 +231,166 @@ const HostProfile = () => {
     );
   }
 
-  const isPasswordValid = editData.password.length >= 8;
-  const doPasswordsMatch = editData.password === editData.confirmPassword;
-
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
+    <div className="container mx-auto p-3 sm:p-6 max-w-4xl">
+      {/* Header */}
+      <div className="mb-6 sm:mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <Button onClick={handleBack} variant="outline">
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back
+          </Button>
           <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleBack}
-            className="flex items-center gap-2"
+            onClick={() => setShowLogoutDialog(true)}
+            variant="outline"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back
+            <LogOut className="w-4 h-4 mr-2" /> Logout
           </Button>
         </div>
-
-        {/* Main Content */}
-        <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold">Profile Settings</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">Profile Settings</h1>
             <p className="text-muted-foreground">
               Manage your account information and preferences
             </p>
           </div>
+        </div>
+      </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Profile Picture Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Profile Picture</CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col items-center space-y-4">
-                <div className="relative">
-                  <Avatar className="w-24 h-24">
-                    <AvatarImage
-                      src={
-                        editData.profileImage
-                          ? URL.createObjectURL(editData.profileImage)
-                          : profileData.profileImage
-                          ? `${
-                              import.meta.env.VITE_API_URL ||
-                              "http://localhost:3000"
-                            }${profileData.profileImage}`
-                          : "/src/assets/Placeholder/host-profile.jpg"
-                      }
-                      alt={profileData.username}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* ===== PROFILE PICTURE ===== */}
+        <div className="lg:col-span-1">
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle className="text-lg">Profile Picture</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center space-y-4">
+              <div className="relative">
+                <Avatar className="w-32 h-32 sm:w-40 sm:h-40">
+                  <AvatarImage
+                    src={
+                      editData.profileImage
+                        ? URL.createObjectURL(editData.profileImage)
+                        : profileData.profileImage
+                        ? `${
+                            import.meta.env.VITE_API_URL ||
+                            "http://localhost:3000"
+                          }${profileData.profileImage}`
+                        : "/src/assets/Placeholder/host-profile.jpg"
+                    }
+                    alt="Profile"
+                  />
+                  <AvatarFallback className="text-2xl sm:text-3xl">
+                    {(isEditing ? editData.username : profileData.username)
+                      .charAt(0)
+                      .toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+
+                {isEditing && (
+                  <label className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-2 cursor-pointer hover:bg-primary/90 transition-colors">
+                    <Camera className="h-4 w-4" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleProfilePicChange}
+                      className="hidden"
                     />
-                    <AvatarFallback className="text-lg font-bold bg-gradient-to-br from-blue-600 to-purple-600 text-white">
-                      {profileData.username.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  {isEditing && (
-                    <label className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground rounded-full p-2 cursor-pointer hover:bg-primary/90 transition-colors">
-                      <Camera className="h-4 w-4" />
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleProfilePicChange}
-                        className="hidden"
-                      />
-                    </label>
-                  )}
-                </div>
+                  </label>
+                )}
+              </div>
 
-                <div className="text-center space-y-1">
-                  <h3 className="font-semibold text-lg">
-                    {profileData.username}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    UUID: {profileData.id}
-                  </p>
-                  <Badge
-                    variant="secondary"
-                    className="bg-blue-100 text-blue-700"
-                  >
-                    {profileData.role.charAt(0).toUpperCase() +
-                      profileData.role.slice(1)}
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
+              <div className="text-center">
+                <h3 className="font-semibold text-lg">
+                  {isEditing ? editData.username : profileData.username}
+                </h3>
+                <p className="text-xs text-muted-foreground font-mono">
+                  UUID: {profileData.id}
+                </p>
+                <Badge variant="outline" className="mt-1">
+                  {profileData.role.charAt(0).toUpperCase() +
+                    profileData.role.slice(1)}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-            {/* Account Information Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Account Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Username */}
-                <div className="space-y-2">
-                  <Label htmlFor="username" className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    Username
-                  </Label>
-                  {isEditing ? (
-                    <Input
-                      id="username"
-                      value={editData.username}
-                      onChange={(e) =>
-                        setEditData((prev) => ({
-                          ...prev,
-                          username: e.target.value,
-                        }))
-                      }
-                    />
-                  ) : (
-                    <div className="p-2 bg-muted rounded-md">
-                      {profileData.username}
-                    </div>
-                  )}
-                </div>
+        {/* ===== ACCOUNT INFORMATION ===== */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Account Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Username */}
+              <div className="space-y-2">
+                <Label htmlFor="username" className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Username
+                </Label>
+                {isEditing ? (
+                  <Input
+                    id="username"
+                    value={editData.username}
+                    onChange={(e) =>
+                      handleInputChange("username", e.target.value)
+                    }
+                    placeholder="Enter your username"
+                  />
+                ) : (
+                  <Input
+                    id="username"
+                    value={profileData.username}
+                    readOnly
+                    className="bg-muted/60 border-muted text-muted-foreground cursor-default"
+                  />
+                )}
+              </div>
 
-                {/* Email */}
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="flex items-center gap-2">
-                    <Mail className="h-4 w-4" />
-                    Email Address
-                  </Label>
-                  {isEditing ? (
-                    <Input
-                      id="email"
-                      type="email"
-                      value={editData.email}
-                      onChange={(e) =>
-                        setEditData((prev) => ({
-                          ...prev,
-                          email: e.target.value,
-                        }))
-                      }
-                    />
-                  ) : (
-                    <div className="p-2 bg-muted rounded-md">
-                      {profileData.email}
-                    </div>
-                  )}
-                </div>
+              {/* Email */}
+              <div className="space-y-2">
+                <Label htmlFor="email" className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  Email Address
+                </Label>
+                {isEditing ? (
+                  <Input
+                    id="email"
+                    type="email"
+                    value={editData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    placeholder="Enter your email"
+                  />
+                ) : (
+                  <Input
+                    id="email"
+                    value={profileData.email}
+                    readOnly
+                    className="bg-muted/60 border-muted text-muted-foreground cursor-default"
+                  />
+                )}
+              </div>
 
-                {/* Password */}
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="flex items-center gap-2">
-                    <Lock className="h-4 w-4" />
-                    Password
-                  </Label>
-                  {isEditing ? (
+              <Separator />
+
+              {/* Password */}
+              <div className="space-y-2">
+                <Label htmlFor="password" className="flex items-center gap-2">
+                  <Lock className="h-4 w-4" />
+                  Password
+                </Label>
+                {isEditing ? (
+                  <div className="space-y-4">
                     <div className="relative">
                       <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
-                        placeholder="Enter new password"
                         value={editData.password}
                         onChange={(e) =>
-                          setEditData((prev) => ({
-                            ...prev,
-                            password: e.target.value,
-                          }))
+                          handleInputChange("password", e.target.value)
                         }
-                        className="pr-10"
+                        placeholder="Enter new password"
                       />
                       <Button
                         type="button"
@@ -394,143 +406,139 @@ const HostProfile = () => {
                         )}
                       </Button>
                     </div>
-                  ) : (
-                    <div className="p-2 bg-muted rounded-md font-mono tracking-wider">
-                      ••••••••
-                    </div>
-                  )}
-                </div>
 
-                {/* Confirm Password (only when editing) */}
-                {isEditing && (
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="confirmPassword"
-                      className="flex items-center gap-2"
-                    >
-                      <Lock className="h-4 w-4" />
-                      Confirm Password
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        id="confirmPassword"
-                        type={showConfirmPassword ? "text" : "password"}
-                        placeholder="Confirm your new password"
-                        value={editData.confirmPassword}
-                        onChange={(e) =>
-                          setEditData((prev) => ({
-                            ...prev,
-                            confirmPassword: e.target.value,
-                          }))
-                        }
-                        className="pr-10"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={() =>
-                          setShowConfirmPassword(!showConfirmPassword)
-                        }
+                    {/* Confirm Password */}
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="confirmPassword"
+                        className="flex items-center gap-2"
                       >
-                        {showConfirmPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </Button>
+                        <Lock className="h-4 w-4" />
+                        Confirm Password
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id="confirmPassword"
+                          type={showConfirmPassword ? "text" : "password"}
+                          value={editData.confirmPassword}
+                          onChange={(e) =>
+                            handleInputChange("confirmPassword", e.target.value)
+                          }
+                          placeholder="Confirm your new password"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() =>
+                            setShowConfirmPassword(!showConfirmPassword)
+                          }
+                        >
+                          {showConfirmPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
                     </div>
+
+                    {editData.password &&
+                      editData.confirmPassword &&
+                      editData.password !== editData.confirmPassword && (
+                        <p className="text-sm text-destructive">
+                          Passwords do not match
+                        </p>
+                      )}
                   </div>
+                ) : (
+                  <Input
+                    id="password"
+                    type="password"
+                    value="••••••••"
+                    readOnly
+                    className="bg-muted/60 border-muted text-muted-foreground cursor-default font-mono tracking-wider"
+                  />
                 )}
+              </div>
 
-                {/* Password Requirements (only when editing) */}
-                {isEditing && (
-                  <div className="bg-background p-3 rounded-md">
-                    <p className="text-sm font-medium mb-2">
+              {isEditing && (
+                <>
+                  <div className="bg-background p-4 rounded-lg">
+                    <h4 className="font-medium text-sm mb-2">
                       Password Requirements:
-                    </p>
-                    <ul className="text-xs space-y-1">
-                      <li
-                        className={`flex items-center gap-2 ${
-                          isPasswordValid
-                            ? "text-green-600"
-                            : "text-muted-foreground"
-                        }`}
-                      >
-                        • At least 8 characters long
-                      </li>
-                      <li className="text-muted-foreground">
-                        • Leave blank to keep current password
-                      </li>
-                      <li
-                        className={`flex items-center gap-2 ${
-                          doPasswordsMatch
-                            ? "text-green-600"
-                            : "text-muted-foreground"
-                        }`}
-                      >
-                        • Confirm password must match
-                      </li>
+                    </h4>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>• At least 8 characters long</li>
+                      <li>• Leave blank to keep current password</li>
+                      <li>• Confirm password must match</li>
                     </ul>
                   </div>
-                )}
+                </>
+              )}
 
-                {/* Action Buttons */}
-                <div className="flex gap-3 pt-4">
-                  {isEditing ? (
-                    <>
-                      <Button
-                        variant="outline"
-                        onClick={handleCancel}
-                        className="flex-1"
-                        disabled={saving}
-                      >
-                        <X className="h-4 w-4 mr-2" />
-                        Cancel
-                      </Button>
-                      <Button
-                        onClick={handleSave}
-                        className="flex-1 flex items-center gap-2"
-                        disabled={saving}
-                      >
-                        {saving ? (
-                          <>
-                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                            Saving...
-                          </>
-                        ) : (
-                          <>
-                            <Save className="h-4 w-4" />
-                            Save
-                          </>
-                        )}
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        variant="outline"
-                        onClick={handleBack}
-                        className="flex-1"
-                      >
-                        Back
-                      </Button>
-                      <Button
-                        onClick={handleEdit}
-                        className="flex-1 flex items-center gap-2"
-                      >
-                        <Edit className="h-4 w-4" />
-                        Edit
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                {isEditing ? (
+                  <>
+                    <Button
+                      onClick={handleCancel}
+                      variant="outline"
+                      className="flex-1 flex items-center justify-center gap-2"
+                    >
+                      <X className="h-4 w-4" />
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleSave}
+                      className="flex-1 flex items-center justify-center gap-2"
+                      disabled={saving}
+                    >
+                      {saving ? (
+                        <>
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4" />
+                          Save
+                        </>
+                      )}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      onClick={handleBack}
+                      variant="outline"
+                      className="flex-1 flex items-center justify-center gap-2"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                      Back
+                    </Button>
+                    <Button
+                      onClick={handleEdit}
+                      className="flex-1 flex items-center justify-center gap-2"
+                    >
+                      <Edit className="h-4 w-4" />
+                      Edit
+                    </Button>
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
+
+      {/* Logout Confirmation Dialog */}
+      <AlertLogout
+        open={showLogoutDialog}
+        onOpenChange={setShowLogoutDialog}
+        onConfirm={handleLogout}
+      />
     </div>
   );
 };

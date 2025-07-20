@@ -16,14 +16,32 @@ const BossTemplate = () => {
   const [searchParams] = useSearchParams();
   const eventId = searchParams.get("eventId");
 
+  const [event, setEvent] = useState(null);
   const [selectedBosses, setSelectedBosses] = useState([]);
   const [availableBosses, setAvailableBosses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
 
+
+  // Fetch event details and available bosses
   useEffect(() => {
+    if (eventId) {
+      fetchEventDetails();
+    }
     fetchAvailableBosses();
-  }, []);
+  }, [eventId]);
+
+  // Function to fetch event details
+  const fetchEventDetails = async () => {
+    try {
+      const response = await apiClient.get(`/events/${eventId}`);
+      setEvent(response.data);
+    } catch (error) {
+      console.error("Error fetching event details:", error);
+      toast.error("Failed to fetch event details");
+    }
+  };
+
 
   const fetchAvailableBosses = async () => {
     try {
@@ -134,19 +152,19 @@ const BossTemplate = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold">
-                  Event: Adventure Quest 2024
+                  {event?.name || "Loading..."}
+                  <Badge
+                    variant="outline"
+                    className="bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800 ml-4 mt-auto"
+                  >
+                    <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full mr-2"></div>
+                    {event.status || "Active"}
+                  </Badge>
                 </h2>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground mt-3">
                   Select bosses to add to this active event
                 </p>
               </div>
-              <Badge
-                variant="outline"
-                className="bg-green-50 text-green-700 border-green-200"
-              >
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                Live
-              </Badge>
             </div>
           </CardHeader>
         </Card>
@@ -169,7 +187,7 @@ const BossTemplate = () => {
           </div>
 
           {/* Available Bosses Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {availableBosses.map((boss) => (
               <Card
                 key={boss.id}
@@ -182,7 +200,7 @@ const BossTemplate = () => {
               >
                 <CardContent className="p-0">
                   {/* Boss Image */}
-                  <div className="relative h-32 bg-gradient-to-br from-primary/20 to-primary/5">
+                  <div className="relative overflow-hidden aspect-square">
                     <img
                       src={
                         boss.image
@@ -190,7 +208,7 @@ const BossTemplate = () => {
                           : "/src/assets/Placeholder/Falcon.png"
                       }
                       alt={boss.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                     />
                     <div className="absolute top-2 right-2">
                       <div
@@ -208,7 +226,7 @@ const BossTemplate = () => {
                   </div>
 
                   {/* Boss Info */}
-                  <div className="p-4 space-y-3">
+                  <div className="pt-4 px-4 space-y-3">
                     <div>
                       <h3 className="font-semibold text-base mb-1">
                         {boss.name}
@@ -229,7 +247,7 @@ const BossTemplate = () => {
                             <Badge
                               key={category.id}
                               variant="outline"
-                              className="text-xs px-1.5 py-0.5 bg-blue-50 text-blue-700 border-blue-200"
+                              className={`text-xs px-1.5 py-0.5`}
                             >
                               {category.name}
                             </Badge>
@@ -240,7 +258,7 @@ const BossTemplate = () => {
 
                     {/* Boss Stats */}
                     <div className="space-y-2 text-sm">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between pt-2 border-t">
                         <span className="text-muted-foreground flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           Cooldown

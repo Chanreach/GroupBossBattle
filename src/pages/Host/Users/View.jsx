@@ -185,9 +185,9 @@ const View = () => {
         {/* Search Card */}
         <Card>
           <CardContent className="p-4">
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               {/* Search Input */}
-              <div className="relative flex-1">
+              <div className="relative flex-1 w-full">
                 {searching ? (
                   <Loader2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
                 ) : (
@@ -198,7 +198,7 @@ const View = () => {
                   placeholder="Search users by username or email..."
                   value={searchTerm}
                   onChange={handleSearch}
-                  className="pl-10 bg-white dark:bg-black border-gray-200 dark:border-gray-700 dark:text-white transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                  className="pl-10 h-10"
                 />
                 {searchTerm && (
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -219,21 +219,19 @@ const View = () => {
               </div>
               
               {/* Role Filter */}
-              <div className="w-48">
-                <Select value={roleFilter} onValueChange={setRoleFilter}>
-                  <SelectTrigger className="bg-white dark:bg-black border-gray-200 dark:border-gray-700 dark:text-white">
-                    <div className="flex items-center gap-2">
-                      <Filter className="h-4 w-4 text-muted-foreground" />
-                      <SelectValue placeholder="Filter by role" />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Roles</SelectItem>
-                    <SelectItem value="host">Host Only</SelectItem>
-                    <SelectItem value="player">Player Only</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <Select value={roleFilter} onValueChange={setRoleFilter}>
+                <SelectTrigger className="w-full sm:w-40">
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-muted-foreground" />
+                    <SelectValue placeholder="Filter by role" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Roles</SelectItem>
+                  <SelectItem value="host">Host Only</SelectItem>
+                  <SelectItem value="player">Player Only</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
@@ -257,7 +255,7 @@ const View = () => {
             )}
 
             {users.length > 0 ? (
-              <div className="divide-y divide-gray-200 dark:divide-gray-700">
+              <div className="divide-y divide-gray-200 dark:divide-accent">
                 {users.map((user) => (
                   <div key={user.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200 ease-in-out">
                     <div className="flex items-center justify-between gap-4">

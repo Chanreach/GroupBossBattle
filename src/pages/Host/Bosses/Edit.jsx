@@ -340,7 +340,7 @@ const EditBoss = () => {
                           <img
                             src={imagePreview}
                             alt="Boss preview"
-                            className="w-full max-w-sm h-48 object-cover rounded-lg mx-auto"
+                            className="w-full max-w-sm object-cover rounded-lg mx-auto aspect-square"
                           />
                           <div className="flex justify-center gap-2">
                             <Button

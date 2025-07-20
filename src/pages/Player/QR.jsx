@@ -22,9 +22,6 @@ const QR = () => {
   const [detectedUrl, setDetectedUrl] = useState("");
   const [cameraError, setCameraError] = useState("");
   const [bossCode, setBossCode] = useState("");
-  const [isValidating, setIsValidating] = useState(false);
-  const [validationMessage, setValidationMessage] = useState("");
-  const [validationStatus, setValidationStatus] = useState(""); // "success", "error", or ""
   const [scannerState, setScannerState] = useState({
     isCameraActive: false,
     isProcessing: false,
@@ -111,88 +108,11 @@ const QR = () => {
     setCameraError("");
   };
 
-  const handleJoinWithCode = async () => {
+  const handleJoinWithCode = () => {
     if (!bossCode || !bossCode.trim()) return;
     
-    setIsValidating(true);
-    setValidationMessage("");
-    setValidationStatus("");
-    
-    try {
-      // Try multiple validation approaches
-      let validationResponse = null;
-      
-      // Method 1: Check if dedicated validation endpoint exists
-      try {
-        validationResponse = await apiClient.get(`/events/bosses/validate-code/${encodeURIComponent(bossCode.trim())}`);
-      } catch (error) {
-        if (error.response?.status !== 404) {
-          throw error; // Re-throw if it's not a 404 (endpoint not found)
-        }
-      }
-      
-      // Method 2: If validation endpoint doesn't exist, try to find the boss by searching events
-      if (!validationResponse) {
-        try {
-          // Try to find boss by searching through all events
-          const eventsResponse = await apiClient.get('/events');
-          const allEvents = eventsResponse.data || [];
-          
-          let foundBoss = null;
-          for (const event of allEvents) {
-            if (event.eventBosses) {
-              const matchingBoss = event.eventBosses.find(eb => eb.joinCode === bossCode.trim());
-              if (matchingBoss) {
-                foundBoss = matchingBoss;
-                break;
-              }
-            }
-          }
-          
-          if (foundBoss) {
-            validationResponse = { 
-              data: { 
-                success: true, 
-                boss: foundBoss.boss || { name: 'Boss Battle' } 
-              } 
-            };
-          }
-        } catch (searchError) {
-          console.error('Error searching for boss:', searchError);
-        }
-      }
-      
-      // If no validation response found, the code is invalid
-      if (!validationResponse) {
-        setValidationStatus("error");
-        setValidationMessage("This boss code is invalid");
-        return;
-      }
-      
-      // Process successful validation
-      if (validationResponse.data && validationResponse.data.success) {
-        setValidationStatus("success");
-        setValidationMessage(`Boss found: ${validationResponse.data.boss.name}`);
-        
-        // Navigate to boss preview after a short delay to show success message
-        setTimeout(() => {
-          navigate(`/boss-preview?joinCode=${encodeURIComponent(bossCode.trim())}`);
-        }, 1000);
-      } else {
-        setValidationStatus("error");
-        setValidationMessage("This boss code is invalid");
-      }
-    } catch (error) {
-      console.error('Error validating boss code:', error);
-      setValidationStatus("error");
-      if (error.response?.status === 404) {
-        setValidationMessage("This boss code is invalid");
-      } else {
-        setValidationMessage("Failed to validate boss code. Please try again.");
-      }
-    } finally {
-      setIsValidating(false);
-    }
+    // Navigate directly without validation
+    navigate(`/boss-preview/join?code=${encodeURIComponent(bossCode.trim())}`);
   };
 
   // ===== RENDER ===== //
@@ -337,34 +257,15 @@ const QR = () => {
                   placeholder="Enter Boss Code"
                   className="w-full p-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   value={bossCode}
-                  onChange={(e) => {
-                    setBossCode(e.target.value);
-                    // Clear validation message when user starts typing
-                    if (validationMessage) {
-                      setValidationMessage("");
-                      setValidationStatus("");
-                    }
-                  }}
-                  disabled={isValidating}
+                  onChange={(e) => setBossCode(e.target.value)}
                 />
-                
-                {/* Validation Message */}
-                {validationMessage && (
-                  <div className={`text-center p-3 rounded-lg border text-sm font-medium ${
-                    validationStatus === "success" 
-                      ? "bg-green-500/10 border-green-500/20 text-green-800 dark:text-green-200" 
-                      : "bg-red-500/10 border-red-500/20 text-red-800 dark:text-red-200"
-                  }`}>
-                    {validationMessage}
-                  </div>
-                )}
                 
                 <Button 
                   onClick={handleJoinWithCode} 
                   className="w-full" 
-                  disabled={!bossCode.trim() || isValidating}
+                  disabled={!bossCode.trim()}
                 >
-                  {isValidating ? "Validating..." : "Join Battle"}
+                  Join Battle
                 </Button>
               </CardContent>
             </Card>

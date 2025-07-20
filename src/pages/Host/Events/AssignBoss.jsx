@@ -264,7 +264,7 @@ const AssignBoss = () => {
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 sm:px-6 py-6 max-w-4xl">
+        <div className="container mx-auto px-4 sm:px-6 py-6 max-w-6xl">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
@@ -310,8 +310,17 @@ const AssignBoss = () => {
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
+
                   <div className="flex items-center justify-between mb-2">
-                    <h2 className="text-lg font-semibold">{event.name}</h2>
+                    <h2 className="text-lg font-semibold">{event.name}
+                        <Badge
+                          variant="outline"
+                          className="bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800 ml-4 mt-auto"
+                        >
+                          <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full mr-2"></div>
+                          {event.status || "Active"}
+                        </Badge>
+                      </h2>
                     {user?.role === "admin" && (
                       <Button
                         variant="outline"
@@ -324,32 +333,34 @@ const AssignBoss = () => {
                       </Button>
                     )}
                   </div>
+
                   {event.description && (
                     <p className="text-sm text-muted-foreground mt-1 mb-2">
                       {event.description}
                     </p>
                   )}
+                  
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <span>
                       <strong>Start:</strong>{" "}
                       {event.startTime
                         ? new Date(event.startTime).toLocaleDateString() +
-                          " " +
-                          new Date(event.startTime).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
+                        " " +
+                        new Date(event.startTime).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
                         : "N/A"}
                     </span>
                     <span>
                       <strong>End:</strong>{" "}
                       {event.endTime
                         ? new Date(event.endTime).toLocaleDateString() +
-                          " " +
-                          new Date(event.endTime).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
+                        " " +
+                        new Date(event.endTime).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
                         : "N/A"}
                     </span>
                     <span>
@@ -357,13 +368,7 @@ const AssignBoss = () => {
                     </span>
                   </div>
                 </div>
-                <Badge
-                  variant="outline"
-                  className="bg-green-50 text-green-700 border-green-200 ml-4"
-                >
-                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                  {event.status || "Active"}
-                </Badge>
+                
               </div>
             </CardHeader>
           </Card>
@@ -412,7 +417,7 @@ const AssignBoss = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {assignedBosses.map((boss) => (
                   <Card
                     key={boss.id}
@@ -450,28 +455,28 @@ const AssignBoss = () => {
                           {/* Only show remove button if user can unassign this boss */}
                           {(user?.role === "admin" ||
                             boss.creatorId === user?.id) && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="w-8 h-8 p-0 bg-background/80 hover:bg-background"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRemoveBoss(boss);
-                                  }}
-                                >
-                                  <X className="w-4 h-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Unassign Boss</TooltipContent>
-                            </Tooltip>
-                          )}
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="w-8 h-8 p-0 bg-background/80 hover:bg-background"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRemoveBoss(boss);
+                                    }}
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Unassign Boss</TooltipContent>
+                              </Tooltip>
+                            )}
                         </div>
                       </div>
 
                       {/* Boss Info */}
-                      <div className="p-4 space-y-3">
+                      <div className="pt-4 px-4 space-y-3">
                         <div>
                           <h3 className="font-semibold text-base mb-1">
                             {boss.name}
@@ -495,7 +500,7 @@ const AssignBoss = () => {
                                 <Badge
                                   key={category.id}
                                   variant="outline"
-                                  className="text-xs px-1.5 py-0.5 bg-blue-50 text-blue-700 border-blue-200"
+                                  className={`text-xs px-1.5 py-0.5`}
                                 >
                                   {category.name}
                                 </Badge>
@@ -516,7 +521,7 @@ const AssignBoss = () => {
                               </span>
                             </div>
                           ) : (
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between pt-2 border-t">
                               <span className="text-sm text-muted-foreground">
                                 Teams Allowed:
                               </span>
@@ -536,7 +541,7 @@ const AssignBoss = () => {
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex items-center justify-between pt-2 border-t">
+                        <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1">
                             {boss.status === "cooldown" && (
                               <Tooltip>
