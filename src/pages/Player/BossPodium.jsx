@@ -1,6 +1,6 @@
 // ===== LIBRARIES ===== //
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   Users,
@@ -39,6 +39,7 @@ import useBossBattle from "@/hooks/useBossBattle";
 
 // ===== UTILITIES ===== //
 import { startConfettiCelebration } from "@/lib/Confetti";
+import { leaderboardAPI } from "@/services/api";
 
 // ===== AUDIOS ===== //
 import victoryDrumsSound from "@/assets/Audio/victory-drums.mp3";
@@ -49,7 +50,9 @@ import "@/index.css";
 
 const BossPodium = () => {
   const navigate = useNavigate();
-  const { socket, currentBoss } = useBossBattle();
+  const { eventBossId, joinCode } = useParams();
+  const location = useLocation();
+  const { socket } = useBossBattle();
   const [currentPage, setCurrentPage] = useState({
     teams: 1,
     individual: 1,
@@ -63,73 +66,139 @@ const BossPodium = () => {
     mvpPlayer: null,
     battleStats: null,
     isLoading: true,
+    eventBossInfo: null,
   });
+  const [hasReceivedData, setHasReceivedData] = useState(false);
   const PAGE_SIZE = 10;
 
   // ===== BOSS CONFIGURATION ===== //
-  const BOSS_NAME = currentBoss?.name || "CS Boss";
+  const BOSS_NAME = leaderboardData.eventBossInfo?.bossName || "Boss";
 
   // ===== EFFECT: Load leaderboard data and set up socket listeners ===== //
   useEffect(() => {
     if (!socket) return;
 
+    console.log("🏆 Podium mounted - waiting for leaderboard data...");
+
     // Listen for final leaderboards from backend
     const handleFinalLeaderboards = (data) => {
       console.log("📊 Received final leaderboards:", data);
 
-      setLeaderboardData({
+      setLeaderboardData((prev) => ({
+        ...prev,
         teamLeaderboard: data.teamLeaderboard || [],
         individualLeaderboard: data.playerLeaderboard || [],
-        allTimeLeaderboard: [], // Will be loaded separately via API
         winningTeam: data.winningTeam,
         mvpPlayer: data.mvpPlayer,
         battleStats: data.battleStats,
+        eventBossInfo: {
+          eventBossId: data.eventBossId,
+          bossName: data.bossName || "Boss",
+        },
         isLoading: false,
-      });
+      }));
     };
+
+    // Also try to get data from location state (passed from battle)
+    if (location.state && location.state.leaderboardData) {
+      console.log(
+        "📊 Using leaderboard data from location state:",
+        location.state.leaderboardData
+      );
+      const data = location.state.leaderboardData;
+      setLeaderboardData((prev) => ({
+        ...prev,
+        teamLeaderboard: data.teamLeaderboard || [],
+        individualLeaderboard: data.playerLeaderboard || [],
+        winningTeam: data.winningTeam,
+        mvpPlayer: data.mvpPlayer,
+        battleStats: data.battleStats,
+        eventBossInfo: {
+          eventBossId: data.eventBossId,
+          bossName: data.bossName || "Boss",
+        },
+        isLoading: false,
+      }));
+    }
 
     socket.on("final-leaderboards", handleFinalLeaderboards);
 
-    // Load all-time leaderboard from API for this specific boss
+    // Load all-time leaderboard from API
     const loadAllTimeLeaderboard = async () => {
       try {
-        const bossId = currentBoss?.id || 'default';
-        const response = await fetch(
-          `http://localhost:3000/api/leaderboards/all-time?bossId=${bossId}`
-        );
-        if (response.ok) {
-          const allTimeData = await response.json();
+        // Use eventBossId from params or get from current session
+        const currentEventBossId = eventBossId || location.state?.eventBossId;
+
+        if (currentEventBossId) {
+          console.log(
+            "📈 Loading boss-specific all-time leaderboard for eventBossId:",
+            currentEventBossId
+          );
+
+          // Get the boss ID from the event boss
+          const eventData = location.state?.eventData;
+          const bossId = eventData?.bossId;
+
+          if (bossId) {
+            const response = await leaderboardAPI.getBossAllTimeLeaderboard(
+              bossId,
+              50
+            );
+            setLeaderboardData((prev) => ({
+              ...prev,
+              allTimeLeaderboard: response.leaderboard || [],
+            }));
+            console.log(
+              "📈 Boss all-time leaderboard loaded:",
+              response.leaderboard
+            );
+          } else {
+            // Fallback to general all-time leaderboard
+            const response = await leaderboardAPI.getAllTimeLeaderboard(50);
+            setLeaderboardData((prev) => ({
+              ...prev,
+              allTimeLeaderboard: response.leaderboard || [],
+            }));
+          }
+        } else {
+          console.warn("⚠️ No eventBossId available for all-time leaderboard");
+          // Load general all-time leaderboard as fallback
+          const response = await leaderboardAPI.getAllTimeLeaderboard(50);
           setLeaderboardData((prev) => ({
             ...prev,
-            allTimeLeaderboard: allTimeData.leaderboard || [],
+            allTimeLeaderboard: response.leaderboard || [],
           }));
-          console.log("📈 All-time leaderboard loaded for boss:", bossId);
         }
       } catch (error) {
         console.error("Error loading all-time leaderboard:", error);
+        // Set empty array on error
+        setLeaderboardData((prev) => ({
+          ...prev,
+          allTimeLeaderboard: [],
+        }));
       }
     };
 
     loadAllTimeLeaderboard();
 
-    // If no data is received initially, show loading state
+    // If no data is received initially, try to fetch from session storage or show empty state
     const timeout = setTimeout(() => {
-      if (leaderboardData.isLoading) {
-        console.log("⏳ Waiting for battle completion data...");
-        // Keep loading state - no mock data
-        setLeaderboardData(prev => ({
-          ...prev,
-          isLoading: false // Stop loading after timeout, show empty state
-        }));
-      }
-    }, 5000); // Wait longer for real data
+      setLeaderboardData((prev) => {
+        if (prev.isLoading && prev.teamLeaderboard.length === 0) {
+          console.log(
+            "⏳ No leaderboard data received - stopping loading state"
+          );
+          return { ...prev, isLoading: false };
+        }
+        return prev;
+      });
+    }, 3000); // Shorter timeout
 
     return () => {
       socket.off("final-leaderboards", handleFinalLeaderboards);
       clearTimeout(timeout);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [socket]); // Remove leaderboardData.isLoading dependency to avoid infinite loop
+  }, [socket, eventBossId, location.state]);
 
   // ===== RENDER HELPERS ===== //
   const teamLeaderboard = leaderboardData.teamLeaderboard;
@@ -138,10 +207,6 @@ const BossPodium = () => {
 
   const goBack = () => {
     navigate("/qr"); // Go to QR page
-  };
-
-  const handlePlayAgain = () => {
-    navigate("/boss-preview");
   };
 
   // Pagination helpers
@@ -193,27 +258,31 @@ const BossPodium = () => {
     return null;
   };
 
-  // Top 3 individual players for podium
-  const podiumPlayers = individualLeaderboard.slice(0, 3);
+  // Top 3 teams for podium display
+  const podiumTeams = leaderboardData.teamLeaderboard.slice(0, 3);
 
   // Debug logging
   useEffect(() => {
     console.log(
-      "🏆 Podium Debug - Individual Leaderboard:",
-      individualLeaderboard
+      "🏆 Podium Debug - Team Leaderboard:",
+      leaderboardData.teamLeaderboard
     );
-    console.log("🏆 Podium Debug - Podium Players:", podiumPlayers);
+    console.log("🏆 Podium Debug - Podium Teams:", podiumTeams);
+    console.log(
+      "🏆 Podium Debug - Individual Leaderboard:",
+      leaderboardData.individualLeaderboard
+    );
     console.log("🏆 Podium Debug - Full Leaderboard Data:", leaderboardData);
-  }, [individualLeaderboard, podiumPlayers, leaderboardData]);
-
-  // Audio
-  const victoryDrumsAudio = new Audio(victoryDrumsSound);
-  const victoryThemeAudio = new Audio(victoryThemeSound);
-  victoryDrumsAudio.volume = 0.03;
-  victoryThemeAudio.volume = 0.02;
+  }, [leaderboardData, podiumTeams]);
 
   // Confetti celebration and victory sounds on component mount
   useEffect(() => {
+    // Audio objects
+    const victoryDrumsAudio = new Audio(victoryDrumsSound);
+    const victoryThemeAudio = new Audio(victoryThemeSound);
+    victoryDrumsAudio.volume = 0.03;
+    victoryThemeAudio.volume = 0.02;
+
     const playVictorySounds = async () => {
       try {
         // Play victory drums first
@@ -345,21 +414,21 @@ const BossPodium = () => {
           <CardContent>
             {/* Desktop Podium */}
             <div className="flex items-end justify-center gap-6 py-4">
-              {podiumPlayers.length > 0 ? (
-                podiumPlayers.map((player, idx) => {
+              {podiumTeams.length > 0 ? (
+                podiumTeams.map((team, idx) => {
                   // Height for podium effect
                   let height =
-                    player.rank === 1 ? 120 : player.rank === 2 ? 80 : 60;
-                  // Animation classes based on rank - only for the avatar
+                    team.rank === 1 ? 120 : team.rank === 2 ? 80 : 60;
+                  // Animation classes based on rank - only for the team icon
                   let animationClass =
-                    player.rank === 1
+                    team.rank === 1
                       ? "animate-bounce-excited-first"
-                      : player.rank === 2
+                      : team.rank === 2
                       ? "animate-bounce-excited-second"
                       : "animate-bounce-excited-third";
                   return (
                     <div
-                      key={player.rank}
+                      key={team.teamId}
                       className={`flex flex-col items-center ${
                         idx === 0
                           ? "order-2"
@@ -369,45 +438,72 @@ const BossPodium = () => {
                       }`}
                     >
                       <div className="mb-2 relative">
-                        <Avatar
-                          className={`w-20 h-20 md:w-24 md:h-24 border-4 border-gray-200 dark:border-gray-700 shadow-lg ${animationClass}`}
+                        <div
+                          className={`w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-gray-200 dark:border-gray-700 shadow-lg ${animationClass} flex items-center justify-center`}
+                          style={{
+                            background:
+                              team.rank === 1
+                                ? "linear-gradient(135deg, #FFD700, #FFA500)"
+                                : team.rank === 2
+                                ? "linear-gradient(135deg, #C0C0C0, #808080)"
+                                : "linear-gradient(135deg, #CD7F32, #8B4513)",
+                          }}
                         >
-                          <AvatarImage
-                            src={player.avatar}
-                            alt={player.nickname || player.username}
-                          />
-                          <AvatarFallback>
-                            {(player.nickname || player.username || "P")[0]}
-                          </AvatarFallback>
-                        </Avatar>
+                          <Users className="w-10 h-10 md:w-12 md:h-12 text-white" />
+                        </div>
                         <div
                           className={`absolute -top-3 -right-3 w-8 h-8 rounded-full ${getPodiumColor(
-                            player.rank
+                            team.rank
                           )} flex items-center justify-center shadow-lg border-2 border-white`}
                         >
-                          {getPodiumIcon(player.rank)}
+                          {getPodiumIcon(team.rank)}
                         </div>
                       </div>
-                      <div className="font-bold text-lg mb-1">
-                        {player.nickname || player.username}
+                      <div className="font-bold text-lg mb-1 text-center">
+                        {team.teamName || `Team ${team.teamId}`}
                       </div>
                       <div className="text-xs text-muted-foreground mb-1">
-                        {(player.totalDamage || 0).toLocaleString()} DMG
+                        {(
+                          team.totalDamageDealt ||
+                          team.totalDamage ||
+                          0
+                        ).toLocaleString()}{" "}
+                        DMG
+                      </div>
+                      <div className="text-xs text-muted-foreground mb-1">
+                        {team.playerCount} Player
+                        {team.playerCount !== 1 ? "s" : ""}
                       </div>
                       <div className="text-xs text-muted-foreground mb-2">
-                        {Math.round(player.accuracy || 0)}% Correct
+                        {team.players && team.players.length > 0
+                          ? Math.round(
+                              team.players.reduce(
+                                (sum, p) =>
+                                  sum +
+                                  (parseFloat(
+                                    p.totalCorrectAnswers || p.accuracy
+                                  ) || 0),
+                                0
+                              ) / team.players.length
+                            )
+                          : 0}
+                        {team.players &&
+                        team.players[0] &&
+                        team.players[0].totalCorrectAnswers !== undefined
+                          ? " Avg Correct"
+                          : "% Avg Accuracy"}
                       </div>
                       <div
                         className={`w-20 md:w-24 h-6 rounded-t-lg ${getPodiumColor(
-                          player.rank
+                          team.rank
                         )} text-white flex items-center justify-center font-bold text-sm shadow-lg`}
                         style={{ height: `${height}px` }}
                       >
-                        {player.rank === 1
-                          ? "1st"
-                          : player.rank === 2
-                          ? "2nd"
-                          : "3rd"}
+                        {team.rank === 1
+                          ? "🏆 Winner"
+                          : team.rank === 2
+                          ? "🥈 2nd"
+                          : "🥉 3rd"}
                       </div>
                     </div>
                   );
@@ -494,7 +590,7 @@ const BossPodium = () => {
                           Total DMG
                         </TableHead>
                         <TableHead className="text-right whitespace-normal">
-                          Correct %
+                          Total Correct
                         </TableHead>
                       </TableRow>
                     </TableHeader>
@@ -529,18 +625,17 @@ const BossPodium = () => {
                             </div>
                           </TableCell>
                           <TableCell className="text-right font-medium">
-                            {team.totalDamage || 0}
+                            {team.totalDamageDealt || team.totalDamage || 0}
                           </TableCell>
                           <TableCell className="text-right">
                             {team.players && team.players.length > 0
-                              ? Math.round(
-                                  team.players.reduce(
-                                    (sum, p) => sum + (p.accuracy || 0),
-                                    0
-                                  ) / team.players.length
+                              ? team.players.reduce(
+                                  (sum, p) =>
+                                    sum +
+                                    (p.totalCorrectAnswers || p.accuracy || 0),
+                                  0
                                 )
                               : 0}
-                            %
                           </TableCell>
                         </TableRow>
                       ))}
@@ -679,7 +774,10 @@ const BossPodium = () => {
                                 </AvatarFallback>
                               </Avatar>
                               <span className="font-medium">
-                                {player.nickname || player.username}
+                                {player.nickname ||
+                                  player.username ||
+                                  player.User?.username ||
+                                  `Player ${player.playerId}`}
                               </span>
                               {player.rank === 1 && (
                                 <Crown className="w-4 h-4 text-yellow-500" />
@@ -687,10 +785,14 @@ const BossPodium = () => {
                             </div>
                           </TableCell>
                           <TableCell className="text-right font-medium">
-                            {player.totalDamage || 0}
+                            {player.totalDamageDealt || player.totalDamage || 0}
                           </TableCell>
                           <TableCell className="text-right">
-                            {Math.round(player.accuracy || 0)}%
+                            {player.totalCorrectAnswers !== undefined
+                              ? player.totalCorrectAnswers
+                              : player.accuracy
+                              ? Math.round(player.accuracy) + "%"
+                              : "0"}
                           </TableCell>
                         </TableRow>
                       ))}

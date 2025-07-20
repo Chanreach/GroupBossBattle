@@ -197,6 +197,9 @@ const BossBattle = () => {
   // ===== BADGE NOTIFICATIONS ===== //
   const [badgeNotifications, setBadgeNotifications] = useState([]); // Array of badge notification objects
 
+  // ===== FINAL LEADERBOARD DATA ===== //
+  const [finalLeaderboardData, setFinalLeaderboardData] = useState(null); // Store final leaderboard data for podium
+
   // ===== QUESTION DATA (Backend Integration) ===== //
   const [currentQuestionData, setCurrentQuestionData] = useState(null);
   const [isLoadingQuestion, setIsLoadingQuestion] = useState(false);
@@ -570,22 +573,30 @@ const BossBattle = () => {
 
       // **FIXED: Request next question after processing answer result**
       // Only request if player is not knocked out and boss is still alive
-      if (!data.battleStatus?.isKnockedOut && data.battleStatus?.bossCurrentHp > 0) {
+      if (
+        !data.battleStatus?.isKnockedOut &&
+        data.battleStatus?.bossCurrentHp > 0
+      ) {
         console.log("📝 Answer result processed, requesting next question...");
-        
+
         // Add a small delay to ensure all state updates are processed
         setTimeout(() => {
           if (socket && (eventBossId || fallbackEventId)) {
             const currentEventBossId = eventBossId || fallbackEventId;
-            console.log("📤 Requesting next question for event boss:", currentEventBossId);
-            
+            console.log(
+              "📤 Requesting next question for event boss:",
+              currentEventBossId
+            );
+
             socket.emit("question:request", {
               eventBossId: currentEventBossId,
             });
           }
         }, 100);
       } else {
-        console.log("📝 Not requesting next question - player knocked out or boss defeated");
+        console.log(
+          "📝 Not requesting next question - player knocked out or boss defeated"
+        );
       }
     });
 
@@ -621,6 +632,12 @@ const BossBattle = () => {
           console.log("Audio play failed:", error);
         });
       }
+    });
+
+    // **NEW: Listen for final leaderboards data**
+    socket.on("final-leaderboards", (data) => {
+      console.log("📊 Received final leaderboards in battle:", data);
+      setFinalLeaderboardData(data);
     });
 
     // **NEW: Listen for badge notifications**
@@ -954,6 +971,7 @@ const BossBattle = () => {
       socket.off("answer-result");
       socket.off("player-attacked");
       socket.off("boss-defeated");
+      socket.off("final-leaderboards");
       socket.off("badge-earned");
       socket.off("battle-state-updated");
       socket.off("battle-status-update");
@@ -1332,9 +1350,14 @@ const BossBattle = () => {
             clearInterval(countdownInterval);
             setIsBossDefeatCountdownVisible(false);
             setIsBossDefeatMessageVisible(false);
-            // Navigate to the victory podium page
+            // Navigate to the victory podium page with leaderboard data
             console.log("Boss defeated! Going to podium...");
-            navigate("/boss-podium");
+            navigate("/boss-podium", {
+              state: {
+                leaderboardData: finalLeaderboardData,
+                eventBossId: eventBossId || fallbackEventId,
+              },
+            });
           }
         }, 1000); // 1 second intervals for countdown
       }, BOSS_DEFEAT_COUNTDOWN_DELAY_MS); // Easy to modify: currently 1 second total
@@ -1344,7 +1367,13 @@ const BossBattle = () => {
         clearTimeout(countdownTimer);
       };
     }
-  }, [bossCurrentHealth, navigate]);
+  }, [
+    bossCurrentHealth,
+    navigate,
+    eventBossId,
+    fallbackEventId,
+    finalLeaderboardData,
+  ]);
 
   // Get timer color based on time remaining
   const getTimerColor = () => {
