@@ -277,46 +277,42 @@ const QuestionBankView = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-3 sm:px-4 py-4 max-w-7xl page-container">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-              Question Bank
-            </h1>
-          </div>
-          <Button
-            onClick={handleAddNew}
-            className="flex items-center gap-2 shadow-sm text-sm"
-          >
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">
-              Add {viewMode === "category" ? "Category" : "Question"}
-            </span>
-          </Button>
+    <div className="container mx-auto px-4 sm:px-6 py-6 max-w-6xl">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <div className=" "></div>
+          <h1 className="text-2xl font-bold tracking-tight">Question Bank</h1>
         </div>
+        <Button
+          onClick={handleAddNew}
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Add {viewMode === "category" ? "Category" : "Question"}
+        </Button>
+      </div>
 
-        {/* Controls */}
-        <Card className="mb-4 border-0 shadow-sm">
-          <CardContent className="p-4 space-y-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              
-              {/* View Mode Select */}
-              <div className="flex items-center gap-3 w-full sm:w-auto">
-                <Label className="text-sm font-medium whitespace-nowrap">
-                  View:
-                </Label>
-                <Select value={viewMode} onValueChange={handleViewModeChange}>
-                  <SelectTrigger className="">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="category">Categories</SelectItem>
-                    <SelectItem value="question">Questions</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+      {/* Controls */}
+      <Card className="mb-6 border-0 shadow-sm">
+        <CardContent className="p-4 space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            
+            {/* View Mode Select */}
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <Label className="text-sm font-medium whitespace-nowrap">
+                View:
+              </Label>
+              <Select value={viewMode} onValueChange={handleViewModeChange}>
+                <SelectTrigger className="">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="category">Categories</SelectItem>
+                  <SelectItem value="question">Questions</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
               {/* Search Input */}
               <div className="relative flex-1 w-full">
@@ -670,7 +666,6 @@ const QuestionBankView = () => {
             </div>
           )}
         </div>
-      </div>
     </div>
   );
 };

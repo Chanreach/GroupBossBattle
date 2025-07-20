@@ -49,6 +49,7 @@ const EditBoss = () => {
   const [originalFormData, setOriginalFormData] = useState(null);
   const [originalCategories, setOriginalCategories] = useState([]);
   const [originalImageState, setOriginalImageState] = useState(null);
+  const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef(null);
 
   // Fetch categories from API
@@ -120,6 +121,37 @@ const EditBoss = () => {
         setImagePreview(e.target.result);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleFileSelect = (file) => {
+    if (file && file.type.startsWith('image/')) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      handleFileSelect(files[0]);
     }
   };
 
@@ -332,8 +364,17 @@ const EditBoss = () => {
                       className="hidden"
                     />
                     <div
-                      className="border-2 border-dashed border-border rounded-lg p-6 sm:p-8 text-center hover:border-primary/50 transition-colors bg-muted/30 cursor-pointer"
+                      className={`border-2 border-dashed rounded-lg p-6 sm:p-8 text-center transition-colors bg-muted/30 cursor-pointer ${
+                        isDragOver 
+                          ? 'border-primary bg-primary/10' 
+                          : imagePreview 
+                            ? 'border-border hover:border-primary/50' 
+                            : 'border-border hover:border-primary/50'
+                      }`}
                       onClick={!imagePreview ? triggerFileInput : undefined}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
                     >
                       {imagePreview ? (
                         <div className="space-y-4">
@@ -449,7 +490,7 @@ const EditBoss = () => {
                     <div className="relative">
                       {/* Category Display Bar with Tags and Dropdown Arrow */}
                       <div
-                        className="flex px-2 py-2 w-full rounded-md border border-input bg-background dark:bg-input/30 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[40px] flex-wrap gap-2 items-start cursor-pointer hover:border-muted-foreground/50"
+                        className="flex px-2 w-full rounded-md border border-input bg-background dark:bg-input/30 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[40px] py-2 flex-wrap gap-2 items-center cursor-pointer hover:border-muted-foreground/50"
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                       >
                         {/* Selected Category Tags */}

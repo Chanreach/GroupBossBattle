@@ -15,6 +15,7 @@ const CreateBoss = () => {
   const [availableCategories, setAvailableCategories] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [isDragOver, setIsDragOver] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -76,6 +77,11 @@ const CreateBoss = () => {
     
     if (!formData.name.trim()) {
       toast.error('Boss name is required');
+      return;
+    }
+
+    if (!selectedImage) {
+      toast.error('Boss image is required');
       return;
     }
 
@@ -153,7 +159,7 @@ const CreateBoss = () => {
             <CardHeader>
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <ImageIcon className="h-5 w-5" />
-                Boss Image
+                Boss Image *
               </h3>
             </CardHeader>
             <CardContent>

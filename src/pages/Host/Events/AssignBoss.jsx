@@ -115,7 +115,7 @@ const AssignBoss = () => {
 
   const handleShowQR = async (boss) => {
     try {
-      const joinUrl = `${window.location.origin}/boss-preview/join?code=${boss.joinCode}`;
+      const joinUrl = `${window.location.origin}/boss-preview/${boss.eventBossId}/${boss.joinCode}`;
       setQrDialog({
         isOpen: true,
         bossName: boss.name,
@@ -124,16 +124,30 @@ const AssignBoss = () => {
         loading: true,
       });
 
-      // Fetch the actual QR code from the API
-      const response = await apiClient.get(
-        `/events/${eventId}/bosses/${boss.id}/qr`
-      );
+      try {
+        // Try to fetch the QR code from the API first
+        const response = await apiClient.get(
+          `/events/${eventId}/bosses/${boss.eventBossId}/qr`
+        );
 
-      setQrDialog((prev) => ({
-        ...prev,
-        qrCode: response.data.qrCode,
-        loading: false,
-      }));
+        setQrDialog((prev) => ({
+          ...prev,
+          qrCode: response.data.qrCode,
+          loading: false,
+        }));
+      } catch (apiError) {
+        console.warn("Backend QR generation failed, using fallback:", apiError);
+        
+        // Fallback: Generate QR code using a client-side library or service
+        // For now, we'll use a free QR code service
+        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=${encodeURIComponent(joinUrl)}`;
+        
+        setQrDialog((prev) => ({
+          ...prev,
+          qrCode: qrCodeUrl,
+          loading: false,
+        }));
+      }
     } catch (error) {
       console.error("Error generating QR code:", error);
       toast.error("Failed to generate QR code");

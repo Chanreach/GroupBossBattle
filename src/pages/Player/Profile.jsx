@@ -149,7 +149,7 @@ const Profile = () => {
   };
 
   const handleBack = () => {
-    navigate("/"); // Go to home page
+    navigate(-1); // Go back to previous page
   };
 
   const handleLogout = async () => {

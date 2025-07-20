@@ -182,55 +182,49 @@ const QuestionsIndex = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-3 sm:px-4 py-4 max-w-7xl page-container">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleBack}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Back</span>
-            </Button>
-            <div className="flex items-center gap-3">
-              <h1 className="text-lg sm:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-                Question Bank
-              </h1>
-            </div>
-          </div>
+    <div className="container mx-auto px-4 sm:px-6 py-6 max-w-6xl">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
           <Button
-            onClick={handleAddNew}
-            className="flex items-center gap-2 shadow-sm text-sm"
+            variant="ghost"
+            size="sm"
+            onClick={handleBack}
+            className="p-2 hover:bg-accent/50"
           >
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Add Question</span>
+            <ArrowLeft className="h-5 w-5" />
           </Button>
+          <h1 className="text-2xl font-bold tracking-tight">Question Bank</h1>
         </div>
+        <Button
+          onClick={handleAddNew}
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Add Question
+        </Button>
+      </div>
 
-        {/* Controls */}
-        <Card className="mb-4 border-0 shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row gap-3">
-              
-              {/* View Mode Select */}
-              <div className="flex items-center gap-3">
-                <Label className="text-sm font-medium whitespace-nowrap">
-                  View:
-                </Label>
-                <Select value={viewMode} onValueChange={handleViewModeChange}>
-                  <SelectTrigger className="sm:w-auto w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="category">Categories</SelectItem>
-                    <SelectItem value="question">Questions</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+      {/* Controls */}
+      <Card className="mb-6 border-0 shadow-sm">
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            
+            {/* View Mode Select */}
+            <div className="flex items-center gap-3">
+              <Label className="text-sm font-medium whitespace-nowrap">
+                View:
+              </Label>
+              <Select value={viewMode} onValueChange={handleViewModeChange}>
+                <SelectTrigger className="sm:w-auto w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="category">Categories</SelectItem>
+                  <SelectItem value="question">Questions</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
               {/* Search Input */}
               <div className="relative flex-1 sm:w-auto h-full">
@@ -499,7 +493,6 @@ const QuestionsIndex = () => {
             </div>
           )}
         </div>
-      </div>
     </div>
   );
 };

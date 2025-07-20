@@ -27,11 +27,13 @@ const Edit = () => {
   const navigate = useNavigate();
   
   const [form, setForm] = useState({ 
+    id: '', // Add id to store the UUID
     username: '', 
     email: '', // Store email but don't show in UI
     role: 'player' 
   });
   const [originalForm, setOriginalForm] = useState({ 
+    id: '',
     username: '', 
     email: '', 
     role: 'player' 
@@ -51,6 +53,7 @@ const Edit = () => {
         setError(null);
         const res = await apiClient.get(`/users/${id}`);
         const userData = {
+          id: res.data.id || '', // Store the UUID
           username: res.data.username || '',
           email: res.data.email || '', // Store existing email
           role: res.data.role || 'player',
@@ -265,11 +268,18 @@ const Edit = () => {
                   {form.username.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex items-center gap-2">
-                <span>{form.username}</span>
-                <Badge variant={getRoleBadgeVariant(form.role)} className="text-xs">
-                  {form.role}
-                </Badge>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <span>{form.username}</span>
+                  <Badge variant={getRoleBadgeVariant(form.role)} className="text-xs">
+                    {form.role}
+                  </Badge>
+                </div>
+                {form.id && (
+                  <p className="text-xs text-muted-foreground font-mono">
+                    UUID: {form.id}
+                  </p>
+                )}
               </div>
             </CardTitle>
           </CardHeader>
@@ -297,6 +307,21 @@ const Edit = () => {
                 {validationErrors.username && (
                   <p className="text-xs text-destructive">{validationErrors.username}</p>
                 )}
+              </div>
+
+              {/* Email Field */}
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium">
+                  Email Address
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={form.email}
+                  readOnly
+                  className="bg-muted/60 border-muted text-muted-foreground cursor-default"
+                  placeholder="Email address"
+                />
               </div>
 
               {/* Role Field */}

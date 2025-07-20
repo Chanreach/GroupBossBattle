@@ -55,18 +55,16 @@ const ViewBosses = () => {
   }
 
   return (
-    <div className="container mx-auto max-w-6xl">
+    <div className="container mx-auto px-4 sm:px-6 py-6 max-w-6xl">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4 px-4 sm:px-6 py-6">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <div className=" "></div>
-            <h1 className="text-2xl font-bold tracking-tight">Bosses</h1>
-          </div>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <div className=" "></div>
+          <h1 className="text-2xl font-bold tracking-tight">Bosses</h1>
         </div>
         <Button
           onClick={handleCreateBoss}
-          className="bg-primary hover:bg-primary/90 flex items-center gap-2 w-full sm:w-auto"
+          className="flex items-center gap-2"
         >
           <Plus className="h-4 w-4" />
           Create Boss
@@ -76,7 +74,7 @@ const ViewBosses = () => {
       {/* Content Area */}
       {bosses.length === 0 ? (
         // No Bosses Found State
-        <div className="flex flex-col items-center justify-center py-16 px-4 sm:px-6">
+        <div className="flex flex-col items-center justify-center py-16">
           <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
             <Sword className="h-8 w-8 text-muted-foreground" />
           </div>
@@ -96,7 +94,7 @@ const ViewBosses = () => {
         </div>
       ) : (
         // Bosses Grid
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 px-4 sm:px-6 pb-6">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {bosses.map((boss) => (
             <Card
               key={boss.id}

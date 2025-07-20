@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 
 // ===== API ===== //
 import { apiClient } from "@/api";
+import { eventBossAPI } from "@/services/api";
 
 // ===== QR SCANNER LOGIC ===== //
 import { QRScanner } from "@/lib/QR.js";
@@ -22,6 +23,7 @@ const QR = () => {
   const [detectedUrl, setDetectedUrl] = useState("");
   const [cameraError, setCameraError] = useState("");
   const [bossCode, setBossCode] = useState("");
+  const [isJoining, setIsJoining] = useState(false);
   const [scannerState, setScannerState] = useState({
     isCameraActive: false,
     isProcessing: false,
@@ -49,6 +51,11 @@ const QR = () => {
         setQrResult(result);
         if (result.startsWith('http://') || result.startsWith('https://')) {
           setDetectedUrl(result);
+          // Auto-redirect if URL contains /boss-preview
+          if (result.includes('/boss-preview')) {
+            window.location.href = result;
+            return;
+          }
         } else {
           setDetectedUrl("");
           setCameraError('QR code does not contain a valid link.');
@@ -108,11 +115,25 @@ const QR = () => {
     setCameraError("");
   };
 
-  const handleJoinWithCode = () => {
+  const handleJoinWithCode = async () => {
     if (!bossCode || !bossCode.trim()) return;
     
-    // Navigate directly without validation
-    navigate(`/boss-preview/join?code=${encodeURIComponent(bossCode.trim())}`);
+    setIsJoining(true);
+    setCameraError(""); // Clear any previous errors
+    
+    try {
+      // Fetch eventBossId using the join code
+      const response = await eventBossAPI.getEventBossByJoinCode(bossCode.trim());
+      const eventBossId = response.id;
+      
+      // Navigate to the new URL format with eventBossId and join code
+      navigate(`/boss-preview/${eventBossId}/${bossCode.trim()}`);
+    } catch (error) {
+      console.error('Error fetching boss by join code:', error);
+      setCameraError('Invalid join code. Please check and try again.');
+    } finally {
+      setIsJoining(false);
+    }
   };
 
   // ===== RENDER ===== //
@@ -244,7 +265,7 @@ const QR = () => {
             </Card>
 
             {/* INPUT BOSS CODE */}
-            <Card className="mt-6">
+            {/* <Card className="mt-6">
               <CardHeader className="text-center">
                 <CardTitle className="text-foreground text-xl">Join with Code</CardTitle>
                 <CardDescription className="text-muted-foregrounad">
@@ -263,12 +284,12 @@ const QR = () => {
                 <Button 
                   onClick={handleJoinWithCode} 
                   className="w-full" 
-                  disabled={!bossCode.trim()}
+                  disabled={!bossCode.trim() || isJoining}
                 >
-                  Join Battle
+                  {isJoining ? "Joining..." : "Join Battle"}
                 </Button>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
         </div>
       </main>

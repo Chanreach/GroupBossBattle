@@ -141,48 +141,43 @@ const View = () => {
 
   if (loading && users.length === 0) {
     return (
-      <div className="min-h-screen bg-background p-4">
-        <div className="container mx-auto max-w-4xl">
-          <Card>
-            <CardContent className="p-8 text-center">
-              <div className="text-muted-foreground">Loading users...</div>
-            </CardContent>
-          </Card>
-        </div>
+      <div className="container mx-auto px-4 sm:px-6 py-6 max-w-4xl">
+        <Card>
+          <CardContent className="p-8 text-center">
+            <div className="text-muted-foreground">Loading users...</div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   if (error && users.length === 0) {
     return (
-      <div className="min-h-screen bg-background p-4">
-        <div className="container mx-auto max-w-4xl">
-          <Card>
-            <CardContent className="p-8 text-center">
-              <p className="text-red-500 dark:text-red-400 mb-4">{error}</p>
-              <Button onClick={() => filterUsers()} variant="outline">
-                Try Again
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+      <div className="container mx-auto px-4 sm:px-6 py-6 max-w-4xl">
+        <Card>
+          <CardContent className="p-8 text-center">
+            <p className="text-red-500 dark:text-red-400 mb-4">{error}</p>
+            <Button onClick={() => filterUsers()} variant="outline">
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="container mx-auto max-w-4xl space-y-6">
-        
-        {/* Header */}
-        <div className="flex items-center gap-3">
+    <div className="container mx-auto px-4 sm:px-6 py-6 max-w-6xl">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
           <div className=" "></div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-            User Management
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight">User Management</h1>
         </div>
+      </div>
 
-        {/* Search Card */}
+      {/* Search Card */}
+      <div className="space-y-6">
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">

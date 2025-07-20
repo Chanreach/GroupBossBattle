@@ -243,6 +243,7 @@ const Authentication = () => {
                           value={registerData.username}
                           onChange={handleRegisterChange}
                           className="pl-10"
+                          minLength={4}
                           required
                         />
                       </div>
@@ -279,6 +280,9 @@ const Authentication = () => {
                           value={registerData.password}
                           onChange={handleRegisterChange}
                           className="pl-10 pr-10"
+                          minLength={8}
+                          pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+                          title="8+ chars with uppercase, lowercase, number & symbol"
                           required
                         />
                         <button
