@@ -141,17 +141,17 @@ export function NavSidebar({ ...props }) {
           },
         ],
       },
-      // {
-      //   title: "Information",
-      //   items: [
-      //     {
-      //       title: "About",
-      //       url: "/about",
-      //       icon: BookA,
-      //       isActive: location.pathname === "/about",
-      //     },
-      //   ],
-      // },
+      {
+        title: "Information",
+        items: [
+          {
+            title: "About",
+            url: "/about",
+            icon: BookA,
+            isActive: location.pathname === "/about",
+          },
+        ],
+      },
     ],
     [location.pathname]
   );

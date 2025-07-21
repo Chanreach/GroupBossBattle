@@ -101,7 +101,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   />
                 </Route>
 
-                <Route path="/about" element={<AppLanding />}>
+                {/* About page for logged-out users */}
+                <Route path="/about-us" element={<AppLanding />}>
                   <Route
                     index
                     element={
@@ -132,6 +133,18 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                         <PlayerViewGuard>
                           <PlayerHome />
                         </PlayerViewGuard>
+                      </AuthenticationCheck>
+                    }
+                  />
+                </Route>
+
+                {/* About page for logged-in users */}
+                <Route path="/about" element={<App />}>
+                  <Route
+                    index
+                    element={
+                      <AuthenticationCheck>
+                        <About />
                       </AuthenticationCheck>
                     }
                   />

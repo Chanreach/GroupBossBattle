@@ -41,9 +41,9 @@ const NavLanding = ({ ...props }) => {
           },
           {
             title: "About",
-            url: "/about",
+            url: "/about-us",
             icon: BookA,
-            isActive: location.pathname === "/about",
+            isActive: location.pathname === "/about-us",
           },
         ],
       },

@@ -120,6 +120,22 @@ const Footer = () => {
                                     </TooltipContent>
                                 </Tooltip>
 
+                                {/* Express.js */}
+                                <Tooltip>
+                                    <TooltipTrigger>
+                                        <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
+                                            <img
+                                                src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/express/express-original.svg"
+                                                alt="Express.js"
+                                                className="w-4 h-4 invert"
+                                            />
+                                        </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Express.js</p>
+                                    </TooltipContent>
+                                </Tooltip>
+
                             </div>
                         </TooltipProvider>
                     </div>

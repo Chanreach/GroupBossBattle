@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/pagination";
 
 // ===== LAYOUTS ===== //
-import Spotlight from "@/layouts/Spotlight";
+import Spotlight from "@/lib/Spotlight";
 
 // ===== CONTEXTS ===== //
 import useBossBattle from "@/hooks/useBossBattle";
