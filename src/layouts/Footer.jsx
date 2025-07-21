@@ -15,7 +15,7 @@ const Footer = () => {
                         <div className="flex items-center space-x-3">
                             <img
                                 className="w-12 h-12 object-contain drop-shadow-lg hover:scale-110 transition-transform duration-300"
-                                src="/src/assets/Swords.png"
+                                src="https://em-content.zobj.net/source/microsoft-3D-fluent/406/crossed-swords_2694-fe0f.png"
                                 alt="UniRAID Logo"
                             />
                             <div>

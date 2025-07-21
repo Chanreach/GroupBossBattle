@@ -58,7 +58,7 @@ const Home = () => {
               {/* Swords Image */}
               <div className="mb-0 sm:mb-0 flex justify-center">
                 <img 
-                  src="/src/assets/Swords.png" 
+                  src="https://em-content.zobj.net/source/microsoft-3D-fluent/406/crossed-swords_2694-fe0f.png" 
                   alt="Crossed Swords" 
                   className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 object-contain drop-shadow-lg"
                 />

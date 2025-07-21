@@ -65,7 +65,7 @@ const Landing = () => {
               {/* Swords Image */}
               <div className="mb-0 sm:mb-0 flex justify-center">
                 <img
-                  src="/src/assets/Swords.png"
+                  src="https://em-content.zobj.net/source/microsoft-3D-fluent/406/crossed-swords_2694-fe0f.png"
                   alt="Crossed Swords"
                   className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 object-contain drop-shadow-lg cursor-pointer"
                   onClick={handleLogoClick}
@@ -107,7 +107,7 @@ const Landing = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-2xl mx-auto px-2">
+            {/* <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-2xl mx-auto px-2">
               <div className="text-center p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-800 backdrop-blur-sm border border-gray-200 dark:border-gray-700">
                 <div className="text-2xl sm:text-3xl font-bold mb-1 text-gray-900 dark:text-white">
                   50
@@ -132,7 +132,7 @@ const Landing = () => {
                   Unique Players
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </section>
