@@ -18,6 +18,7 @@ import {
   Smartphone,
   Ambulance,
   Skull,
+  Sword,
 } from "lucide-react";
 
 // ===== HOOKS ===== //
@@ -48,6 +49,7 @@ import useBossBattle from "@/hooks/useBossBattle";
 import { toast } from "sonner";
 import { useAuth } from "@/context/useAuth";
 import { getGuestUser } from "@/utils/guestUtils";
+import { getBossImageUrl } from "@/utils/imageUtils";
 
 // ===== STYLES ===== //
 import "@/index.css";
@@ -1556,17 +1558,28 @@ const BossBattle = () => {
                 isBossTakingDamage ? "bg-red-500/50 shake" : ""
               }`}
             >
-              <img
-                src={`/api/uploads/bosses/${bossData?.boss?.image}`}
-                alt={BOSS_NAME}
-                className={`w-full h-full object-cover transition-all duration-500 ${
-                  isBossTakingDamage ? "opacity-70" : ""
-                } ${
-                  bossCurrentHealth === 0
-                    ? "grayscale brightness-50 blur-sm"
-                    : ""
-                }`}
-              />
+              {bossData?.boss?.image ? (
+                <img
+                  src={getBossImageUrl(bossData.boss.image)}
+                  alt={BOSS_NAME}
+                  className={`w-full h-full object-cover transition-all duration-500 ${
+                    isBossTakingDamage ? "opacity-70" : ""
+                  } ${
+                    bossCurrentHealth === 0
+                      ? "grayscale brightness-50 blur-sm"
+                      : ""
+                  }`}
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                  <div className="text-center">
+                    <Sword className="h-16 w-16 text-primary/60 mx-auto mb-2" />
+                    <span className="text-sm text-muted-foreground">
+                      No Image
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Damage Flash Overlay */}
               {isBossTakingDamage && (

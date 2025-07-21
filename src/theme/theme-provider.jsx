@@ -5,10 +5,10 @@ const ThemeContext = createContext();
 
 // Define provider component
 export function ThemeProvider({ children }) {
-  const [colorScheme, setColorScheme] = useState(null);
+  const [colorScheme, setColorScheme] = useState("light");
 
   useEffect(() => {
-    const saved = localStorage.getItem("colorScheme") || "dark";
+    const saved = localStorage.getItem("colorScheme") || "light";
     setColorScheme(saved);
   }, []);
 
@@ -22,11 +22,6 @@ export function ThemeProvider({ children }) {
   const toggleColorScheme = () => {
     setColorScheme(prev => (prev === "light" ? "dark" : "light"));
   };
-
-  if (!colorScheme) {
-    // Render nothing or a loader until theme is loaded
-    return null;
-  }
 
   return (
     <ThemeContext.Provider value={{ colorScheme, toggleColorScheme }}>
