@@ -1876,7 +1876,7 @@ const BossBattle = () => {
 
                 <div className="pt-4">
                   <Button
-                    onClick={() => navigate("/boss-preview")}
+                    onClick={() => navigate(`/boss-preview/${eventBossId}/${joinCode}`)}
                     variant="outline"
                     className="w-full"
                   >
