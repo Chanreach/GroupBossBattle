@@ -493,7 +493,7 @@ const BossPreview = () => {
   const allTimeLeaderboard = realLeaderboardData.allTimeLeaderboard || [];
 
   const goBack = () => {
-    navigate("/qr");
+    navigate("/");
   };
 
   useEffect(() => {

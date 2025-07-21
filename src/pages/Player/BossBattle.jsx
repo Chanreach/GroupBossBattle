@@ -687,15 +687,26 @@ const BossBattle = () => {
       // Update boss health
       setBossCurrentHealth(data.bossCurrentHp);
 
-      // Generate floating damage number for other players' attacks
-      if (data.damage && data.damage > 0) {
+      // Get current user info to avoid double damage indicators
+      const currentUser = getUserInfo();
+      const isCurrentPlayerAttack = currentUser && 
+        (data.playerNickname === currentUser.username || 
+         data.playerId === currentUser.id);
+
+      // Generate floating damage number only for OTHER players' attacks
+      // (Current player's attacks are handled by answer-result event)
+      if (data.damage && data.damage > 0 && !isCurrentPlayerAttack) {
         console.log(
           `🎯 Other player attack - generating damage number: ${data.damage} (${data.responseCategory})`
         );
         generateDamageNumber(data.damage, data.responseCategory || "NORMAL");
+      } else if (isCurrentPlayerAttack) {
+        console.log(
+          `🎯 Skipping damage number for current player's own attack (handled by answer-result)`
+        );
       }
 
-      // Show damage animation
+      // Show damage animation for all attacks (including current player's)
       setIsBossTakingDamage(true);
       setTimeout(() => setIsBossTakingDamage(false), 500);
 
