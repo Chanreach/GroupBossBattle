@@ -1,7 +1,7 @@
 // ===== LIBRARIES ===== //
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Users, X, Trophy, User, TrendingUp } from "lucide-react";
+import { ArrowLeft, Users, X, Trophy, User, TrendingUp, Sword } from "lucide-react";
 
 // ===== COMPONENTS ===== //
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -36,6 +36,7 @@ import useBossBattle from "@/hooks/useBossBattle";
 import { toast } from "sonner";
 import { useAuth } from "@/context/useAuth";
 import { getGuestUser } from "@/utils/guestUtils";
+import { getBossImageUrl } from "@/utils/imageUtils";
 
 const BossPreview = () => {
   const { eventBossId, joinCode } = useParams();
@@ -710,11 +711,22 @@ const BossPreview = () => {
               {/* Boss Image */}
               <div className="relative">
                 <div className="w-full aspect-square bg-muted rounded-lg overflow-hidden">
-                  <img
-                    src={`/api/uploads/bosses/${eventBoss?.boss?.image}`}
-                    alt={eventBoss?.boss?.name || "Boss Image"}
-                    className="w-full h-full object-cover"
-                  />
+                  {eventBoss?.boss?.image ? (
+                    <img
+                      src={getBossImageUrl(eventBoss.boss.image)}
+                      alt={eventBoss?.boss?.name || "Boss Image"}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                      <div className="text-center">
+                        <Sword className="h-12 w-12 text-primary/60 mx-auto mb-2" />
+                        <span className="text-sm text-muted-foreground">
+                          No Image
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
