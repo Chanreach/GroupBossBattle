@@ -54,6 +54,19 @@ const BossPreview = () => {
   const [bossStatus, setBossStatus] = useState("active"); // active, in-battle, cooldown
   const [cooldownTimer, setCooldownTimer] = useState(0); // seconds remaining
 
+  // Auto-fill nickname with username when user is available
+  useEffect(() => {
+    if (user && !nickname) {
+      setNickname(user.username || "");
+    } else if (!user && !nickname) {
+      // Check for guest user
+      const guestUser = getGuestUser();
+      if (guestUser) {
+        setNickname(guestUser.username || "");
+      }
+    }
+  }, [user, nickname]);
+
   // Get user info from localStorage/auth context
   const getUserInfo = () => {
     if (user) {
@@ -701,7 +714,7 @@ const BossPreview = () => {
         <div className="max-w-sm mx-auto">
           <Card className="overflow-hidden">
             {/* Boss Name Header */}
-            <CardHeader className="text-center pb-4">
+            <CardHeader className="text-center">
               <CardTitle className="capitalize text-xl font-bold">
                 {eventBoss?.boss?.name}
               </CardTitle>
@@ -715,7 +728,9 @@ const BossPreview = () => {
                     <img
                       src={getBossImageUrl(eventBoss.boss.image)}
                       alt={eventBoss?.boss?.name || "Boss Image"}
-                      className="w-full h-full object-cover"
+                      className={`w-full h-full object-cover ${
+                        bossStatus === "cooldown" ? "boss-image-paused" : ""
+                      }`}
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
@@ -728,58 +743,55 @@ const BossPreview = () => {
                     </div>
                   )}
                 </div>
+                
+                {/* Sleeping Z Animation - Only show when boss is on cooldown */}
+                {bossStatus === "cooldown" && cooldownTimer > 0 && (
+                  <div className="absolute top-10 right-20 pointer-events-none">
+                    <div className="sleeping-z">Z</div>
+                    <div className="sleeping-z" style={{ left: '8px', top: '4px' }}>Z</div>
+                    <div className="sleeping-z" style={{ left: '16px', top: '8px' }}>Z</div>
+                  </div>
+                )}
               </div>
 
               {/* Boss Status Display */}
-              <div className="text-center py-2">
+              <div className="text-center pt-2 mb-0">
                 {bossStatus === "cooldown" && cooldownTimer > 0 && (
-                  <div className="space-y-2">
-                    <div className="text-orange-500 font-semibold">
-                      🛡️ Boss on Cooldown
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Available in: {Math.floor(cooldownTimer / 60)}m{" "}
-                      {cooldownTimer % 60}s
-                    </div>
+                  <div className="font-semibold">
+                    Boss on Cooldown
                   </div>
                 )}
                 {bossStatus === "in-battle" && (
-                  <div className="text-red-500 font-semibold">
-                    ⚔️ Boss is currently in battle
+                  <div className="text-purple-600 font-semibold flex items-center justify-center gap-2">
+                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                    Boss is currently in battle
                   </div>
                 )}
                 {bossStatus === "active" && (
-                  <div className="text-green-500 font-semibold">
-                    ✅ Boss available for battle
+                  <div className="text-purple-600 font-semibold">
+                    Boss available for battle
                   </div>
                 )}
               </div>
 
               {/* Players Joined */}
-              <div className="text-center py-2">
+              <div className="text-center">
                 <div className="flex items-center justify-center text-muted-foreground text-sm">
-                  <Users className="w-4 h-4 mr-2" />
-                  <span>Players joined: {playersOnline}</span>
+                  <Users className="w-4 h-4 mr-2 text-purple-600" />
+                  <span className="text-purple-600">Players joined: {playersOnline}</span>
                 </div>
               </div>
-
-              {/* Countdown Timer - Only show if player has joined */}
-              {isJoined && isBattleStarted && countdown !== null && (
-                <div className="text-center text-2xl font-bold text-red-500">
-                  {countdown > 0
-                    ? `Starting in ${countdown}...`
-                    : "Battle Starting!"}
-                </div>
-              )}
 
               {/* Join/Waiting Button */}
               {!isJoined ? (
                 <Button
                   onClick={handleJoin}
-                  className="w-full"
+                  className="w-full !bg-purple-500 hover:!bg-purple-600 !text-white !border-purple-500 halftone-texture"
                   disabled={!nickname.trim() || bossStatus === "cooldown"}
                 >
-                  {bossStatus === "cooldown" ? "Boss on Cooldown" : "Join"}
+                  {bossStatus === "cooldown" 
+                    ? `Available in: ${Math.floor(cooldownTimer / 60)}m ${String(cooldownTimer % 60).padStart(2, '0')}s`
+                    : "Join"}
                 </Button>
               ) : (
                 <div className="space-y-2">
@@ -790,7 +802,14 @@ const BossPreview = () => {
                         player(s)
                       </Button>
                     )}
-                    {!isCountdownActive && (
+                    {isBattleStarted && countdown !== null && (
+                      <Button className="flex-1" disabled variant="destructive">
+                        {countdown > 0
+                          ? `Starting in ${countdown}...`
+                          : "Battle Starting!"}
+                      </Button>
+                    )}
+                    {!isCountdownActive && !isBattleStarted && (
                       <Button
                         onClick={handleUnjoin}
                         variant="outline"

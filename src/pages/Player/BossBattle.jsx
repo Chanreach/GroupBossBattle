@@ -1,3 +1,14 @@
+/*
+ * Z-INDEX HIERARCHY FOR OVERLAYS (All below 100 to avoid conflicts):
+ * - Sonner Toasts: z-9999 (FIXED: Explicitly set highest priority - always interactable above all dialogs)
+ * - shadcn/ui Dialogs: ~1000+ (automatic, modal overlays, external library)
+ * - Top Controls: z-90 (navigation buttons, settings - above dialog backdrops but below dialog content)
+ * - Damage Flash: z-80 (red screen effect when hurt - covers everything below but stays below top controls)
+ * - Badge Notifications: z-30 (achievement notifications)
+ * - Answer Grid Overlay: z-20 (disabled state overlay when knocked out/dead)
+ * - Regular Content: Lower z-index values (z-10 and below)
+ */
+
 // ===== LIBRARIES ===== //
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
@@ -925,7 +936,8 @@ const BossBattle = () => {
       if (data.shouldRedirect) {
         setTimeout(() => {
           if (eventBossId && joinCode) {
-            navigate(`/boss-preview/${eventBossId}/${joinCode}`);
+            // navigate(`/boss-preview/${eventBossId}/${joinCode}`);
+            window.location.href = `/boss-preview/${eventBossId}/${joinCode}`;
           } else {
             navigate("/player");
           }
@@ -1495,59 +1507,95 @@ const BossBattle = () => {
         </div>
       </div>
 
-      {/* Full Screen Wrong Answer Flash */}
+      {/* Full Screen Wrong Answer Flash - z-80 (covers everything below but stays below top controls) */}
       {isPlayerHurt && (
-        <div className="absolute inset-0 bg-red-500/60 z-50 animate-pulse"></div>
+        <div className="absolute inset-0 bg-red-500/60 z-80 animate-pulse"></div>
       )}
 
-      <div className="h-full flex flex-col p-3 max-w-md mx-auto relative z-10">
-        {/* Top Controls */}
-        <div className="flex items-center justify-between mb-3 flex-shrink-0 relative">
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={handleLeave}
-              variant="outline"
-              size="sm"
-              className="flex items-center justify-center"
-            >
-              <LogOut className="w-4 h-4 rotate-180" />
-            </Button>
-          </div>
+      {/* Top Controls - z-90 (above dialog backdrops but below dialog content) */}
+      <div className="fixed top-0 left-0 right-0 z-90 p-3 pointer-events-auto">
+        <div className="max-w-md mx-auto">
+          <div className="flex items-center justify-between mb-3 flex-shrink-0 relative">
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handleLeave}
+                variant="outline"
+                size="sm"
+                disabled={isCurrentPlayerKnockedOut}
+                className={`flex items-center justify-center ${
+                  (isCurrentPlayerKnockedOut || isCurrentPlayerDead || isRevivalDialogVisible) 
+                    ? "bg-[#464646] text-white border-[#464646] hover:bg-[#494949] dark:bg-background dark:text-foreground dark:border-border dark:hover:bg-accent" 
+                    : ""
+                } ${
+                  isCurrentPlayerKnockedOut ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                <LogOut className={`w-4 h-4 rotate-180 ${
+                  (isCurrentPlayerKnockedOut || isCurrentPlayerDead || isRevivalDialogVisible) 
+                    ? "text-white dark:text-foreground" 
+                    : ""
+                }`} />
+              </Button>
+            </div>
 
-          {/* Boss Name - Centered */}
-          <div className="absolute left-1/2 transform -translate-x-1/2 text-center">
-            <h2 className="text-lg font-bold text-center">{bossData?.boss?.name}</h2>
-            {/* Team Information */}
-            {currentPlayerTeam && (
-              <div className="text-xs text-center text-muted-foreground">
-                Your Team: {currentPlayerTeam.teamName}
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={toggleDarkMode}
-              variant="outline"
-              size="sm"
-              className="flex items-center justify-center"
-            >
-              {isDarkModeEnabled ? (
-                <Sun className="w-4 h-4" />
-              ) : (
-                <Moon className="w-4 h-4" />
+            {/* Boss Name - Centered */}
+            <div className="absolute left-1/2 transform -translate-x-1/2 text-center">
+              <h2 className="text-lg font-bold text-center">{bossData?.boss?.name}</h2>
+              {/* Team Information */}
+              {currentPlayerTeam && (
+                <div className="text-xs text-center text-muted-foreground">
+                  Your Team: {currentPlayerTeam.teamName}
+                </div>
               )}
-            </Button>
-            <Button
-              onClick={handleLiveLeaderboard}
-              variant="outline"
-              size="sm"
-              className="flex items-center justify-center"
-            >
-              <Trophy className="w-4 h-4" />
-            </Button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={toggleDarkMode}
+                variant="outline"
+                size="sm"
+                className={`flex items-center justify-center ${
+                  (isCurrentPlayerKnockedOut || isCurrentPlayerDead || isRevivalDialogVisible) 
+                    ? "bg-[#464646] text-white border-[#464646] hover:bg-[#494949] dark:bg-background dark:text-foreground dark:border-border dark:hover:bg-accent" 
+                    : ""
+                }`}
+              >
+                {isDarkModeEnabled ? (
+                  <Sun className={`w-4 h-4 ${
+                    (isCurrentPlayerKnockedOut || isCurrentPlayerDead || isRevivalDialogVisible) 
+                      ? "text-white dark:text-foreground" 
+                      : ""
+                  }`} />
+                ) : (
+                  <Moon className={`w-4 h-4 ${
+                    (isCurrentPlayerKnockedOut || isCurrentPlayerDead || isRevivalDialogVisible) 
+                      ? "text-white dark:text-foreground" 
+                      : ""
+                  }`} />
+                )}
+              </Button>
+              <Button
+                onClick={handleLiveLeaderboard}
+                variant="outline"
+                size="sm"
+                className={`flex items-center justify-center ${
+                  (isCurrentPlayerKnockedOut || isCurrentPlayerDead || isRevivalDialogVisible) 
+                    ? "bg-[#464646] text-white border-[#464646] hover:bg-[#494949] dark:bg-background dark:text-foreground dark:border-border dark:hover:bg-accent" 
+                    : ""
+                }`}
+              >
+                <Trophy className={`w-4 h-4 ${
+                  (isCurrentPlayerKnockedOut || isCurrentPlayerDead || isRevivalDialogVisible) 
+                    ? "text-white dark:text-foreground" 
+                    : ""
+                }`} />
+              </Button>
+            </div>
           </div>
         </div>
+      </div>
+
+      <div className="h-full flex flex-col p-3 max-w-md mx-auto relative z-10 pt-20">
 
         {/* Boss Health Section */}
         <div className="mb-3 flex-shrink-0">
@@ -1845,13 +1893,14 @@ const BossBattle = () => {
         </Card>
       </div>
 
-      {/* Battle Leaderboard */}
+      {/* Battle Leaderboard - Higher z-index (modal overlay) */}
       <BattleLeaderboard
         isOpen={isLeaderboardVisible}
         onClose={() => setIsLeaderboardVisible(false)}
       />
 
-      {/* Knocked Out Alert Dialog */}
+      {/* ========== DIALOGS - Very High z-index (typically 1000+) ========== */}
+      {/* Knocked Out Alert Dialog - shadcn/ui AlertDialog has very high z-index by default */}
       <AlertDialog open={isCurrentPlayerKnockedOut || isCurrentPlayerDead}>
         <AlertDialogContent className="max-w-sm mx-auto">
           <AlertDialogHeader>
@@ -1908,12 +1957,17 @@ const BossBattle = () => {
                 </div>
 
                 {/* Main message */}
-                <AlertDialogTitle className="text-center text-foreground text-lg font-semibold">
+                <AlertDialogTitle className="text-center text-foreground text-lg font-semibold mb-3">
                   You are down!
                 </AlertDialogTitle>
 
                 {/* Instructions */}
-                <AlertDialogDescription className="text-center text-muted-foreground">
+                <AlertDialogDescription className="text-center text-muted-foreground mb-4">
+                  {currentPlayerTeam && (
+                    <div className="mb-0">
+                      Find your team: <b className="text-foreground">{currentPlayerTeam.teamName}</b>
+                    </div>
+                  )}
                   Show this code to a teammate to get revived!
                 </AlertDialogDescription>
 
@@ -1938,7 +1992,7 @@ const BossBattle = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* OTP Input Dialog for Revival Code */}
+      {/* OTP Input Dialog for Revival Code - shadcn/ui AlertDialog has very high z-index by default */}
       <AlertDialog
         open={isRevivalDialogVisible}
         onOpenChange={setIsRevivalDialogVisible}
@@ -1998,9 +2052,9 @@ const BossBattle = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Answer Grid Overlay - Disable interactions when knocked out or dead */}
+      {/* Answer Grid Overlay - z-20 (disabled state overlay when knocked out or dead) */}
       {(isCurrentPlayerKnockedOut || isCurrentPlayerDead) && (
-        <div className="absolute inset-0 bg-black/50 z-40 flex items-center justify-center">
+        <div className="absolute inset-0 bg-black/50 z-20 flex items-center justify-center">
           <div className="text-white text-center">
             {isCurrentPlayerDead ? (
               <>
@@ -2021,8 +2075,9 @@ const BossBattle = () => {
         </div>
       )}
 
-      {/* Badge Notifications */}
-      <div className="fixed top-4 right-4 z-50 space-y-2">
+      {/* ========== NOTIFICATIONS - Highest z-index ========== */}
+      {/* Badge Notifications - z-30 (stays above most content but below toasts) */}
+      <div className="fixed top-4 right-4 z-30 space-y-2">
         {badgeNotifications.map((badge, index) => (
           <div
             key={badge.id}

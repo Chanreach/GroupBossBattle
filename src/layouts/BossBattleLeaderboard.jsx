@@ -103,7 +103,7 @@ const BattleLeaderboard = ({ isOpen, onClose }) => {
 
   const expandAll = () => {
     const allTeamNames = new Set(
-      sortedLeaderboardData.map((team) => team.team)
+      sortedLeaderboardData.map((team) => team.teamName || team.team || "Unknown Team")
     );
     setExpandedTeams(allTeamNames);
   };
@@ -145,7 +145,7 @@ const BattleLeaderboard = ({ isOpen, onClose }) => {
       {/* Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/20 z-40 md:hidden backdrop-blur-[1px]"
+          className="fixed inset-0 bg-black/20 z-[1001] md:hidden backdrop-blur-[1px] pointer-events-auto"
           onClick={onClose}
         />
       )}
@@ -153,7 +153,7 @@ const BattleLeaderboard = ({ isOpen, onClose }) => {
       {/* Leaderboard Panel */}
       <div
         className={`
-        fixed top-0 right-0 h-full w-72 max-w-[85vw] bg-background/93 backdrop-blur-[1px] border-l border-border z-50
+        fixed top-0 right-0 h-full w-72 max-w-[85vw] bg-background/93 backdrop-blur-[1px] border-l border-border z-[1002] pointer-events-auto
         transform transition-transform duration-300 ease-in-out
         ${isOpen ? "translate-x-0" : "translate-x-full"}
         shadow-2xl
