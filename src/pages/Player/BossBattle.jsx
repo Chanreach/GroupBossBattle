@@ -1515,12 +1515,12 @@ const BossBattle = () => {
           </div>
 
           {/* Boss Name - Centered */}
-          <div className="absolute left-1/2 transform -translate-x-1/2">
-            <h2 className="text-lg font-bold">{bossData?.boss?.name}</h2>
+          <div className="absolute left-1/2 transform -translate-x-1/2 text-center">
+            <h2 className="text-lg font-bold text-center">{bossData?.boss?.name}</h2>
             {/* Team Information */}
             {currentPlayerTeam && (
               <div className="text-xs text-center text-muted-foreground">
-                {currentPlayerTeam.teamName}
+                Your Team: {currentPlayerTeam.teamName}
               </div>
             )}
           </div>
