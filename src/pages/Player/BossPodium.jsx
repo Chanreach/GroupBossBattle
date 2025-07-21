@@ -744,7 +744,7 @@ const BossPodium = () => {
                           Total DMG
                         </TableHead>
                         <TableHead className="text-right whitespace-normal">
-                          Correct %
+                          Total Correct Answers
                         </TableHead>
                       </TableRow>
                     </TableHeader>
@@ -774,7 +774,8 @@ const BossPodium = () => {
                                 </AvatarFallback>
                               </Avatar>
                               <span className="font-medium">
-                                {player.nickname ||
+                                {player.playerName ||
+                                  player.nickname ||
                                   player.username ||
                                   player.User?.username ||
                                   `Player ${player.playerId}`}
@@ -788,11 +789,7 @@ const BossPodium = () => {
                             {player.totalDamageDealt || player.totalDamage || 0}
                           </TableCell>
                           <TableCell className="text-right">
-                            {player.totalCorrectAnswers !== undefined
-                              ? player.totalCorrectAnswers
-                              : player.accuracy
-                              ? Math.round(player.accuracy) + "%"
-                              : "0"}
+                            {player.totalCorrectAnswers || 0}
                           </TableCell>
                         </TableRow>
                       ))}

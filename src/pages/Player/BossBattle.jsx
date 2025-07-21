@@ -196,6 +196,8 @@ const BossBattle = () => {
 
   // ===== BADGE NOTIFICATIONS ===== //
   const [badgeNotifications, setBadgeNotifications] = useState([]); // Array of badge notification objects
+  const [badgeQueue, setBadgeQueue] = useState([]); // Queue for badges waiting to be displayed
+  const [isDisplayingBadge, setIsDisplayingBadge] = useState(false); // Track if a badge is currently being displayed
 
   // ===== FINAL LEADERBOARD DATA ===== //
   const [finalLeaderboardData, setFinalLeaderboardData] = useState(null); // Store final leaderboard data for podium
@@ -317,6 +319,73 @@ const BossBattle = () => {
       );
     }, 2000); // Match animation duration
   }, []);
+
+  // ===== BADGE NOTIFICATION FUNCTIONS ===== //
+  // Function to remove badge notification
+  const removeBadgeNotification = useCallback((badgeId) => {
+    setBadgeNotifications((prev) =>
+      prev.filter((notification) => notification.id !== badgeId)
+    );
+    setIsDisplayingBadge(false); // Allow next badge to display
+  }, []);
+
+  // Function to process next badge in queue
+  const processNextBadge = useCallback(() => {
+    setBadgeQueue((prevQueue) => {
+      if (prevQueue.length > 0 && !isDisplayingBadge) {
+        const nextBadge = prevQueue[0];
+        const remainingQueue = prevQueue.slice(1);
+
+        // Display the next badge
+        setBadgeNotifications([nextBadge]);
+        setIsDisplayingBadge(true);
+
+        return remainingQueue;
+      }
+      return prevQueue;
+    });
+  }, [isDisplayingBadge]);
+
+  // Function to add badge to queue
+  const addBadgeToQueue = useCallback(
+    (badgeData) => {
+      const badgeNotification = {
+        id: Date.now() + Math.random(), // Unique ID
+        type: badgeData.type,
+        message: badgeData.message,
+        milestone: badgeData.milestone,
+        badgeId: badgeData.badgeId,
+        badgeName: badgeData.badgeName,
+        badgeIcon: badgeData.badgeIcon,
+        eventBossId: badgeData.eventBossId,
+        timestamp: new Date(),
+      };
+
+      // If no badge is currently displaying, show immediately
+      if (!isDisplayingBadge) {
+        setBadgeNotifications([badgeNotification]);
+        setIsDisplayingBadge(true);
+      } else {
+        // Add to queue
+        setBadgeQueue((prev) => [...prev, badgeNotification]);
+      }
+    },
+    [isDisplayingBadge]
+  );
+
+  // Process queue when isDisplayingBadge changes
+  useEffect(() => {
+    if (!isDisplayingBadge && badgeQueue.length > 0) {
+      processNextBadge();
+    }
+  }, [isDisplayingBadge, badgeQueue.length, processNextBadge]);
+
+  // Effect to process next badge when current one is removed
+  useEffect(() => {
+    if (!isDisplayingBadge) {
+      processNextBadge();
+    }
+  }, [isDisplayingBadge, processNextBadge]);
 
   // ===== SOCKET.IO INTEGRATION ===== //
   useEffect(() => {
@@ -644,27 +713,8 @@ const BossBattle = () => {
     socket.on("badge-earned", (data) => {
       console.log("🎖️ Badge Earned!", data);
 
-      // Add badge notification to the array
-      const badgeNotification = {
-        id: Date.now() + Math.random(), // Unique ID
-        type: data.type,
-        message: data.message,
-        milestone: data.milestone,
-        badgeId: data.badgeId,
-        eventBossId: data.eventBossId,
-        timestamp: new Date(),
-      };
-
-      setBadgeNotifications((prev) => [...prev, badgeNotification]);
-
-      // Auto-remove after 6 seconds as backup
-      setTimeout(() => {
-        setBadgeNotifications((prev) =>
-          prev.filter(
-            (notification) => notification.id !== badgeNotification.id
-          )
-        );
-      }, 6000);
+      // Add badge to queue for sequential display
+      addBadgeToQueue(data);
     });
 
     // Listen for battle state updates
@@ -996,6 +1046,7 @@ const BossBattle = () => {
     joinCode, // **NEW: Add joinCode dependency**
     navigate, // **NEW: Add navigate dependency**
     heartbeatsAudioRef, // **NEW: Add heartbeatsAudioRef dependency**
+    addBadgeToQueue, // **NEW: Add addBadgeToQueue dependency**
   ]);
 
   const leaveBoss = () => {
@@ -1422,13 +1473,6 @@ const BossBattle = () => {
     }
   }, [isCurrentPlayerDead]);
 
-  // Function to remove badge notification
-  const removeBadgeNotification = useCallback((badgeId) => {
-    setBadgeNotifications((prev) =>
-      prev.filter((notification) => notification.id !== badgeId)
-    );
-  }, []);
-
   // ===== ===== ===== RENDER ===== ===== ===== //
   return (
     <main
@@ -1470,7 +1514,7 @@ const BossBattle = () => {
 
           {/* Boss Name - Centered */}
           <div className="absolute left-1/2 transform -translate-x-1/2">
-            <h2 className="text-lg font-bold">{BOSS_NAME}</h2>
+            <h2 className="text-lg font-bold">{bossData?.boss?.name}</h2>
             {/* Team Information */}
             {currentPlayerTeam && (
               <div className="text-xs text-center text-muted-foreground">
@@ -1513,7 +1557,7 @@ const BossBattle = () => {
               }`}
             >
               <img
-                src={BOSS_IMAGE_URL}
+                src={`/api/uploads/bosses/${bossData?.boss?.image}`}
                 alt={BOSS_NAME}
                 className={`w-full h-full object-cover transition-all duration-500 ${
                   isBossTakingDamage ? "opacity-70" : ""
@@ -1580,7 +1624,7 @@ const BossBattle = () => {
                   <div className="mt-30 sm:mt-40 text-center bg-black/80 p-4">
                     <h2 className="text-2xl font-bold text-white drop-shadow-lg mb-2 flex items-center justify-center gap-2">
                       <Skull className="w-6 h-6" />
-                      {BOSS_NAME} has been defeated!
+                      {bossData?.boss?.name} has been defeated!
                     </h2>
                   </div>
                   {/* Show countdown under defeat message */}

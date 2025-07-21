@@ -1,214 +1,168 @@
 import React, { useState, useEffect } from "react";
+import { X } from "lucide-react";
 
-/**
- * BadgeNotification Component
- *
- * Displays animated notifications when players earn badges
- * Shows badge icon, name, and congratulatory message
- */
-const BadgeNotification = ({ badge, onClose, duration = 5000 }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [isLeaving, setIsLeaving] = useState(false);
+const BadgeNotification = ({ badge, onClose, index = 0 }) => {
+  const [isVisible, setIsVisible] = useState(true);
+  const [isEntering, setIsEntering] = useState(true);
 
   useEffect(() => {
-    // Trigger entrance animation
-    setTimeout(() => setIsVisible(true), 50);
+    // Entry animation
+    const entryTimer = setTimeout(() => {
+      setIsEntering(false);
+    }, 100);
 
-    const timer = setTimeout(() => {
-      setIsLeaving(true);
+    // Auto-close timer
+    const closeTimer = setTimeout(() => {
+      setIsVisible(false);
       setTimeout(onClose, 300); // Wait for exit animation
-    }, duration);
+    }, 4000); // Show for 4 seconds
 
-    return () => clearTimeout(timer);
-  }, [duration, onClose]);
+    return () => {
+      clearTimeout(entryTimer);
+      clearTimeout(closeTimer);
+    };
+  }, [onClose]);
 
-  if (!badge) return null;
+  const handleClose = () => {
+    setIsVisible(false);
+    setTimeout(onClose, 300);
+  };
 
-  const getBadgeEmoji = (badgeName) => {
-    switch (badgeName) {
+  const getBadgeIcon = (badgeData) => {
+    // Use the icon from the badge data if available
+    if (badgeData.badgeIcon) {
+      return badgeData.badgeIcon;
+    }
+
+    // Fallback to type/name-based icons
+    const badgeType = badgeData.type || badgeData.badgeName;
+    switch (badgeType) {
       case "MVP":
-        return "🏆";
+        return "👑";
       case "Last Hit":
         return "🎯";
       case "Boss Defeated":
-        return "🏅";
+        return "⚔️";
       case "10 Questions":
-        return "📊";
+        return "🏅";
       case "25 Questions":
-        return "📈";
+        return "🥉";
       case "50 Questions":
-        return "📊";
+        return "🥈";
       case "100 Questions":
-        return "🎓";
+        return "🥇";
       default:
-        return "🎖️";
+        return "🏆";
     }
   };
 
-  const getBadgeMessage = (badgeName) => {
-    switch (badgeName) {
+  const getBadgeColor = (badgeData) => {
+    const badgeType = badgeData.type || badgeData.badgeName;
+    switch (badgeType) {
       case "MVP":
-        return "Most Valuable Player!";
+        return "from-yellow-400 to-yellow-600";
       case "Last Hit":
-        return "Delivered the final blow!";
+        return "from-red-400 to-red-600";
       case "Boss Defeated":
-        return "Boss Defeated!";
+        return "from-purple-400 to-purple-600";
       case "10 Questions":
-        return "10 Correct Answers!";
+        return "from-blue-400 to-blue-600";
       case "25 Questions":
-        return "25 Correct Answers!";
+        return "from-orange-400 to-orange-600";
       case "50 Questions":
-        return "50 Correct Answers!";
+        return "from-green-400 to-green-600";
       case "100 Questions":
-        return "100 Correct Answers!";
+        return "from-pink-400 to-pink-600";
       default:
-        return "Achievement Unlocked!";
+        return "from-gray-400 to-gray-600";
     }
   };
+
+  if (!isVisible) return null;
 
   return (
-    <>
-      <div
-        className={`fixed top-4 right-4 z-50 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-lg shadow-2xl p-4 max-w-sm transition-all duration-300 ease-out transform ${
-          isVisible && !isLeaving
-            ? "opacity-100 scale-100 translate-y-0"
-            : "opacity-0 scale-90 -translate-y-4"
-        }`}
-        style={{
-          animation:
-            isVisible && !isLeaving
-              ? "badgeWiggle 0.6s ease-out 0.2s"
-              : undefined,
-        }}
+    <div
+      className={`
+        fixed top-4 right-4 z-50 w-80 p-4 rounded-lg shadow-2xl
+        bg-gradient-to-r ${getBadgeColor(badge)}
+        border border-white/20 backdrop-blur-sm
+        transform transition-all duration-300 ease-out
+        ${
+          isEntering
+            ? "translate-x-full opacity-0 scale-90"
+            : "translate-x-0 opacity-100 scale-100"
+        }
+        ${!isVisible ? "translate-x-full opacity-0 scale-90" : ""}
+      `}
+      style={{
+        top: `${1 + index * 5}rem`,
+        transitionDelay: `${index * 100}ms`,
+      }}
+    >
+      {/* Glow effect */}
+      <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-white/20 to-transparent opacity-50 pointer-events-none" />
+
+      {/* Close button */}
+      <button
+        onClick={handleClose}
+        className="absolute top-2 right-2 p-1 rounded-full bg-black/20 hover:bg-black/40 transition-colors"
       >
-        {/* Close button */}
-        <button
-          onClick={() => {
-            setIsLeaving(true);
-            setTimeout(onClose, 300);
-          }}
-          className="absolute top-2 right-2 text-white hover:text-gray-200 transition-colors"
-        >
-          ✕
-        </button>
+        <X className="w-4 h-4 text-white" />
+      </button>
 
-        {/* Badge content */}
-        <div className="flex items-center space-x-3">
-          {/* Badge icon */}
-          <div
-            className={`text-4xl transition-transform duration-500 ${
-              isVisible ? "animate-pulse" : ""
-            }`}
-          >
-            {getBadgeEmoji(badge.name)}
-          </div>
-
-          {/* Badge info */}
-          <div className="flex-1">
-            <h3
-              className={`font-bold text-lg transition-all duration-300 delay-300 ${
-                isVisible
-                  ? "opacity-100 translate-x-0"
-                  : "opacity-0 translate-x-4"
-              }`}
-            >
-              Badge Earned!
-            </h3>
-            <p
-              className={`text-sm opacity-90 transition-all duration-300 delay-400 ${
-                isVisible
-                  ? "opacity-90 translate-x-0"
-                  : "opacity-0 translate-x-4"
-              }`}
-            >
-              {badge.name}
-            </p>
-            <p
-              className={`text-xs opacity-75 transition-all duration-300 delay-500 ${
-                isVisible
-                  ? "opacity-75 translate-x-0"
-                  : "opacity-0 translate-x-4"
-              }`}
-            >
-              {getBadgeMessage(badge.name)}
-            </p>
-          </div>
+      {/* Badge content */}
+      <div className="flex items-center space-x-3">
+        {/* Badge icon */}
+        <div className="text-4xl drop-shadow-lg animate-bounce">
+          {getBadgeIcon(badge)}
         </div>
 
-        {/* Progress bar */}
-        <div className="absolute bottom-0 left-0 h-1 bg-white bg-opacity-30 rounded-b-lg overflow-hidden">
-          <div
-            className="h-full bg-white bg-opacity-50 transition-all ease-linear"
-            style={{
-              width: "100%",
-              animation: `progressBar ${duration / 1000}s linear`,
-            }}
-          />
+        {/* Badge info */}
+        <div className="flex-1">
+          <h3 className="text-lg font-bold text-white drop-shadow-md">
+            {badge.badgeName || badge.name || badge.type || "Badge Earned"}
+          </h3>
+          <p className="text-sm text-white/90 drop-shadow-sm">
+            {badge.message ||
+              badge.description ||
+              "Congratulations on earning this badge!"}
+          </p>
+          {badge.value && (
+            <p className="text-xs text-white/80 mt-1 font-semibold">
+              {badge.value}
+            </p>
+          )}
         </div>
       </div>
 
-      {/* Global styles for animations */}
-      <style>{`
-        @keyframes badgeWiggle {
-          0%, 20%, 50%, 80%, 100% {
-            transform: rotate(0deg);
-          }
-          10% {
-            transform: rotate(5deg);
-          }
-          30% {
-            transform: rotate(-5deg);
-          }
-          40% {
-            transform: rotate(3deg);
-          }
-          60% {
-            transform: rotate(-3deg);
-          }
-          70% {
-            transform: rotate(2deg);
-          }
-          90% {
-            transform: rotate(-1deg);
-          }
-        }
+      {/* Sparkle effects using CSS animations */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {[...Array(6)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
+            style={{
+              left: `${Math.random() * 80 + 10}%`,
+              top: `${Math.random() * 80 + 10}%`,
+              animationDelay: `${Math.random() * 2}s`,
+              animationDuration: `${2 + Math.random()}s`,
+            }}
+          />
+        ))}
+      </div>
 
-        @keyframes progressBar {
-          from {
-            width: 100%;
-          }
-          to {
-            width: 0%;
-          }
-        }
-      `}</style>
-    </>
-  );
-};
-
-/**
- * BadgeNotificationManager Component
- *
- * Manages multiple badge notifications and stacks them
- */
-export const BadgeNotificationManager = ({ badges, onRemoveBadge }) => {
-  return (
-    <div className="fixed top-4 right-4 z-50 space-y-2">
-      {badges.map((badge, index) => (
-        <div
-          key={`${badge.id}-${badge.timestamp || index}`}
-          style={{
-            transform: `translateY(${index * 10}px)`,
-            zIndex: 50 - index,
-          }}
-        >
-          <BadgeNotification
-            badge={badge}
-            onClose={() => onRemoveBadge(badge.id)}
-            duration={5000 + index * 1000} // Stagger durations
+      {/* Progress bar for milestones */}
+      {badge.type?.startsWith("MILESTONE") && badge.progress && (
+        <div className="mt-3 h-2 bg-black/20 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-white rounded-full transition-all duration-1000 ease-out"
+            style={{
+              width: `${badge.progress}%`,
+              transitionDelay: "0.6s",
+            }}
           />
         </div>
-      ))}
+      )}
     </div>
   );
 };

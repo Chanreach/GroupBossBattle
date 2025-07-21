@@ -35,7 +35,7 @@ import { apiClient } from "@/api";
 import useBossBattle from "@/hooks/useBossBattle";
 import { toast } from "sonner";
 import { useAuth } from "@/context/useAuth";
-import { getGuestUser, isGuestUser } from "@/utils/guestUtils";
+import { getGuestUser } from "@/utils/guestUtils";
 
 const BossPreview = () => {
   const { eventBossId, joinCode } = useParams();
@@ -159,6 +159,59 @@ const BossPreview = () => {
     fetchEventBoss();
   }, [eventBossId]);
 
+  // Load leaderboard data from the new API
+  useEffect(() => {
+    const loadLeaderboardData = async () => {
+      if (!eventBossId || !eventBoss?.boss?.id) return;
+
+      try {
+        setRealLeaderboardData((prev) => ({ ...prev, isLoading: true }));
+
+        // Use the new boss preview leaderboard API endpoint
+        const response = await fetch(
+          `/api/boss-preview/${eventBoss.eventId}/${eventBoss.boss.id}/leaderboard`
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+
+          if (data.success && data.data) {
+            setRealLeaderboardData({
+              teamLeaderboard: data.data.teamLeaderboard || [],
+              individualLeaderboard: data.data.individualLeaderboard || [],
+              allTimeLeaderboard: data.data.allTimeLeaderboard || [],
+              isLoading: false,
+            });
+
+            console.log("� Leaderboard data loaded from new API:", data.data);
+          }
+        } else {
+          console.warn("Failed to load leaderboard data, using fallback");
+          setRealLeaderboardData((prev) => ({ ...prev, isLoading: false }));
+        }
+      } catch (error) {
+        console.error("Error loading leaderboard data:", error);
+        setRealLeaderboardData((prev) => ({ ...prev, isLoading: false }));
+      }
+    };
+
+    loadLeaderboardData();
+  }, [eventBossId, eventBoss]);
+
+  // Periodic leaderboard refresh
+  useEffect(() => {
+    if (!socket || !eventBossId) return;
+
+    // Refresh leaderboard data every 30 seconds
+    const refreshInterval = setInterval(() => {
+      if (socket.connected) {
+        socket.emit("boss-preview:request-leaderboard", { eventBossId });
+      }
+    }, 30000);
+
+    return () => clearInterval(refreshInterval);
+  }, [socket, eventBossId]);
+
   // Cooldown timer effect
   useEffect(() => {
     let interval;
@@ -196,6 +249,7 @@ const BossPreview = () => {
   useEffect(() => {
     if (socket && eventBossId && joinCode) {
       socket.emit("boss-preview:join", { eventBossId, joinCode });
+      // Send initial leaderboard data request after joining
       socket.on("boss-preview:joined", (data) => {
         toast.success("Joined boss preview successfully");
         // Update session data with current player count when first joining
@@ -203,6 +257,9 @@ const BossPreview = () => {
           setSession(data.session);
           setPlayersOnline(data.session.playerCount);
         }
+
+        // Request initial leaderboard data
+        socket.emit("boss-preview:request-leaderboard", { eventBossId });
       });
 
       // LISTEN FOR REAL-TIME PLAYER COUNT UPDATES (players who joined the battle)
@@ -232,6 +289,74 @@ const BossPreview = () => {
         }
       });
 
+      // LISTEN FOR REAL-TIME LEADERBOARD UPDATES from new socket events
+      socket.on("boss-preview:leaderboard-update", (data) => {
+        console.log("📊 Received leaderboard update in preview:", data);
+
+        if (data.leaderboardData) {
+          setRealLeaderboardData((prev) => ({
+            ...prev,
+            teamLeaderboard:
+              data.leaderboardData.teamLeaderboard?.map((team) => ({
+                rank: team.rank,
+                team: team.teamName,
+                dmg: team.totalDamage,
+                correct: team.totalCorrectAnswers,
+                avatar: "/src/assets/Placeholder/Profile1.jpg",
+                playerCount: team.playerCount,
+              })) || prev.teamLeaderboard,
+            individualLeaderboard:
+              data.leaderboardData.individualLeaderboard?.map((player) => ({
+                rank: player.rank,
+                player: player.playerName,
+                team: player.teamName,
+                dmg: player.totalDamage,
+                correct: player.correctAnswers,
+                avatar: player.avatar || "/src/assets/Placeholder/Profile1.jpg",
+              })) || prev.individualLeaderboard,
+            allTimeLeaderboard:
+              data.leaderboardData.allTimeLeaderboard?.map((player) => ({
+                rank: player.rank,
+                player: player.playerName,
+                dmg: player.totalDamage,
+                correct: player.correctAnswers,
+                avatar: player.avatar || "/src/assets/Placeholder/Profile1.jpg",
+              })) || prev.allTimeLeaderboard,
+          }));
+        }
+      });
+
+      // LISTEN FOR LEGACY LEADERBOARD UPDATES (fallback)
+      socket.on("leaderboard-update", (data) => {
+        console.log("📊 Received legacy leaderboard update in preview:", data);
+
+        setRealLeaderboardData((prev) => ({
+          ...prev,
+          teamLeaderboard: data.teamLeaderboard || prev.teamLeaderboard,
+          individualLeaderboard:
+            data.playerLeaderboard || prev.individualLeaderboard,
+        }));
+      });
+
+      // LISTEN FOR PLAYER JOIN NOTIFICATIONS
+      socket.on("player:joined-notification", (data) => {
+        toast.info(`${data.playerNickname} joined the battle!`);
+      });
+
+      // LISTEN FOR PLAYER KNOCKOUT NOTIFICATIONS
+      socket.on("player:knockout-notification", (data) => {
+        toast.error(`${data.playerNickname} was knocked out!`);
+      });
+
+      // LISTEN FOR BOSS DAMAGE UPDATES
+      socket.on("boss:damage-update", (data) => {
+        if (data.damage > 0) {
+          toast.success(
+            `Boss took ${data.damage} damage! HP: ${data.currentHP}/${data.maxHP}`
+          );
+        }
+      });
+
       // LISTEN FOR BOSS STATUS UPDATES
       socket.on("boss-status:updated", (data) => {
         setBossStatus(data.status);
@@ -253,7 +378,7 @@ const BossPreview = () => {
       });
 
       // LISTEN FOR BATTLE START (when enough players join)
-      socket.on("battle:countdown-started", (data) => {
+      socket.on("battle:countdown-started", () => {
         setIsCountdownActive(true);
         toast.success("Battle starting soon! Get ready!");
       });
@@ -314,12 +439,14 @@ const BossPreview = () => {
 
       return () => {
         socket.off("boss-preview:joined");
+        socket.off("boss-preview:leaderboard-update");
         socket.off("player-count:updated");
         socket.off("online-viewers:updated");
         socket.off("boss-fight:joined");
         socket.off("boss-fight:reconnected");
         socket.off("boss-status:updated");
         socket.off("battle:countdown-started");
+        socket.off("leaderboard-update");
         socket.off("connect", attemptReconnection);
         socket.off("error");
         socket.off("left-boss-session");
@@ -338,211 +465,18 @@ const BossPreview = () => {
   });
   const PAGE_SIZE = 10;
 
-  // Enhanced leaderboard data
-  const teamLeaderboard = [
-    {
-      rank: 1,
-      team: "Kangaroo",
-      dmg: 100,
-      correct: 9,
-      avatar: "/src/assets/Placeholder/Profile1.jpg",
-    },
-    {
-      rank: 2,
-      team: "Koala",
-      dmg: 85,
-      correct: 8,
-      avatar: "/src/assets/Placeholder/Profile2.jpg",
-    },
-    {
-      rank: 3,
-      team: "Shellfish",
-      dmg: 68,
-      correct: 7,
-      avatar: "/src/assets/Placeholder/Profile3.jpg",
-    },
-    {
-      rank: 4,
-      team: "Dolphins",
-      dmg: 55,
-      correct: 6,
-      avatar: "/src/assets/Placeholder/Profile4.jpg",
-    },
-  ];
+  // Real leaderboard data state
+  const [realLeaderboardData, setRealLeaderboardData] = useState({
+    teamLeaderboard: [],
+    individualLeaderboard: [],
+    allTimeLeaderboard: [],
+    isLoading: true,
+  });
 
-  const individualLeaderboard = [
-    {
-      rank: 1,
-      player: "Sovitep",
-      dmg: 100,
-      correct: 9,
-      avatar: "/src/assets/Placeholder/Profile1.jpg",
-    },
-    {
-      rank: 2,
-      player: "Visoth",
-      dmg: 90,
-      correct: 8,
-      avatar: "/src/assets/Placeholder/Profile2.jpg",
-    },
-    {
-      rank: 3,
-      player: "Roth",
-      dmg: 75,
-      correct: 7,
-      avatar: "/src/assets/Placeholder/Profile3.jpg",
-    },
-    {
-      rank: 4,
-      player: "Alice",
-      dmg: 65,
-      correct: 6,
-      avatar: "/src/assets/Placeholder/Profile4.jpg",
-    },
-    {
-      rank: 5,
-      player: "Bob",
-      dmg: 55,
-      correct: 5,
-      avatar: "/src/assets/Placeholder/Profile5.jpg",
-    },
-    {
-      rank: 6,
-      player: "Charlie",
-      dmg: 45,
-      correct: 4,
-      avatar: "/src/assets/Placeholder/Profile1.jpg",
-    },
-    {
-      rank: 7,
-      player: "David",
-      dmg: 35,
-      correct: 3,
-      avatar: "/src/assets/Placeholder/Profile2.jpg",
-    },
-    {
-      rank: 8,
-      player: "Emma",
-      dmg: 30,
-      correct: 3,
-      avatar: "/src/assets/Placeholder/Profile3.jpg",
-    },
-    {
-      rank: 9,
-      player: "Frank",
-      dmg: 25,
-      correct: 2,
-      avatar: "/src/assets/Placeholder/Profile4.jpg",
-    },
-    {
-      rank: 10,
-      player: "Grace",
-      dmg: 20,
-      correct: 2,
-      avatar: "/src/assets/Placeholder/Profile5.jpg",
-    },
-    {
-      rank: 11,
-      player: "Henry",
-      dmg: 15,
-      correct: 1,
-      avatar: "/src/assets/Placeholder/Profile1.jpg",
-    },
-    {
-      rank: 12,
-      player: "Ivy",
-      dmg: 10,
-      correct: 1,
-      avatar: "/src/assets/Placeholder/Profile2.jpg",
-    },
-  ];
-
-  const allTimeLeaderboard = [
-    {
-      rank: 1,
-      player: "Python",
-      dmg: 300,
-      correct: 25,
-      avatar: "/src/assets/Placeholder/Profile1.jpg",
-    },
-    {
-      rank: 2,
-      player: "Sovitep",
-      dmg: 280,
-      correct: 22,
-      avatar: "/src/assets/Placeholder/Profile2.jpg",
-    },
-    {
-      rank: 3,
-      player: "Visoth",
-      dmg: 250,
-      correct: 20,
-      avatar: "/src/assets/Placeholder/Profile3.jpg",
-    },
-    {
-      rank: 4,
-      player: "Alice",
-      dmg: 220,
-      correct: 18,
-      avatar: "/src/assets/Placeholder/Profile4.jpg",
-    },
-    {
-      rank: 5,
-      player: "Bob",
-      dmg: 200,
-      correct: 16,
-      avatar: "/src/assets/Placeholder/Profile5.jpg",
-    },
-    {
-      rank: 6,
-      player: "Charlie",
-      dmg: 180,
-      correct: 14,
-      avatar: "/src/assets/Placeholder/Profile1.jpg",
-    },
-    {
-      rank: 7,
-      player: "Master",
-      dmg: 160,
-      correct: 12,
-      avatar: "/src/assets/Placeholder/Profile2.jpg",
-    },
-    {
-      rank: 8,
-      player: "Legend",
-      dmg: 140,
-      correct: 11,
-      avatar: "/src/assets/Placeholder/Profile3.jpg",
-    },
-    {
-      rank: 9,
-      player: "Hero",
-      dmg: 120,
-      correct: 10,
-      avatar: "/src/assets/Placeholder/Profile4.jpg",
-    },
-    {
-      rank: 10,
-      player: "Champion",
-      dmg: 100,
-      correct: 9,
-      avatar: "/src/assets/Placeholder/Profile5.jpg",
-    },
-    {
-      rank: 11,
-      player: "Warrior",
-      dmg: 90,
-      correct: 8,
-      avatar: "/src/assets/Placeholder/Profile1.jpg",
-    },
-    {
-      rank: 12,
-      player: "Fighter",
-      dmg: 80,
-      correct: 7,
-      avatar: "/src/assets/Placeholder/Profile2.jpg",
-    },
-  ];
+  // Use real leaderboard data or fallback to empty arrays
+  const teamLeaderboard = realLeaderboardData.teamLeaderboard || [];
+  const individualLeaderboard = realLeaderboardData.individualLeaderboard || [];
+  const allTimeLeaderboard = realLeaderboardData.allTimeLeaderboard || [];
 
   const goBack = () => {
     navigate("/qr");
@@ -831,14 +765,9 @@ const BossPreview = () => {
                 <Button
                   onClick={handleJoin}
                   className="w-full"
-                  disabled={
-                    !nickname.trim() ||
-                    bossStatus === "cooldown"
-                  }
+                  disabled={!nickname.trim() || bossStatus === "cooldown"}
                 >
-                  {bossStatus === "cooldown"
-                    ? "Boss on Cooldown"
-                    : "Join"}
+                  {bossStatus === "cooldown" ? "Boss on Cooldown" : "Join"}
                 </Button>
               ) : (
                 <div className="space-y-2">
@@ -876,10 +805,7 @@ const BossPreview = () => {
                   onChange={handleNicknameChange}
                   placeholder="Enter your nickname"
                   maxLength={20}
-                  disabled={
-                    isJoined ||
-                    bossStatus === "cooldown"
-                  }
+                  disabled={isJoined || bossStatus === "cooldown"}
                 />
               </div>
             </CardContent>
@@ -955,34 +881,60 @@ const BossPreview = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {getPaginatedData(
-                        teamLeaderboard,
-                        "teams"
-                      ).paginatedData.map((team) => (
-                        <TableRow key={team.rank} className="hover:bg-muted/50">
-                          <TableCell className="font-medium">
-                            {getRankBadge(team.rank)}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-3">
-                              <Avatar className="w-8 h-8">
-                                <AvatarImage
-                                  src={team.avatar}
-                                  alt={team.team}
-                                />
-                                <AvatarFallback>{team.team[0]}</AvatarFallback>
-                              </Avatar>
-                              <span className="font-medium">{team.team}</span>
+                      {realLeaderboardData.isLoading ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center py-8">
+                            <div className="flex items-center justify-center gap-2">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                              Loading team leaderboard...
                             </div>
                           </TableCell>
-                          <TableCell className="text-right font-medium">
-                            {team.dmg}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {team.correct}
+                        </TableRow>
+                      ) : getPaginatedData(teamLeaderboard, "teams")
+                          .paginatedData.length === 0 ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={4}
+                            className="text-center py-8 text-muted-foreground"
+                          >
+                            No team data available yet
                           </TableCell>
                         </TableRow>
-                      ))}
+                      ) : (
+                        getPaginatedData(
+                          teamLeaderboard,
+                          "teams"
+                        ).paginatedData.map((team) => (
+                          <TableRow
+                            key={team.rank}
+                            className="hover:bg-muted/50"
+                          >
+                            <TableCell className="font-medium">
+                              {getRankBadge(team.rank)}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <Avatar className="w-8 h-8">
+                                  <AvatarImage
+                                    src={team.avatar}
+                                    alt={team.team}
+                                  />
+                                  <AvatarFallback>
+                                    {team.team[0]}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="font-medium">{team.team}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right font-medium">
+                              {team.dmg}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {team.correct}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
                     </TableBody>
                   </Table>
                   <PaginationControls
@@ -1016,41 +968,62 @@ const BossPreview = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {getPaginatedData(
-                        individualLeaderboard,
-                        "individual"
-                      ).paginatedData.map((player) => (
-                        <TableRow
-                          key={player.rank}
-                          className="hover:bg-muted/50"
-                        >
-                          <TableCell className="font-medium">
-                            {getRankBadge(player.rank)}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-3">
-                              <Avatar className="w-8 h-8">
-                                <AvatarImage
-                                  src={player.avatar}
-                                  alt={player.player}
-                                />
-                                <AvatarFallback>
-                                  {player.player[0]}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="font-medium">
-                                {player.player}
-                              </span>
+                      {realLeaderboardData.isLoading ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center py-8">
+                            <div className="flex items-center justify-center gap-2">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                              Loading individual leaderboard...
                             </div>
                           </TableCell>
-                          <TableCell className="text-right font-medium">
-                            {player.dmg}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {player.correct}
+                        </TableRow>
+                      ) : getPaginatedData(individualLeaderboard, "individual")
+                          .paginatedData.length === 0 ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={4}
+                            className="text-center py-8 text-muted-foreground"
+                          >
+                            No player data available yet
                           </TableCell>
                         </TableRow>
-                      ))}
+                      ) : (
+                        getPaginatedData(
+                          individualLeaderboard,
+                          "individual"
+                        ).paginatedData.map((player) => (
+                          <TableRow
+                            key={player.rank}
+                            className="hover:bg-muted/50"
+                          >
+                            <TableCell className="font-medium">
+                              {getRankBadge(player.rank)}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <Avatar className="w-8 h-8">
+                                  <AvatarImage
+                                    src={player.avatar}
+                                    alt={player.player}
+                                  />
+                                  <AvatarFallback>
+                                    {player.player[0]}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="font-medium">
+                                  {player.player}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right font-medium">
+                              {player.dmg}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {player.correct}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
                     </TableBody>
                   </Table>
                   <PaginationControls
@@ -1086,41 +1059,62 @@ const BossPreview = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {getPaginatedData(
-                        allTimeLeaderboard,
-                        "alltime"
-                      ).paginatedData.map((player) => (
-                        <TableRow
-                          key={player.rank}
-                          className="hover:bg-muted/50"
-                        >
-                          <TableCell className="font-medium">
-                            {getRankBadge(player.rank)}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-3">
-                              <Avatar className="w-8 h-8">
-                                <AvatarImage
-                                  src={player.avatar}
-                                  alt={player.player}
-                                />
-                                <AvatarFallback>
-                                  {player.player[0]}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="font-medium">
-                                {player.player}
-                              </span>
+                      {realLeaderboardData.isLoading ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center py-8">
+                            <div className="flex items-center justify-center gap-2">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                              Loading all-time leaderboard...
                             </div>
                           </TableCell>
-                          <TableCell className="text-right font-medium">
-                            {player.dmg}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {player.correct}
+                        </TableRow>
+                      ) : getPaginatedData(allTimeLeaderboard, "alltime")
+                          .paginatedData.length === 0 ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={4}
+                            className="text-center py-8 text-muted-foreground"
+                          >
+                            No historical data available yet
                           </TableCell>
                         </TableRow>
-                      ))}
+                      ) : (
+                        getPaginatedData(
+                          allTimeLeaderboard,
+                          "alltime"
+                        ).paginatedData.map((player) => (
+                          <TableRow
+                            key={player.rank}
+                            className="hover:bg-muted/50"
+                          >
+                            <TableCell className="font-medium">
+                              {getRankBadge(player.rank)}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <Avatar className="w-8 h-8">
+                                  <AvatarImage
+                                    src={player.avatar}
+                                    alt={player.player}
+                                  />
+                                  <AvatarFallback>
+                                    {player.player[0]}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="font-medium">
+                                  {player.player}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right font-medium">
+                              {player.dmg}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {player.correct}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
                     </TableBody>
                   </Table>
                   <PaginationControls

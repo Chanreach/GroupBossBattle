@@ -1,5 +1,12 @@
-import React, { useState } from "react";
-import { ArrowLeft, Trophy, Users, User, TrendingUp } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import {
+  ArrowLeft,
+  Trophy,
+  Users,
+  User,
+  TrendingUp,
+  Loader,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,11 +30,17 @@ import {
   PaginationNext,
 } from "@/components/ui/pagination";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
+import useBossBattle from "@/hooks/useBossBattle";
+import { leaderboardAPI } from "@/services/api";
 
 const Leaderboard = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const eventId = searchParams.get("eventId");
+  const eventBossId = searchParams.get("eventBossId"); // Get eventBossId for real-time updates
+  const { socket } = useBossBattle();
+
   const [currentPage, setCurrentPage] = useState({
     teams: 1,
     individual: 1,
@@ -35,267 +48,285 @@ const Leaderboard = () => {
   });
   const PAGE_SIZE = 10;
 
-  // Enhanced leaderboard data
-  const teamLeaderboard = [
-    {
-      rank: 1,
-      team: "Kangaroo",
-      dmg: 100,
-      correct: 9,
-      avatar: "/src/assets/Placeholder/Team1.jpg",
-    },
-    {
-      rank: 2,
-      team: "Koala",
-      dmg: 85,
-      correct: 8,
-      avatar: "/src/assets/Placeholder/Team2.jpg",
-    },
-    {
-      rank: 3,
-      team: "Shellfish",
-      dmg: 68,
-      correct: 7,
-      avatar: "/src/assets/Placeholder/Team3.jpg",
-    },
-    {
-      rank: 4,
-      team: "Dolphins",
-      dmg: 55,
-      correct: 6,
-      avatar: "/src/assets/Placeholder/Team1.jpg",
-    },
-    {
-      rank: 5,
-      team: "Eagles",
-      dmg: 42,
-      correct: 5,
-      avatar: "/src/assets/Placeholder/Team2.jpg",
-    },
-    {
-      rank: 6,
-      team: "Tigers",
-      dmg: 38,
-      correct: 4,
-      avatar: "/src/assets/Placeholder/Team3.jpg",
-    },
-    {
-      rank: 7,
-      team: "Lions",
-      dmg: 35,
-      correct: 4,
-      avatar: "/src/assets/Placeholder/Team1.jpg",
-    },
-    {
-      rank: 8,
-      team: "Bears",
-      dmg: 32,
-      correct: 3,
-      avatar: "/src/assets/Placeholder/Team2.jpg",
-    },
-    {
-      rank: 9,
-      team: "Wolves",
-      dmg: 28,
-      correct: 3,
-      avatar: "/src/assets/Placeholder/Team3.jpg",
-    },
-    {
-      rank: 10,
-      team: "Panthers",
-      dmg: 25,
-      correct: 2,
-      avatar: "/src/assets/Placeholder/Team1.jpg",
-    },
-    {
-      rank: 11,
-      team: "Hawks",
-      dmg: 22,
-      correct: 2,
-      avatar: "/src/assets/Placeholder/Team2.jpg",
-    },
-    {
-      rank: 12,
-      team: "Falcons",
-      dmg: 18,
-      correct: 1,
-      avatar: "/src/assets/Placeholder/Team3.jpg",
-    },
-  ];
+  // Real-time leaderboard data state
+  const [leaderboardData, setLeaderboardData] = useState({
+    teamLeaderboard: [],
+    individualLeaderboard: [],
+    allTimeLeaderboard: [],
+    isLoading: true,
+  });
 
-  const individualLeaderboard = [
-    {
-      rank: 1,
-      player: "Sovitep",
-      dmg: 100,
-      correct: 9,
-      avatar: "/src/assets/Placeholder/Profile1.jpg",
-    },
-    {
-      rank: 2,
-      player: "Visoth",
-      dmg: 90,
-      correct: 8,
-      avatar: "/src/assets/Placeholder/Profile2.jpg",
-    },
-    {
-      rank: 3,
-      player: "Roth",
-      dmg: 75,
-      correct: 7,
-      avatar: "/src/assets/Placeholder/Profile3.jpg",
-    },
-    {
-      rank: 4,
-      player: "Alice",
-      dmg: 65,
-      correct: 6,
-      avatar: "/src/assets/Placeholder/Profile4.jpg",
-    },
-    {
-      rank: 5,
-      player: "Bob",
-      dmg: 55,
-      correct: 5,
-      avatar: "/src/assets/Placeholder/Profile5.jpg",
-    },
-    {
-      rank: 6,
-      player: "Charlie",
-      dmg: 45,
-      correct: 4,
-      avatar: "/src/assets/Placeholder/Profile6.jpg",
-    },
-    {
-      rank: 7,
-      player: "David",
-      dmg: 35,
-      correct: 3,
-      avatar: "/src/assets/Placeholder/Profile7.jpg",
-    },
-    {
-      rank: 8,
-      player: "Emma",
-      dmg: 30,
-      correct: 3,
-      avatar: "/src/assets/Placeholder/Profile1.jpg",
-    },
-    {
-      rank: 9,
-      player: "Frank",
-      dmg: 25,
-      correct: 2,
-      avatar: "/src/assets/Placeholder/Profile2.jpg",
-    },
-    {
-      rank: 10,
-      player: "Grace",
-      dmg: 20,
-      correct: 2,
-      avatar: "/src/assets/Placeholder/Profile3.jpg",
-    },
-    {
-      rank: 11,
-      player: "Henry",
-      dmg: 15,
-      correct: 1,
-      avatar: "/src/assets/Placeholder/Profile4.jpg",
-    },
-    {
-      rank: 12,
-      player: "Ivy",
-      dmg: 10,
-      correct: 1,
-      avatar: "/src/assets/Placeholder/Profile5.jpg",
-    },
-  ];
+  // Boss battle state with real-time tracking
+  const [battleState, setBattleState] = useState({
+    bossName: "Boss",
+    bossStatus: "active", // active, in-battle, cooldown
+    currentHP: 1000,
+    maxHP: 1000,
+    playersActive: 0,
+    eventBossId: null, // Track the current eventBossId
+    isLoading: true,
+  });
 
-  const allTimeLeaderboard = [
-    {
-      rank: 1,
-      player: "Python",
-      dmg: 300,
-      correct: 25,
-      avatar: "/src/assets/Placeholder/Profile1.jpg",
-    },
-    {
-      rank: 2,
-      player: "Sovitep",
-      dmg: 280,
-      correct: 22,
-      avatar: "/src/assets/Placeholder/Profile2.jpg",
-    },
-    {
-      rank: 3,
-      player: "Visoth",
-      dmg: 250,
-      correct: 20,
-      avatar: "/src/assets/Placeholder/Profile3.jpg",
-    },
-    {
-      rank: 4,
-      player: "Alice",
-      dmg: 220,
-      correct: 18,
-      avatar: "/src/assets/Placeholder/Profile4.jpg",
-    },
-    {
-      rank: 5,
-      player: "Bob",
-      dmg: 200,
-      correct: 16,
-      avatar: "/src/assets/Placeholder/Profile5.jpg",
-    },
-    {
-      rank: 6,
-      player: "Charlie",
-      dmg: 180,
-      correct: 14,
-      avatar: "/src/assets/Placeholder/Profile6.jpg",
-    },
-    {
-      rank: 7,
-      player: "Master",
-      dmg: 160,
-      correct: 12,
-      avatar: "/src/assets/Placeholder/Profile7.jpg",
-    },
-    {
-      rank: 8,
-      player: "Legend",
-      dmg: 140,
-      correct: 11,
-      avatar: "/src/assets/Placeholder/Profile1.jpg",
-    },
-    {
-      rank: 9,
-      player: "Hero",
-      dmg: 120,
-      correct: 10,
-      avatar: "/src/assets/Placeholder/Profile2.jpg",
-    },
-    {
-      rank: 10,
-      player: "Champion",
-      dmg: 100,
-      correct: 9,
-      avatar: "/src/assets/Placeholder/Profile3.jpg",
-    },
-    {
-      rank: 11,
-      player: "Warrior",
-      dmg: 90,
-      correct: 8,
-      avatar: "/src/assets/Placeholder/Profile4.jpg",
-    },
-    {
-      rank: 12,
-      player: "Fighter",
-      dmg: 80,
-      correct: 7,
-      avatar: "/src/assets/Placeholder/Profile5.jpg",
-    },
-  ];
+  // Load initial data and set up socket listeners
+  useEffect(() => {
+    if (!eventId) return;
+
+    const loadInitialData = async () => {
+      try {
+        setBattleState((prev) => ({ ...prev, isLoading: true }));
+        setLeaderboardData((prev) => ({ ...prev, isLoading: true }));
+
+        // Load all-time leaderboard
+        const allTimeResponse = await leaderboardAPI.getAllTimeLeaderboard(50);
+
+        setLeaderboardData((prev) => ({
+          ...prev,
+          allTimeLeaderboard: allTimeResponse.leaderboard || [],
+          isLoading: false,
+        }));
+
+        setBattleState((prev) => ({
+          ...prev,
+          isLoading: false,
+        }));
+
+        console.log("📈 Host leaderboard data loaded");
+      } catch (error) {
+        console.error("Error loading host leaderboard data:", error);
+        toast.error("Failed to load leaderboard data");
+        setLeaderboardData((prev) => ({ ...prev, isLoading: false }));
+        setBattleState((prev) => ({ ...prev, isLoading: false }));
+      }
+    };
+
+    loadInitialData();
+  }, [eventId]);
+
+  // Real-time socket setup effect
+  useEffect(() => {
+    if (!socket || !eventBossId) return;
+
+    console.log(
+      `📡 Host joining real-time rooms for eventBoss: ${eventBossId}`
+    );
+
+    // Join socket rooms for real-time updates
+    socket.emit("get-boss-session-info", { eventBossId });
+
+    // Request initial leaderboard data
+    socket.emit("boss-preview:request-leaderboard", { eventBossId });
+
+    // Set up periodic refresh for real-time data
+    const refreshInterval = setInterval(() => {
+      socket.emit("boss-preview:request-leaderboard", { eventBossId });
+    }, 10000); // Refresh every 10 seconds
+
+    return () => {
+      clearInterval(refreshInterval);
+    };
+  }, [socket, eventBossId]);
+
+  // Socket listeners for real-time updates
+  useEffect(() => {
+    if (!socket) return;
+
+    // Listen for boss session info (contains current boss state)
+    const handleBossSessionInfo = (data) => {
+      console.log("🎯 Host received boss session info:", data);
+
+      if (data.bossData) {
+        setBattleState((prev) => ({
+          ...prev,
+          bossName: data.bossData.name || "Boss",
+          bossStatus: data.isStarted
+            ? "in-battle"
+            : data.bossData.isActive
+            ? "active"
+            : "cooldown",
+          currentHP: data.bossData.currentHp || prev.currentHP,
+          maxHP: data.bossData.maxHp || prev.maxHP,
+          playersActive: data.playerCount || 0,
+          eventBossId: data.eventBossId,
+        }));
+      }
+    };
+
+    // Listen for real-time leaderboard updates from boss preview
+    const handleBossPreviewLeaderboardUpdate = (data) => {
+      console.log("📊 Host received boss preview leaderboard update:", data);
+
+      if (data.leaderboardData) {
+        setLeaderboardData((prev) => ({
+          ...prev,
+          teamLeaderboard:
+            data.leaderboardData.teamLeaderboard || prev.teamLeaderboard,
+          individualLeaderboard:
+            data.leaderboardData.playerLeaderboard ||
+            prev.individualLeaderboard,
+        }));
+      }
+    };
+
+    // Listen for real-time leaderboard updates from combat
+    const handleLeaderboardUpdate = (data) => {
+      console.log("📊 Host received combat leaderboard update:", data);
+
+      setLeaderboardData((prev) => ({
+        ...prev,
+        teamLeaderboard: data.teamLeaderboard || prev.teamLeaderboard,
+        individualLeaderboard:
+          data.playerLeaderboard || prev.individualLeaderboard,
+      }));
+    };
+
+    // Listen for boss status updates
+    const handleBossStatusUpdate = (data) => {
+      console.log("🎯 Host received boss status update:", data);
+
+      setBattleState((prev) => ({
+        ...prev,
+        bossStatus: data.status,
+        bossName: data.bossName || prev.bossName,
+        currentHP:
+          data.currentHP !== undefined ? data.currentHP : prev.currentHP,
+        maxHP: data.maxHP !== undefined ? data.maxHP : prev.maxHP,
+      }));
+
+      // Show toast notifications
+      if (data.status === "in-battle") {
+        toast.info(`${data.bossName || "Boss"} battle has started!`);
+      } else if (data.status === "cooldown") {
+        toast.success(`${data.bossName || "Boss"} has been defeated!`);
+      }
+    };
+
+    // Listen for battle start events
+    const handleBattleStart = (data) => {
+      console.log("🚀 Host received battle start:", data);
+
+      if (data.session) {
+        setBattleState((prev) => ({
+          ...prev,
+          bossStatus: "in-battle",
+          bossName: data.session.bossData?.name || prev.bossName,
+          currentHP: data.session.bossData?.currentHp || prev.currentHP,
+          maxHP: data.session.bossData?.maxHp || prev.maxHP,
+          playersActive: data.session.playerCount || prev.playersActive,
+        }));
+
+        toast.info("Battle has started!");
+      }
+    };
+
+    // Listen for battle status sync (real-time HP updates)
+    const handleBattleStatusSync = (data) => {
+      console.log("🔄 Host received battle status sync:", data);
+
+      setBattleState((prev) => ({
+        ...prev,
+        currentHP:
+          data.bossCurrentHp !== undefined
+            ? data.bossCurrentHp
+            : prev.currentHP,
+        maxHP: data.bossMaxHp !== undefined ? data.bossMaxHp : prev.maxHP,
+      }));
+    };
+
+    // Listen for player join notifications
+    const handlePlayerJoined = (data) => {
+      toast.info(`${data.playerNickname} joined the battle!`);
+      setBattleState((prev) => ({
+        ...prev,
+        playersActive: prev.playersActive + 1,
+      }));
+    };
+
+    // Listen for boss damage updates
+    const handleBossDamageUpdate = (data) => {
+      if (data.damage > 0) {
+        setBattleState((prev) => ({
+          ...prev,
+          currentHP: data.currentHP,
+          maxHP: data.maxHP,
+        }));
+
+        toast.success(
+          `Boss took ${data.damage} damage! (${data.currentHP}/${data.maxHP} HP)`
+        );
+      }
+    };
+
+    // Listen for player knockout notifications
+    const handlePlayerKnockout = (data) => {
+      toast.error(`${data.playerNickname} was knocked out!`);
+    };
+
+    // Listen for boss defeated event
+    const handleBossDefeated = (data) => {
+      console.log("💀 Host received boss defeated:", data);
+
+      setBattleState((prev) => ({
+        ...prev,
+        bossStatus: "cooldown",
+        currentHP: 0,
+      }));
+
+      toast.success(`${data.winningTeam?.name || "A team"} defeated the boss!`);
+    };
+
+    // Listen for player count updates
+    const handlePlayerCountUpdate = (data) => {
+      console.log("👥 Host received player count update:", data);
+
+      if (data.session) {
+        setBattleState((prev) => ({
+          ...prev,
+          playersActive: data.session.playerCount || prev.playersActive,
+          bossStatus: data.session.isStarted ? "in-battle" : prev.bossStatus,
+        }));
+      }
+    };
+
+    // Set up socket listeners
+    socket.on("boss-session-info", handleBossSessionInfo);
+    socket.on(
+      "boss-preview:leaderboard-update",
+      handleBossPreviewLeaderboardUpdate
+    );
+    socket.on("leaderboard-update", handleLeaderboardUpdate);
+    socket.on("boss-status:updated", handleBossStatusUpdate);
+    socket.on("battle:start", handleBattleStart);
+    socket.on("battle-status-sync", handleBattleStatusSync);
+    socket.on("player:joined-notification", handlePlayerJoined);
+    socket.on("player:joined-battle", handlePlayerJoined);
+    socket.on("boss:damage-update", handleBossDamageUpdate);
+    socket.on("player:knockout-notification", handlePlayerKnockout);
+    socket.on("boss-defeated", handleBossDefeated);
+    socket.on("player-count:updated", handlePlayerCountUpdate);
+
+    return () => {
+      socket.off("boss-session-info", handleBossSessionInfo);
+      socket.off(
+        "boss-preview:leaderboard-update",
+        handleBossPreviewLeaderboardUpdate
+      );
+      socket.off("leaderboard-update", handleLeaderboardUpdate);
+      socket.off("boss-status:updated", handleBossStatusUpdate);
+      socket.off("battle:start", handleBattleStart);
+      socket.off("battle-status-sync", handleBattleStatusSync);
+      socket.off("player:joined-notification", handlePlayerJoined);
+      socket.off("player:joined-battle", handlePlayerJoined);
+      socket.off("boss:damage-update", handleBossDamageUpdate);
+      socket.off("player:knockout-notification", handlePlayerKnockout);
+      socket.off("boss-defeated", handleBossDefeated);
+      socket.off("player-count:updated", handlePlayerCountUpdate);
+    };
+  }, [socket]);
+
+  // Use real data or fallback to empty arrays
+  const teamLeaderboard = leaderboardData.teamLeaderboard || [];
+  const individualLeaderboard = leaderboardData.individualLeaderboard || [];
+  const allTimeLeaderboard = leaderboardData.allTimeLeaderboard || [];
 
   // Pagination helpers
   const getPaginatedData = (data, tabKey) => {
@@ -310,7 +341,10 @@ const Leaderboard = () => {
   };
 
   const handleBack = () => {
-    navigate(`/host/events/assign_boss?eventId=${eventId}`);
+    const backUrl = eventBossId
+      ? `/host/events/assign_boss?eventId=${eventId}&eventBossId=${eventBossId}`
+      : `/host/events/assign_boss?eventId=${eventId}`;
+    navigate(backUrl);
   };
 
   const getRankBadge = (rank) => {
@@ -429,35 +463,109 @@ const Leaderboard = () => {
           <CardHeader>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <CardTitle className="text-lg">Adventure Quest 2024</CardTitle>
+                <CardTitle className="text-lg">
+                  {battleState.isLoading
+                    ? "Loading Event..."
+                    : "Event Leaderboard"}
+                </CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  Boss: Dragon Lord • 10 Players Active
+                  Boss: {battleState.bossName || "No Boss Selected"} •{" "}
+                  {battleState.playersActive || 0} Players Active
                 </p>
               </div>
-              <Badge className="bg-green-500 hover:bg-green-600 w-fit">
-                <TrendingUp className="w-3 h-3 mr-1" />
-                Active Battle
+              <Badge
+                className={`w-fit ${
+                  battleState.bossStatus === "in-battle"
+                    ? "bg-red-500 hover:bg-red-600"
+                    : battleState.bossStatus === "active"
+                    ? "bg-green-500 hover:bg-green-600"
+                    : "bg-gray-500 hover:bg-gray-600"
+                }`}
+              >
+                <div
+                  className={`w-2 h-2 rounded-full mr-2 ${
+                    battleState.bossStatus === "in-battle" ||
+                    battleState.bossStatus === "active"
+                      ? "bg-white animate-pulse"
+                      : "bg-gray-300"
+                  }`}
+                />
+                {battleState.bossStatus === "in-battle"
+                  ? "Battle Active"
+                  : battleState.bossStatus === "active"
+                  ? "Ready to Battle"
+                  : "Boss Defeated"}
               </Badge>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Boss Health</Label>
-                <span className="text-sm text-muted-foreground">
-                  250 / 1000 HP
-                </span>
+                <Label className="text-sm font-medium">
+                  {battleState.bossName || "No Boss Selected"}
+                </Label>
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      battleState.bossStatus === "active"
+                        ? "bg-green-500 animate-pulse"
+                        : battleState.bossStatus === "in-battle"
+                        ? "bg-red-500 animate-pulse"
+                        : "bg-gray-500"
+                    }`}
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {battleState.bossStatus === "cooldown"
+                      ? "0"
+                      : battleState.currentHP || 0}{" "}
+                    / {battleState.maxHP || 100} HP
+                  </span>
+                </div>
               </div>
-              {/* Custom Progress Bar */}
+              {/* Dynamic Progress Bar */}
               <div className="w-full bg-muted rounded-full h-3">
                 <div
-                  className="bg-destructive rounded-full h-3 transition-all duration-300"
-                  style={{ width: "25%" }}
+                  className={`rounded-full h-3 transition-all duration-500 ${
+                    battleState.bossStatus === "cooldown"
+                      ? "bg-gray-400 w-0"
+                      : battleState.bossStatus === "active"
+                      ? "bg-destructive w-full"
+                      : "bg-destructive"
+                  }`}
+                  style={{
+                    width:
+                      battleState.bossStatus === "cooldown"
+                        ? "0%"
+                        : battleState.bossStatus === "active"
+                        ? "100%"
+                        : `${
+                            ((battleState.currentHP || 0) /
+                              (battleState.maxHP || 100)) *
+                            100
+                          }%`,
+                  }}
                 ></div>
               </div>
               <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>25% Remaining</span>
-                <span>750 damage dealt</span>
+                <span>
+                  {battleState.bossStatus === "cooldown"
+                    ? "Defeated"
+                    : battleState.bossStatus === "active"
+                    ? "Ready for Battle"
+                    : `${Math.round(
+                        ((battleState.currentHP || 0) /
+                          (battleState.maxHP || 100)) *
+                          100
+                      )}% Remaining`}
+                </span>
+                <span>
+                  {battleState.bossStatus === "in-battle" &&
+                  battleState.playersActive
+                    ? `${battleState.playersActive} players active`
+                    : battleState.bossStatus === "cooldown"
+                    ? "Battle Complete"
+                    : "Waiting for players"}
+                </span>
               </div>
             </div>
           </CardContent>
@@ -521,31 +629,67 @@ const Leaderboard = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {getPaginatedData(
-                      teamLeaderboard,
-                      "teams"
-                    ).paginatedData.map((team) => (
-                      <TableRow key={team.rank} className="hover:bg-muted/50">
-                        <TableCell className="font-medium">
-                          {getRankBadge(team.rank)}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar className="w-8 h-8">
-                              <AvatarImage src={team.avatar} alt={team.team} />
-                              <AvatarFallback>{team.team[0]}</AvatarFallback>
-                            </Avatar>
-                            <span className="font-medium">{team.team}</span>
+                    {leaderboardData.isLoading ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={4}
+                          className="text-center py-8 text-muted-foreground"
+                        >
+                          <div className="flex items-center justify-center gap-2">
+                            <Loader className="w-4 h-4 animate-spin" />
+                            Loading team leaderboard...
                           </div>
                         </TableCell>
-                        <TableCell className="text-right font-medium">
-                          {team.dmg}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {team.correct}
+                      </TableRow>
+                    ) : teamLeaderboard.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={4}
+                          className="text-center py-8 text-muted-foreground"
+                        >
+                          No team data available yet
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ) : (
+                      getPaginatedData(
+                        teamLeaderboard,
+                        "teams"
+                      ).paginatedData.map((team, index) => (
+                        <TableRow
+                          key={team.teamName || index}
+                          className="hover:bg-muted/50"
+                        >
+                          <TableCell className="font-medium">
+                            {getRankBadge(index + 1)}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <Avatar className="w-8 h-8">
+                                <AvatarImage
+                                  src={
+                                    team.avatar ||
+                                    "/src/assets/Placeholder/Team1.jpg"
+                                  }
+                                  alt={team.teamName || `Team ${index + 1}`}
+                                />
+                                <AvatarFallback>
+                                  {(team.teamName || `T${index + 1}`)[0]}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="font-medium">
+                                {team.teamName || `Team ${index + 1}`}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            {team.totalDamage || 0}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {team.totalCorrectAnswers || 0}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
                 <PaginationControls
@@ -576,36 +720,73 @@ const Leaderboard = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {getPaginatedData(
-                      individualLeaderboard,
-                      "individual"
-                    ).paginatedData.map((player) => (
-                      <TableRow key={player.rank} className="hover:bg-muted/50">
-                        <TableCell className="font-medium">
-                          {getRankBadge(player.rank)}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar className="w-8 h-8">
-                              <AvatarImage
-                                src={player.avatar}
-                                alt={player.player}
-                              />
-                              <AvatarFallback>
-                                {player.player[0]}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="font-medium">{player.player}</span>
+                    {leaderboardData.isLoading ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={4}
+                          className="text-center py-8 text-muted-foreground"
+                        >
+                          <div className="flex items-center justify-center gap-2">
+                            <Loader className="w-4 h-4 animate-spin" />
+                            Loading individual leaderboard...
                           </div>
                         </TableCell>
-                        <TableCell className="text-right font-medium">
-                          {player.dmg}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {player.correct}
+                      </TableRow>
+                    ) : individualLeaderboard.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={4}
+                          className="text-center py-8 text-muted-foreground"
+                        >
+                          No individual player data available yet
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ) : (
+                      getPaginatedData(
+                        individualLeaderboard,
+                        "individual"
+                      ).paginatedData.map((player, index) => (
+                        <TableRow
+                          key={player.playerNickname || index}
+                          className="hover:bg-muted/50"
+                        >
+                          <TableCell className="font-medium">
+                            {getRankBadge(index + 1)}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <Avatar className="w-8 h-8">
+                                <AvatarImage
+                                  src={
+                                    player.avatar ||
+                                    "/src/assets/Placeholder/Profile1.jpg"
+                                  }
+                                  alt={
+                                    player.playerNickname ||
+                                    `Player ${index + 1}`
+                                  }
+                                />
+                                <AvatarFallback>
+                                  {
+                                    (player.playerNickname ||
+                                      `P${index + 1}`)[0]
+                                  }
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="font-medium">
+                                {player.playerNickname || `Player ${index + 1}`}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            {player.totalDamage || 0}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {player.totalCorrectAnswers || 0}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
                 <PaginationControls
@@ -636,36 +817,77 @@ const Leaderboard = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {getPaginatedData(
-                      allTimeLeaderboard,
-                      "alltime"
-                    ).paginatedData.map((player) => (
-                      <TableRow key={player.rank} className="hover:bg-muted/50">
-                        <TableCell className="font-medium">
-                          {getRankBadge(player.rank)}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar className="w-8 h-8">
-                              <AvatarImage
-                                src={player.avatar}
-                                alt={player.player}
-                              />
-                              <AvatarFallback>
-                                {player.player[0]}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="font-medium">{player.player}</span>
+                    {leaderboardData.isLoading ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={4}
+                          className="text-center py-8 text-muted-foreground"
+                        >
+                          <div className="flex items-center justify-center gap-2">
+                            <Loader className="w-4 h-4 animate-spin" />
+                            Loading all-time leaderboard...
                           </div>
                         </TableCell>
-                        <TableCell className="text-right font-medium">
-                          {player.dmg}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {player.correct}
+                      </TableRow>
+                    ) : allTimeLeaderboard.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={4}
+                          className="text-center py-8 text-muted-foreground"
+                        >
+                          No all-time data available yet
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ) : (
+                      getPaginatedData(
+                        allTimeLeaderboard,
+                        "alltime"
+                      ).paginatedData.map((player, index) => (
+                        <TableRow
+                          key={player.playerName || index}
+                          className="hover:bg-muted/50"
+                        >
+                          <TableCell className="font-medium">
+                            {getRankBadge(index + 1)}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <Avatar className="w-8 h-8">
+                                <AvatarImage
+                                  src={
+                                    player.profilePicture ||
+                                    "/src/assets/Placeholder/Profile1.jpg"
+                                  }
+                                  alt={
+                                    player.playerName ||
+                                    player.nickname ||
+                                    `Player ${index + 1}`
+                                  }
+                                />
+                                <AvatarFallback>
+                                  {
+                                    (player.playerName ||
+                                      player.nickname ||
+                                      `P${index + 1}`)[0]
+                                  }
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="font-medium">
+                                {player.playerName ||
+                                  player.nickname ||
+                                  `Player ${index + 1}`}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            {player.totalDamage || 0}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {player.totalCorrectAnswers || 0}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
                 <PaginationControls

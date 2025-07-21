@@ -137,11 +137,13 @@ const AssignBoss = () => {
         }));
       } catch (apiError) {
         console.warn("Backend QR generation failed, using fallback:", apiError);
-        
+
         // Fallback: Generate QR code using a client-side library or service
         // For now, we'll use a free QR code service
-        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=${encodeURIComponent(joinUrl)}`;
-        
+        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=${encodeURIComponent(
+          joinUrl
+        )}`;
+
         setQrDialog((prev) => ({
           ...prev,
           qrCode: qrCodeUrl,
@@ -242,10 +244,6 @@ const AssignBoss = () => {
     navigate("/host/events/view");
   };
 
-  const handleViewLeaderboard = () => {
-    navigate(`/host/events/leaderboard?eventId=${eventId}`);
-  };
-
   const handlePlayerBadges = () => {
     navigate("/host/events/player_badges");
   };
@@ -324,17 +322,17 @@ const AssignBoss = () => {
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-
                   <div className="flex items-center justify-between mb-2">
-                    <h2 className="text-lg font-semibold">{event.name}
-                        <Badge
-                          variant="outline"
-                          className="bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800 ml-4 mt-auto"
-                        >
-                          <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full mr-2"></div>
-                          {event.status || "Active"}
-                        </Badge>
-                      </h2>
+                    <h2 className="text-lg font-semibold">
+                      {event.name}
+                      <Badge
+                        variant="outline"
+                        className="bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800 ml-4 mt-auto"
+                      >
+                        <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full mr-2"></div>
+                        {event.status || "Active"}
+                      </Badge>
+                    </h2>
                     {user?.role === "admin" && (
                       <Button
                         variant="outline"
@@ -353,28 +351,28 @@ const AssignBoss = () => {
                       {event.description}
                     </p>
                   )}
-                  
+
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <span>
                       <strong>Start:</strong>{" "}
                       {event.startTime
                         ? new Date(event.startTime).toLocaleDateString() +
-                        " " +
-                        new Date(event.startTime).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
+                          " " +
+                          new Date(event.startTime).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
                         : "N/A"}
                     </span>
                     <span>
                       <strong>End:</strong>{" "}
                       {event.endTime
                         ? new Date(event.endTime).toLocaleDateString() +
-                        " " +
-                        new Date(event.endTime).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
+                          " " +
+                          new Date(event.endTime).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
                         : "N/A"}
                     </span>
                     <span>
@@ -382,7 +380,6 @@ const AssignBoss = () => {
                     </span>
                   </div>
                 </div>
-                
               </div>
             </CardHeader>
           </Card>
@@ -469,23 +466,23 @@ const AssignBoss = () => {
                           {/* Only show remove button if user can unassign this boss */}
                           {(user?.role === "admin" ||
                             boss.creatorId === user?.id) && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="w-8 h-8 p-0 bg-background/80 hover:bg-background"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleRemoveBoss(boss);
-                                    }}
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Unassign Boss</TooltipContent>
-                              </Tooltip>
-                            )}
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-8 h-8 p-0 bg-background/80 hover:bg-background"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRemoveBoss(boss);
+                                  }}
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Unassign Boss</TooltipContent>
+                            </Tooltip>
+                          )}
                         </div>
                       </div>
 
@@ -592,12 +589,18 @@ const AssignBoss = () => {
                                 variant="ghost"
                                 size="sm"
                                 className="w-8 h-8 p-0"
-                                onClick={handleViewLeaderboard}
+                                onClick={() =>
+                                  navigate(
+                                    `/host/events/leaderboard?eventId=${eventId}&eventBossId=${boss.eventBossId}`
+                                  )
+                                }
                               >
                                 <Trophy className="w-4 h-4" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>View Leaderboard</TooltipContent>
+                            <TooltipContent>
+                              View Boss Leaderboard
+                            </TooltipContent>
                           </Tooltip>
                         </div>
                       </div>
