@@ -299,7 +299,8 @@ const BossPreview = () => {
         // If battle has started and player has joined, redirect to battle page
         if (data.session?.isStarted) {
           setIsBattleStarted(true);
-          setCountdown(3); // Short countdown for reconnect
+          // Only set countdown if user wants to auto-join (not returning from battle)
+          // setCountdown(3);
         }
       });
 
@@ -803,10 +804,19 @@ const BossPreview = () => {
                       </Button>
                     )}
                     {isBattleStarted && countdown !== null && (
-                      <Button className="flex-1" disabled variant="destructive">
+                      <Button className="flex-1c w-full halftone-texture" disabled variant="destructive">
                         {countdown > 0
                           ? `Starting in ${countdown}...`
                           : "Battle Starting!"}
+                      </Button>
+                    )}
+                    {isBattleStarted && countdown === null && (
+                      <Button 
+                        className="flex-1c w-full halftone-texture" 
+                        onClick={() => navigate(`/boss-battle/${eventBossId}/${joinCode}`, { state: { session } })}
+                        variant="default"
+                      >
+                        Return to Battle
                       </Button>
                     )}
                     {!isCountdownActive && !isBattleStarted && (

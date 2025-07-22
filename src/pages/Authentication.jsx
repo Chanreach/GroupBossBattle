@@ -56,11 +56,23 @@ const Authentication = () => {
     setTimeout(() => {
       setIsSignIn(newSignInState);
       setIsClosing(false);
-      // Update URL
+      
+      // Preserve ALL current search parameters when switching forms
+      const currentParams = new URLSearchParams(location.search);
+      
+      // Update URL while preserving all parameters
       if (newSignInState) {
-        navigate("/auth", { replace: true });
+        // Switching to login - remove mode parameter but keep others
+        currentParams.delete("mode");
+        const queryString = currentParams.toString();
+        const newUrl = queryString ? `/auth?${queryString}` : "/auth";
+        navigate(newUrl, { replace: true });
       } else {
-        navigate("/auth?mode=register", { replace: true });
+        // Switching to register - add mode parameter
+        currentParams.set("mode", "register");
+        const queryString = currentParams.toString();
+        const newUrl = `/auth?${queryString}`;
+        navigate(newUrl, { replace: true });
       }
     }, 180); // Match this with your CSS animation duration
   };
@@ -128,13 +140,15 @@ const Authentication = () => {
       const returnUrl = params.get("returnUrl");
       
       if (returnUrl) {
-        navigate(decodeURIComponent(returnUrl));
+        const decodedUrl = decodeURIComponent(returnUrl);
+        // Use setTimeout to ensure login state is properly set before navigation
+        setTimeout(() => navigate(decodedUrl), 500);
       } else {
         // Redirect based on user role
         if (data.user.role === "admin" || data.user.role === "host") {
-          navigate("/host/events/view");
+          setTimeout(() => navigate("/host/events/view"), 500);
         } else {
-          navigate("/");
+          setTimeout(() => navigate("/"), 500);
         }
       }
     } catch (err) {
@@ -171,7 +185,8 @@ const Authentication = () => {
       const returnUrl = params.get("returnUrl");
       
       if (returnUrl) {
-        setTimeout(() => navigate(decodeURIComponent(returnUrl)), 500);
+        const decodedUrl = decodeURIComponent(returnUrl);
+        setTimeout(() => navigate(decodedUrl), 500);
       } else {
         setTimeout(() => navigate("/"), 500);
       }
