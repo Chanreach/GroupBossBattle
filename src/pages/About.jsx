@@ -357,7 +357,7 @@ const AboutContent = () => {
                     </CardHeader>
                   </div>
                   <div className="flex justify-center gap-3 mt-3">
-                    <a href="https://github.com/ChanreachTry" className="text-gray-600 hover:text-green-600 transition-colors">
+                    <a href="https://github.com/Chanreach" className="text-gray-600 hover:text-green-600 transition-colors">
                       <Github className="w-4 h-4" />
                     </a>
                     <a href="https://mail.google.com/mail/?view=cm&fs=1&to=ctry1%40paragoniu.edu.kh&authuser=0" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-green-600 transition-colors">
