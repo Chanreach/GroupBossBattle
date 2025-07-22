@@ -29,7 +29,7 @@ const IntersectionObserver = ({ children, initialVisible = [] }) => {
         });
       },
       {
-        threshold: 0.1,
+        threshold: 0.001,
         rootMargin: '0px 0px -50px 0px'
       }
     );

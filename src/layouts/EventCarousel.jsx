@@ -171,7 +171,7 @@ const EventCarousel = () => {
       <div className="relative w-full">
         <div className="relative w-full max-w-7xl mx-auto px-4">
           <div className="relative h-[300px] flex items-center justify-center">
-            <div className="w-[350px] h-[350px] sm:w-[600px] sm:h-[338px] rounded-xl bg-gradient-to-br from-purple-600/20 via-purple-500/20 to-pink-500/20 backdrop-blur-sm border border-white/20 animate-pulse">
+            <div className="w-[350px] h-[350px] sm:w-[600px] sm:h-[338px] rounded-xl bg-purple-600/20 backdrop-blur-sm border border-white/20 animate-pulse">
               <div className="p-4 sm:p-6 h-full flex flex-col justify-center items-center text-white">
                 <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/20 rounded-full animate-spin mb-4"></div>
                 <div className="text-lg sm:text-xl font-medium opacity-70">Loading Events...</div>
@@ -238,11 +238,11 @@ const EventCarousel = () => {
                 }
               }}
             >
-              {/* Card with gradient border */}
+              {/* Card with solid border */}
               <div className={`relative w-full h-full rounded-xl overflow-hidden ${
                 event.isPlaceholder 
-                  ? 'bg-gradient-to-br from-blue-600/50 via-purple-500/50 to-indigo-500/50'
-                  : 'bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500'
+                  ? 'bg-blue-600/50'
+                  : 'bg-purple-600'
               } p-[3px]`}>
 
                 <div className="relative w-full h-full rounded-lg overflow-hidden bg-white/10 dark:bg-white/5 backdrop-blur-sm border border-white/20 dark:border-white/20">
@@ -322,7 +322,7 @@ const EventCarousel = () => {
               onClick={() => goToSlide(index)}
               className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-300 ${
                 index === currentIndex
-                  ? "bg-purple-600 dark:bg-white shadow-lg scale-125"
+                  ? "bg-purple-600 shadow-lg scale-125"
                   : "bg-gray-400 dark:bg-white/40 hover:bg-purple-500 dark:hover:bg-white/60"
               }`}
               aria-label={`Go to event ${index + 1}`}

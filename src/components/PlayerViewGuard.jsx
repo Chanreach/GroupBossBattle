@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth.jsx";
+import Loading from "../pages/Loading.jsx";
 
 /**
  * Component that handles the redirect logic for host/admin users
@@ -38,7 +39,7 @@ export const PlayerViewGuard = ({ children }) => {
 
   // Wait for authentication to load and localStorage to be checked
   if (isLoading || !localStorageChecked) {
-    return <div>Loading...</div>;
+    return <Loading />;
   }
 
   // If user is host/admin and hasn't explicitly chosen to view as player,

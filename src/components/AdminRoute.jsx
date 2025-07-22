@@ -1,5 +1,6 @@
 import { useAuth } from '../context/useAuth';
 import { Navigate, useLocation } from 'react-router-dom';
+import Loading from '../pages/Loading.jsx';
 
 export const AdminRoute = ({ children }) => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -7,7 +8,7 @@ export const AdminRoute = ({ children }) => {
 
   // Show loading while checking authentication
   if (isLoading) {
-    return <div className="flex items-center justify-center p-4">Loading...</div>;
+    return <Loading />;
   }
 
   // Redirect to auth if not authenticated

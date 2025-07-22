@@ -18,6 +18,7 @@ import {
   Users,
   BarChart3,
   Shield,
+  PencilRuler,
 } from "lucide-react";
 
 // ===== COMPONENTS ===== //
@@ -333,7 +334,7 @@ export function NavSidebar({ ...props }) {
                         navigate("/host/events/view");
                       }}
                     >
-                      <Users className="mr-2 h-4 w-4" />
+                      <PencilRuler className="mr-2 h-4 w-4" />
                       <span>View as Host</span>
                     </DropdownMenuItem>
                   )}

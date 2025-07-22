@@ -91,7 +91,7 @@ const Authentication = () => {
         email: registerData.email,
         password: registerData.password,
       });
-      toast.success("Account created! You can now sign in.");
+      toast.success("Account created! You can now login.");
       handleFormTransition(true);
       setRegisterData({
         username: "",
@@ -192,7 +192,7 @@ const Authentication = () => {
         {/* ===== REGISTER CARD ===== */}
         {!isSignIn && (
           <Card
-            className={`border-0 flex flex-col md:flex-row overflow-hidden min-h-[600px] mt-2 g-lg-0 py-0 gap-0 ${
+            className={`border-2 flex flex-col md:flex-row overflow-hidden min-h-[600px] mt-2 g-lg-0 py-0 gap-0 ${
               isClosing
                 ? "animated-fadeOut-down-fast"
                 : "animated-fadeIn-down-fast"
@@ -347,7 +347,7 @@ const Authentication = () => {
                       <Button
                         type="submit"
                         variant="outline"
-                        className="flex-1 bg-zinc-900 dark:bg-zinc-750 text-white hover:text-white hover:bg-zinc-800 px-0 py-2 rounded-2"
+                        className="flex-1 font-semibold px-3 py-2 rounded-2 !bg-purple-500 hover:!bg-purple-600 !text-white !border-purple-700 dark:!border-purple-600 halftone-texture"
                       >
                         Create Account
                       </Button>
@@ -360,8 +360,9 @@ const Authentication = () => {
                       className="text-primary cursor-pointer hover:underline"
                       onClick={() => handleFormTransition(true)}
                     >
-                      Sign in
+                      Login instead
                     </span>
+                    
                   </div>
                 </CardContent>
               </div>
@@ -372,7 +373,7 @@ const Authentication = () => {
         {/* ===== LOGIN CARD ===== */}
         {isSignIn && (
           <Card
-            className={`border-0 flex flex-col md:flex-row overflow-hidden min-h-[600px] py-0 gap-0 ${
+            className={`border-2 flex flex-col md:flex-row overflow-hidden min-h-[600px] py-0 gap-0 ${
               isClosing
                 ? "animated-fadeOut-down-fast"
                 : "animated-fadeIn-down-fast"
@@ -404,7 +405,7 @@ const Authentication = () => {
                 <CardHeader className="text-center pb-6">
                   <CardTitle className="text-2xl font-bold">Login</CardTitle>
                   <CardDescription>
-                    Sign in to continue your boss battle adventures
+                    Login to continue your boss battle adventures
                   </CardDescription>
                 </CardHeader>
 
@@ -481,7 +482,7 @@ const Authentication = () => {
                       <Button
                         type="submit"
                         variant="outline"
-                        className="flex-1 bg-zinc-900 dark:bg-zinc-750 text-white hover:text-white hover:bg-zinc-800 px-6 py-2 rounded-2"
+                        className="flex-1 font-semibold px-4 py-2 rounded-2 !bg-blue-500 hover:!bg-blue-600 !text-white !border-blue-700 dark:!border-blue-600 halftone-texture"
                       >
                         Login
                       </Button>

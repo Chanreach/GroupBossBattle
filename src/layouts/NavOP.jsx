@@ -11,6 +11,7 @@ import {
   User,
   LogOut,
   BarChart3,
+  PencilRuler,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -321,7 +322,6 @@ const NavOP = (props) => {
                       <User className="mr-2 h-4 w-4" />
                       <span>Profile</span>
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={() => {
                         localStorage.setItem("viewAsPlayer", "true");
@@ -333,8 +333,9 @@ const NavOP = (props) => {
                       }}
                     >
                       <Home className="mr-2 h-4 w-4" />
-                      <span>Back to Player</span>
+                      <span>View as Player</span>
                     </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={handleLogout}
                       className="text-red-600 focus:text-red-600"

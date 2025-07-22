@@ -1035,19 +1035,7 @@ input:-moz-autofill {
 }
 
 /* Prevent scrollbar jumping by always showing vertical scrollbar */
-html {
-  overflow-y: scroll;
-}
 
-/* Alternative: Force consistent layout height */
-body {
-  min-height: 100vh;
-}
-
-/* Ensure all main containers maintain consistent minimum height */
-#root {
-  min-height: 100vh;
-}
 
 /* Utility class for consistent page layout */
 .page-container {

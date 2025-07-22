@@ -33,6 +33,7 @@ import Authentication from "./pages/Authentication";
 
 // ===== PLAYER PAGES ===== //
 import Error from "./pages/Error";
+import Loading from "./pages/Loading";
 import PlayerHome from "./pages/Player/Home";
 import PlayerEventBosses from "./pages/Player/EventBosses";
 import PlayerBadges from "./pages/Player/Badges";
@@ -385,8 +386,12 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   </Route>
                 </Route>
 
+                {/* Loading Route */}
+                <Route path="/loading" element={<Loading />} />
+
                 {/* 404 Error Route */}
                 <Route path="/error" element={<Error />} />
+                
                 <Route path="*" element={<AppError />}>
                   <Route path="*" element={<Error />} />
                 </Route>

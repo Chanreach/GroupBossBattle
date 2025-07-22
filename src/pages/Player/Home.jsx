@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import EventCarousel from "@/layouts/EventCarousel"
 // import EventCarousel2 from "@/layouts/EventCarousel2"
 import QRButton from "@/layouts/QRButton"
+import { LiquidPillElement, LiquidCircleElement, LiquidFloatingElement } from "@/lib/LiquidParallax"
 
 // ===== STYLES ===== //
 import "@/index.css"
@@ -28,6 +29,10 @@ const Home = () => {
     document.getElementById("features")?.scrollIntoView({
       behavior: "smooth",
     })
+  }
+
+  const handleQRCodeClick = () => {
+    navigate("/qr")
   }
 
   const handleLogoClick = async () => {
@@ -49,6 +54,72 @@ const Home = () => {
 
       {/* ===== HERO SECTION ===== */}
       <section className="relative min-h-screen overflow-hidden py-6 bg-[#f3f0ff] dark:bg-[#140f25]">
+        
+        {/* Liquid Parallax Decorative Elements */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
+          <LiquidPillElement 
+            className="absolute top-40 right-20 w-24 h-6 bg-blue-400 rounded-full transform rotate-12 blur-sm" 
+            intensity={1.2}
+            delay={200}
+            floatRange={12}
+          />
+          <LiquidPillElement 
+            className="absolute bottom-32 left-16 w-36 h-9 bg-pink-400 rounded-full transform -rotate-12" 
+            intensity={1.0}
+            delay={400}
+            floatRange={10}
+          />
+          <LiquidPillElement 
+            className="absolute bottom-20 right-10 w-28 h-8 bg-purple-300 rounded-full transform rotate-45" 
+            intensity={1.1}
+            delay={600}
+            floatRange={11}
+          />
+          <LiquidPillElement 
+            className="absolute bottom-40 right-1/4 w-20 h-5 bg-purple-400 rounded-full transform rotate-30" 
+            intensity={1.3}
+            delay={500}
+            floatRange={9}
+          />
+          <LiquidCircleElement 
+            className="absolute bottom-16 left-1/3 w-16 h-16 bg-purple-500 rounded-full blur-sm" 
+            intensity={1.3}
+            delay={150}
+            floatRange={22}
+          />
+          <LiquidCircleElement 
+            className="absolute top-72 left-12 w-8 h-8 bg-blue-400 rounded-full opacity-60 blur-md" 
+            intensity={2.2}
+            delay={350}
+            floatRange={18}
+          />
+          <LiquidCircleElement 
+            className="absolute bottom-60 right-16 w-12 h-12 bg-pink-400 rounded-full opacity-70 blur-sm" 
+            intensity={1.8}
+            delay={450}
+            floatRange={16}
+          />
+          <LiquidCircleElement 
+            className="absolute top-96 right-12 w-7 h-7 bg-purple-400 rounded-full opacity-50 blur-md" 
+            intensity={2.5}
+            delay={550}
+            floatRange={20}
+          />
+          <LiquidPillElement 
+            className="absolute top-72 left-20 w-32 h-6 bg-blue-300 rounded-full transform -rotate-15 blur-sm" 
+            intensity={0.9}
+            delay={800}
+            floatRange={13}
+          />
+
+
+          <LiquidPillElement 
+            className="absolute bottom-12 left-1/4 w-24 h-5 bg-pink-300 rounded-full transform -rotate-40 blur-md" 
+            intensity={1.0}
+            delay={700}
+            floatRange={10}
+          />
+        </div>
 
         <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 sm:px-6 md:px-12 lg:px-20 xl:px-32 2xl:px-48">
           <div className="max-w-6xl mx-auto text-center w-full">
@@ -79,15 +150,15 @@ const Home = () => {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-8 sm:mb-12 px-2">
-              {/* <Button
+
+              <Button
                 onClick={handleQRCodeClick}
                 size="lg"
-                className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold bg-white text-purple-600 hover:bg-gray-100 transition-all duration-300 rounded-xl shadow-xl hover:shadow-2xl hover:scale-105 group"
+                className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold !bg-purple-500 hover:!bg-purple-600 !text-white !border-purple-500 transition-all duration-300 rounded-xl shadow-xl hover:shadow-2xl hover:scale-105 group halftone-texture"
               >
                 <QrCode className="w-4 h-4 sm:w-5 sm:h-5 mr-2 group-hover:rotate-12 transition-transform duration-300" />
-                Scan to Join Battle
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
-              </Button> */}
+                Scan QR to Join
+              </Button>
 
               <Button
                 onClick={handleLearnMore}
@@ -101,7 +172,7 @@ const Home = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-2xl mx-auto px-2">
+            {/* <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-2xl mx-auto px-2">
               <div className="text-center p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-800 backdrop-blur-sm border border-gray-200 dark:border-gray-700">
                 <div className="text-2xl sm:text-3xl font-bold mb-1 text-gray-900 dark:text-white">50</div>
                 <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">Battles Fought</div>
@@ -114,7 +185,7 @@ const Home = () => {
                 <div className="text-2xl sm:text-3xl font-bold mb-1 text-gray-900 dark:text-white">123</div>
                 <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">Unique Players</div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </section>
@@ -146,11 +217,10 @@ const Home = () => {
           {/* Features Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mb-12 sm:mb-16">
             {/* Feature 1 */}
-            <Card className="group relative overflow-hidden border-2 border-blue-200 dark:border-blue-700 shadow-xl hover:shadow-2xl transition-all duration-500 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 hover:scale-105">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-purple-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <Card className="relative overflow-hidden py-1 border-2 shadow-lg bg-white dark:bg-gray-800 hover:shadow-xl transition-shadow duration-300">
               <CardHeader className="relative z-10 text-center pt-10 sm:pt-12 px-6 sm:px-8">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                  <QrCode className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 border-2 rounded-2xl flex items-center justify-center">
+                  <QrCode className="w-8 h-8 sm:w-10 sm:h-10 text-blue-500" />
                 </div>
                 <Badge className="mb-3 sm:mb-4 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-sm mx-auto inline-block">Step 1</Badge>
                 <CardTitle className="text-xl sm:text-2xl mb-0 sm:mb-0 text-gray-900 dark:text-white">Scan & Join</CardTitle>
@@ -164,11 +234,10 @@ const Home = () => {
             </Card>
 
             {/* Feature 2 */}
-            <Card className="group relative overflow-hidden border-2 border-purple-200 dark:border-purple-700 shadow-xl hover:shadow-2xl transition-all duration-500 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 hover:scale-105">
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 to-pink-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <Card className="relative overflow-hidden py-1 border-2 shadow-lg bg-white dark:bg-gray-800 hover:shadow-xl transition-shadow duration-300">
               <CardHeader className="relative z-10 text-center pt-10 sm:pt-12 px-6 sm:px-8">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                  <Swords className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 border-2 rounded-2xl flex items-center justify-center">
+                  <Swords className="w-8 h-8 sm:w-10 sm:h-10 text-purple-500" />
                 </div>
                 <Badge className="mb-3 sm:mb-4 bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 text-sm mx-auto inline-block">
                   Step 2
@@ -184,11 +253,10 @@ const Home = () => {
             </Card>
 
             {/* Feature 3 */}
-            <Card className="group relative overflow-hidden border-2 border-green-200 dark:border-green-700 shadow-xl hover:shadow-2xl transition-all duration-500 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 hover:scale-105">
-              <div className="absolute inset-0 bg-gradient-to-br from-green-600/10 to-emerald-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <Card className="relative overflow-hidden py-1 border-2 shadow-lg bg-white dark:bg-gray-800 hover:shadow-xl transition-shadow duration-300">
               <CardHeader className="relative z-10 text-center pt-10 sm:pt-12 px-6 sm:px-8">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                  <BadgeIcon className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 border-2 rounded-2xl flex items-center justify-center">
+                  <BadgeIcon className="w-8 h-8 sm:w-10 sm:h-10 text-green-500" />
                 </div>
                 <Badge className="mb-3 sm:mb-4 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-sm mx-auto inline-block">Step 3</Badge>
                 <CardTitle className="text-xl sm:text-2xl mb-0 sm:mb-0 text-gray-900 dark:text-white">Win & Collect</CardTitle>
