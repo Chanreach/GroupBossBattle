@@ -54,10 +54,12 @@ const EventBosses = () => {
             ...eventBoss.boss,
             status: eventBoss.status || "active", // Default to active if no status
             eventBossId: eventBoss.id,
+            joinCode: eventBoss.joinCode, // Add joinCode for navigation
             categories: eventBoss.boss.Categories || [], // Include categories
           })) || [];
 
         console.log("EventBosses: Extracted bosses:", bosses);
+        console.log("EventBosses: Boss statuses:", bosses.map(b => ({ name: b.name, status: b.status, eventBossId: b.eventBossId, joinCode: b.joinCode })));
         setAssignedBosses(bosses);
       }
     } catch (error) {
@@ -81,6 +83,26 @@ const EventBosses = () => {
 
   const handleViewLeaderboard = () => {
     navigate("/leaderboard");
+  };
+
+  const handleJoinBoss = (boss) => {
+    console.log("Attempting to join boss:", boss);
+
+    // Check if boss has required properties
+    if (!boss.eventBossId) {
+      toast.error("Invalid boss configuration: Missing eventBossId");
+      return;
+    }
+    
+    if (!boss.joinCode) {
+      toast.error("Invalid boss configuration: Missing joinCode");
+      return;
+    }
+
+    // Construct the boss preview URL similar to AssignBoss.jsx
+    const joinUrl = `/boss-preview/${boss.eventBossId}/${boss.joinCode}`;
+    console.log("Navigating to:", joinUrl);
+    navigate(joinUrl);
   };
 
   if (loading) {
@@ -192,7 +214,7 @@ const EventBosses = () => {
                   className="bg-green-50 text-green-700 border-green-200"
                 >
                   <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                  {event.status || "Active"}
+                  {event.status || "Ready"}
                 </Badge>
               </div>
             </div>
@@ -227,12 +249,12 @@ const EventBosses = () => {
               <Label className="text-lg font-semibold">Available Bosses</Label>
               <div className="text-sm text-muted-foreground">
                 {
-                  assignedBosses.filter((boss) => boss.status === "active")
+                  assignedBosses.filter((boss) => !boss.status || boss.status.toLowerCase() === "active")
                     .length
                 }{" "}
-                Active •{" "}
+                Ready •{" "}
                 {
-                  assignedBosses.filter((boss) => boss.status === "cooldown")
+                  assignedBosses.filter((boss) => boss.status && boss.status.toLowerCase() !== "active")
                     .length
                 }{" "}
                 On Cooldown
@@ -258,20 +280,23 @@ const EventBosses = () => {
                         className="w-full h-[270px] object-cover"
                       />
                       <div className="absolute top-2 left-2">
-                        {boss.status === "active" ? (
-                          <Badge className="bg-green-500 hover:bg-green-600">
-                            <Zap className="w-3 h-3 mr-1" />
-                            Active
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="secondary"
-                            className="bg-orange-100 text-orange-800"
-                          >
-                            <Clock className="w-3 h-3 mr-1" />
-                            Cooldown
-                          </Badge>
-                        )}
+                        {(() => {
+                          const isActive = !boss.status || boss.status.toLowerCase() === "active";
+                          return isActive ? (
+                            <Badge className="bg-green-500 hover:bg-green-600">
+                              <Zap className="w-3 h-3 mr-1" />
+                              Ready
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="secondary"
+                              className="bg-orange-100 text-orange-800"
+                            >
+                              <Clock className="w-3 h-3 mr-1" />
+                              {boss.status || "Cooldown"}
+                            </Badge>
+                          );
+                        })()}
                       </div>
                     </div>
 
@@ -281,9 +306,7 @@ const EventBosses = () => {
                         <h3 className="font-semibold text-base mb-1">
                           {boss.name}
                         </h3>
-                        <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
-                          <span>{boss.cooldownDuration || 60}s cooldown</span>
-                        </div>
+
                         {boss.description && (
                           <p className="text-xs text-muted-foreground mb-2">
                             {boss.description}
@@ -316,16 +339,23 @@ const EventBosses = () => {
                             {boss.numberOfTeams || 2}
                           </span>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">
-                            Status:
-                          </span>
-                          <span className="text-sm font-mono">
-                            {boss.status === "active"
-                              ? "Ready to Battle"
-                              : "On Cooldown"}
-                          </span>
-                        </div>
+                      </div>
+
+                      {/* Join Button */}
+                      <div className="pt-3">
+                        {(() => {
+                          const isActive = !boss.status || boss.status.toLowerCase() === "active";
+                          return (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="flex-1 w-full font-semibold px-3 py-2 rounded-2 !bg-purple-500 hover:!bg-purple-600 !text-white !border-purple-700 dark:!border-purple-600 halftone-texture"
+                              onClick={() => handleJoinBoss(boss)}
+                            >
+                              {isActive ? "Join" : "View Boss"}
+                            </Button>
+                          );
+                        })()}
                       </div>
                     </div>
                   </CardContent>

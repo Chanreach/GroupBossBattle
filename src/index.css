@@ -2,6 +2,7 @@
 
 /* imports */
 @import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -881,7 +882,7 @@ button {
 .sleeping-z {
   position: absolute;
   animation: sleepingZ 5s linear infinite;
-  font-family: 'Comic Sans MS', cursive, sans-serif;
+  font-family: 'Comic Sans MS', 'Kalam', cursive, sans-serif;
   font-weight: bold;
   color: #f3f3f3;
   text-shadow: 2px 2px 4px rgba(0,0,0,0.3);

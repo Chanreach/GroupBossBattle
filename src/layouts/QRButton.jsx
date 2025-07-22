@@ -63,7 +63,7 @@ const QRButton = () => {
       
       <div
         onClick={handleQRCodeClick}
-        className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-accent/5 backdrop-blur-xs border-2 border-gray-300/30 dark:border-gray-600 shadow-2xl p-2 sm:p-3 transition-all duration-300 hover:scale-105 cursor-pointer flex items-center justify-center"
+        className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-accent/50 backdrop-blur-xs border-2 border-gray-300/30 dark:border-gray-600 shadow-2xl p-2 sm:p-3 transition-all duration-300 hover:scale-105 cursor-pointer flex items-center justify-center"
       >
         <QrCode className="w-full h-full scale-110 text-purple-600 dark:text-white" />
       </div>

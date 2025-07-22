@@ -493,7 +493,7 @@ const BossPreview = () => {
   const allTimeLeaderboard = realLeaderboardData.allTimeLeaderboard || [];
 
   const goBack = () => {
-    navigate("/");
+    navigate(-1);
   };
 
   useEffect(() => {
@@ -836,7 +836,7 @@ const BossPreview = () => {
                   onChange={handleNicknameChange}
                   placeholder="Enter your nickname"
                   maxLength={20}
-                  disabled={isJoined || bossStatus === "cooldown"}
+                  disabled={isJoined}
                 />
               </div>
             </CardContent>
