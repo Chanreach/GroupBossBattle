@@ -16,7 +16,15 @@ const fetchEventBossData = async (eventBossId) => {
       throw new Error("Failed to fetch event boss data");
     }
 
-    return await response.json();
+    const eventBoss = await response.json();
+    return {
+      name: eventBoss.boss.name,
+      description: eventBoss.boss.description,
+      image: eventBoss.boss.image,
+      status: eventBoss.status,
+      cooldownDuration: eventBoss.cooldownDuration,
+      cooldownEndTime: eventBoss.cooldownEndTime,
+    };
   } catch (error) {
     console.warn("Error fetching event boss data:", error);
     return null;
@@ -27,38 +35,40 @@ const useBossPreview = (eventBossId, joinCode) => {
   const { socket } = useBossBattle();
 
   const [eventBoss, setEventBoss] = useState(null);
+  const [eventBossStatus, setEventBossStatus] = useState("active");
+  const [cooldownTimer, setCooldownTimer] = useState(null);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [hasEnteredPreview, setHasEnteredPreview] = useState(false);
+  const [hasJoinedPreview, setHasJoinedPreview] = useState(false);
 
-  // Enter preview page
-  const enterPreview = useCallback(() => {
+  // Join preview page
+  const joinPreview = useCallback(() => {
     if (!socket || !eventBossId || !joinCode) return;
 
     setIsLoading(true);
-    socket.emit(SOCKET_EVENTS.BOSS_PREVIEW.ENTER, { eventBossId, joinCode });
+    socket.emit(SOCKET_EVENTS.BOSS_PREVIEW.JOIN, { eventBossId, joinCode });
   }, [socket, eventBossId, joinCode]);
 
-  // Exit preview page
-  const exitPreview = useCallback(() => {
+  // Leave preview page
+  const leavePreview = useCallback(() => {
     if (!socket || !eventBossId) return;
 
-    socket.emit(SOCKET_EVENTS.BOSS_PREVIEW.EXIT, { eventBossId });
+    socket.emit(SOCKET_EVENTS.BOSS_PREVIEW.LEAVE, { eventBossId });
   }, [socket, eventBossId]);
 
   useEffect(() => {
     if (!socket || !eventBossId || !joinCode) return;
 
-    if (!hasEnteredPreview) {
-      enterPreview();
-      setHasEnteredPreview(true);
+    if (!hasJoinedPreview) {
+      joinPreview();
+      setHasJoinedPreview(true);
     }
 
-    const handleEnteredPreview = (data) => {
+    const handleJoinedPreview = (payload) => {
       setIsLoading(false);
-
-      setEventBoss(data.eventBoss);
-
+      setEventBoss(payload.data.eventBoss);
+      setEventBossStatus(payload.data.eventBoss.status);
+      setCooldownTimer(payload.data.eventBoss.cooldownEndTime);
     };
 
     const handleSocketError = (error) => {
@@ -67,16 +77,37 @@ const useBossPreview = (eventBossId, joinCode) => {
       console.error("Socket error:", error);
     };
 
-    socket.on(SOCKET_EVENTS.BOSS_PREVIEW.ENTERED, handleEnteredPreview);
+    socket.on(SOCKET_EVENTS.BOSS_PREVIEW.JOINED, handleJoinedPreview);
     socket.on(SOCKET_EVENTS.ERROR, handleSocketError);
 
     return () => {
-      socket.off(SOCKET_EVENTS.BOSS_PREVIEW.ENTERED, handleEnteredPreview);
+      socket.off(SOCKET_EVENTS.BOSS_PREVIEW.JOINED, handleJoinedPreview);
       socket.off(SOCKET_EVENTS.ERROR, handleSocketError);
     };
-  }, [socket, eventBossId, joinCode, hasEnteredPreview, enterPreview]);
+  }, [socket, eventBossId, joinCode, hasJoinedPreview, joinPreview]);
 
-  return { eventBoss, enterPreview, exitPreview, isLoading };
+  useEffect(() => {
+    if (!eventBoss && !isLoading && eventBossId && hasJoinedPreview) {
+      const fallbackTimer = setTimeout(() => {
+        console.warn("Using HTTP fallback event boss data");
+        fetchEventBossData(eventBossId)
+          .then((eventBoss) => {
+            if (eventBoss) {
+              setEventBoss(eventBoss);
+              setEventBossStatus(eventBoss.status);
+              setCooldownTimer(eventBoss.cooldownEndTime);
+            }
+          })
+          .catch((error) => {
+            console.error("Error fetching fallback event boss data:", error);
+          });
+      }, 1000);
+
+      return () => clearTimeout(fallbackTimer);
+    }
+  }, [eventBoss, isLoading, eventBossId, hasJoinedPreview]);
+
+  return { eventBoss, isLoading, joinPreview, leavePreview };
 };
 
 export default useBossPreview;

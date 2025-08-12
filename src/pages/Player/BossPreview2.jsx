@@ -1,7 +1,16 @@
 // ===== LIBRARIES ===== //
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Users, X, Trophy, User, TrendingUp, Sword } from "lucide-react";
+import {
+  ArrowLeft,
+  Users,
+  X,
+  Trophy,
+  User,
+  TrendingUp,
+  Sword,
+} from "lucide-react";
+import { toast } from "sonner";
 
 // ===== COMPONENTS ===== //
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -31,448 +40,44 @@ import {
 // ===== STYLES ===== //
 import "@/index.css";
 
-import { apiClient } from "@/api";
-import useBossBattle from "@/hooks/useBossBattle";
-import { toast } from "sonner";
+// // ===== HOOKS ===== //
+import useBossPreview from "@/hooks/useBossPreview";
+// import useBattleQueue from "@/hooks/useBattleQueue";
 import { useAuth } from "@/context/useAuth";
+
+// ===== UTILITIES ===== //
 import { getGuestUser } from "@/utils/guestUtils";
 import { getBossImageUrl } from "@/utils/imageUtils";
+import { getUserInfo } from "@/utils/userUtils";
 
 const BossPreview = () => {
   const { eventBossId, joinCode } = useParams();
-  const { socket } = useBossBattle();
+  const navigate = useNavigate();
   const { user } = useAuth();
 
-  const navigate = useNavigate();
-  const [nickname, setNickname] = useState("");
+  const bossPreview = useBossPreview(eventBossId, joinCode);
+  // const battleQueue = useBattleQueue(eventBossId, joinCode);
+
+  const {
+    eventBoss,
+    isLoading,
+    joinPreview,
+    leavePreview
+  } = bossPreview;
 
   const [countdown, setCountdown] = useState(null);
   const [isBattleStarted, setIsBattleStarted] = useState(false);
   const [session, setSession] = useState(null);
-
-  const [eventBoss, setEventBoss] = useState(null);
-  const [bossStatus, setBossStatus] = useState("active"); // active, in-battle, cooldown
-  const [cooldownTimer, setCooldownTimer] = useState(0); // seconds remaining
-
-  // Auto-fill nickname with username when user is available
-  useEffect(() => {
-    if (user && !nickname) {
-      setNickname(user.username || "");
-    } else if (!user && !nickname) {
-      // Check for guest user
-      const guestUser = getGuestUser();
-      if (guestUser) {
-        setNickname(guestUser.username || "");
-      }
-    }
-  }, [user, nickname]);
-
-  // Get user info from localStorage/auth context
-  const getUserInfo = () => {
-    if (user) {
-      if (user.isGuest) {
-        // Guest user
-        return {
-          id: user.id,
-          username: user.username,
-          isGuest: true,
-        };
-      } else {
-        // Regular authenticated user
-        return {
-          id: user.id,
-          username: user.username,
-          isGuest: false,
-        };
-      }
-    }
-
-    // Fallback: check localStorage directly for guest user
-    const guestUser = getGuestUser();
-    if (guestUser) {
-      return {
-        id: guestUser.id,
-        username: guestUser.username,
-        isGuest: true,
-      };
-    }
-
-    return null;
-  };
-
-  // Nickname validation function
-  const validateNickname = (nickname) => {
-    const trimmed = nickname.trim();
-
-    // Length validation
-    if (trimmed.length < 2) {
-      return "Nickname must be at least 2 characters long";
-    }
-    if (trimmed.length > 20) {
-      return "Nickname must be 20 characters or less";
-    }
-
-    // Character validation (alphanumeric + spaces, hyphens, underscores)
-    const validPattern = /^[a-zA-Z0-9\s\-_]+$/;
-    if (!validPattern.test(trimmed)) {
-      return "Nickname can only contain letters, numbers, spaces, hyphens, and underscores";
-    }
-
-    // No consecutive spaces
-    if (/\s{2,}/.test(trimmed)) {
-      return "Nickname cannot contain consecutive spaces";
-    }
-
-    // Cannot start or end with special characters
-    if (/^[-_\s]|[-_\s]$/.test(trimmed)) {
-      return "Nickname cannot start or end with spaces, hyphens, or underscores";
-    }
-
-    return null; // Valid
-  };
-
-  // Handle nickname input change with validation
-  const handleNicknameChange = (e) => {
-    const value = e.target.value;
-    setNickname(value);
-  };
-
-  useEffect(() => {
-    const fetchEventBoss = async () => {
-      try {
-        const response = await apiClient.get(`/event-bosses/${eventBossId}`);
-        const bossData = response.data;
-        setEventBoss(bossData);
-
-        // Set boss status and handle cooldown
-        setBossStatus(bossData.status);
-
-        if (bossData.status === "cooldown" && bossData.cooldownDuration) {
-          const remainingTime = bossData.cooldownDuration;
-
-          if (remainingTime > 0) {
-            setCooldownTimer(remainingTime);
-          } else {
-            // Cooldown has ended, update status to active
-            setBossStatus("active");
-            try {
-              await apiClient.patch(`/event-bosses/${eventBossId}/status`, {
-                status: "active",
-                cooldownEndTime: null,
-              });
-            } catch (error) {
-              console.error("Failed to update boss status:", error);
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching event boss:", error);
-        toast.error("Failed to fetch event boss details");
-      }
-    };
-    fetchEventBoss();
-  }, [eventBossId]);
-
-  // Load leaderboard data from the new API
-  useEffect(() => {
-    const loadLeaderboardData = async () => {
-      if (!eventBossId || !eventBoss?.boss?.id) return;
-
-      try {
-        setRealLeaderboardData((prev) => ({ ...prev, isLoading: true }));
-
-        // Use the new boss preview leaderboard API endpoint
-        const response = await fetch(
-          `/api/boss-preview/${eventBoss.eventId}/${eventBoss.boss.id}/leaderboard`
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-
-          if (data.success && data.data) {
-            setRealLeaderboardData({
-              teamLeaderboard: data.data.teamLeaderboard || [],
-              individualLeaderboard: data.data.individualLeaderboard || [],
-              allTimeLeaderboard: data.data.allTimeLeaderboard || [],
-              isLoading: false,
-            });
-
-            console.log("� Leaderboard data loaded from new API:", data.data);
-          }
-        } else {
-          console.warn("Failed to load leaderboard data, using fallback");
-          setRealLeaderboardData((prev) => ({ ...prev, isLoading: false }));
-        }
-      } catch (error) {
-        console.error("Error loading leaderboard data:", error);
-        setRealLeaderboardData((prev) => ({ ...prev, isLoading: false }));
-      }
-    };
-
-    loadLeaderboardData();
-  }, [eventBossId, eventBoss]);
-
-  // Periodic leaderboard refresh
-  useEffect(() => {
-    if (!socket || !eventBossId) return;
-
-    // Refresh leaderboard data every 30 seconds
-    const refreshInterval = setInterval(() => {
-      if (socket.connected) {
-        socket.emit("boss-preview:request-leaderboard", { eventBossId });
-      }
-    }, 30000);
-
-    return () => clearInterval(refreshInterval);
-  }, [socket, eventBossId]);
-
-  // Cooldown timer effect
-  useEffect(() => {
-    let interval;
-
-    if (bossStatus === "cooldown" && cooldownTimer > 0) {
-      interval = setInterval(() => {
-        setCooldownTimer((prev) => {
-          if (prev <= 1) {
-            // Cooldown finished, update boss status
-            setBossStatus("active");
-
-            // Update backend status
-            apiClient
-              .patch(`/event-bosses/${eventBossId}/status`, {
-                status: "active",
-                cooldownEndTime: null,
-              })
-              .catch((error) => {
-                console.error("Failed to update boss status:", error);
-              });
-
-            toast.success("Boss is now available for battle!");
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [bossStatus, cooldownTimer, eventBossId]);
-
-  useEffect(() => {
-    if (socket && eventBossId && joinCode) {
-      socket.emit("boss-preview:join", { eventBossId, joinCode });
-      // Send initial leaderboard data request after joining
-      socket.on("boss-preview:joined", (data) => {
-        toast.success("Joined boss preview successfully");
-        // Update session data with current player count when first joining
-        if (data.session) {
-          setSession(data.session);
-          setPlayersOnline(data.session.playerCount);
-        }
-
-        // Request initial leaderboard data
-        socket.emit("boss-preview:request-leaderboard", { eventBossId });
-      });
-
-      // LISTEN FOR REAL-TIME PLAYER COUNT UPDATES (players who joined the battle)
-      socket.on("player-count:updated", (data) => {
-        setSession(data.session);
-        setPlayersOnline(data.session?.playerCount);
-      });
-
-      // LISTEN FOR BOSS FIGHT JOIN CONFIRMATION
-      socket.on("boss-fight:joined", (data) => {
-        setPlayersOnline(data.session?.playerCount);
-        setIsJoined(true);
-        toast.success(data.message || "Successfully joined boss fight");
-      });
-
-      // LISTEN FOR RECONNECTION SUCCESS
-      socket.on("boss-fight:reconnected", (data) => {
-        setSession(data.session);
-        setPlayersOnline(data.session?.playerCount);
-        setIsJoined(true); // Reconnection means they previously joined
-        toast.success("Reconnected to boss fight successfully");
-
-        // If battle has started and player has joined, redirect to battle page
-        if (data.session?.isStarted) {
-          setIsBattleStarted(true);
-          // Only set countdown if user wants to auto-join (not returning from battle)
-          // setCountdown(3);
-        }
-      });
-
-      // LISTEN FOR REAL-TIME LEADERBOARD UPDATES from new socket events
-      socket.on("boss-preview:leaderboard-update", (data) => {
-        console.log("📊 Received leaderboard update in preview:", data);
-
-        if (data.leaderboardData) {
-          setRealLeaderboardData((prev) => ({
-            ...prev,
-            teamLeaderboard:
-              data.leaderboardData.teamLeaderboard?.map((team) => ({
-                rank: team.rank,
-                team: team.teamName,
-                dmg: team.totalDamage,
-                correct: team.totalCorrectAnswers,
-                avatar: "/src/assets/Placeholder/Profile1.jpg",
-                playerCount: team.playerCount,
-              })) || prev.teamLeaderboard,
-            individualLeaderboard:
-              data.leaderboardData.individualLeaderboard?.map((player) => ({
-                rank: player.rank,
-                player: player.playerName,
-                team: player.teamName,
-                dmg: player.totalDamage,
-                correct: player.correctAnswers,
-                avatar: player.avatar || "/src/assets/Placeholder/Profile1.jpg",
-              })) || prev.individualLeaderboard,
-            allTimeLeaderboard:
-              data.leaderboardData.allTimeLeaderboard?.map((player) => ({
-                rank: player.rank,
-                player: player.playerName,
-                dmg: player.totalDamage,
-                correct: player.correctAnswers,
-                avatar: player.avatar || "/src/assets/Placeholder/Profile1.jpg",
-              })) || prev.allTimeLeaderboard,
-          }));
-        }
-      });
-
-      // LISTEN FOR LEGACY LEADERBOARD UPDATES (fallback)
-      socket.on("leaderboard-update", (data) => {
-        console.log("📊 Received legacy leaderboard update in preview:", data);
-
-        setRealLeaderboardData((prev) => ({
-          ...prev,
-          teamLeaderboard: data.teamLeaderboard || prev.teamLeaderboard,
-          individualLeaderboard:
-            data.playerLeaderboard || prev.individualLeaderboard,
-        }));
-      });
-
-      // LISTEN FOR PLAYER JOIN NOTIFICATIONS
-      socket.on("player:joined-notification", (data) => {
-        toast.info(`${data.playerNickname} joined the battle!`);
-      });
-
-      // LISTEN FOR PLAYER KNOCKOUT NOTIFICATIONS
-      socket.on("player:knockout-notification", (data) => {
-        toast.error(`${data.playerNickname} was knocked out!`);
-      });
-
-      // LISTEN FOR BOSS DAMAGE UPDATES
-      socket.on("boss:damage-update", (data) => {
-        if (data.damage > 0) {
-          toast.success(
-            `Boss took ${data.damage} damage! HP: ${data.currentHP}/${data.maxHP}`
-          );
-        }
-      });
-
-      // LISTEN FOR BOSS STATUS UPDATES
-      socket.on("boss-status:updated", (data) => {
-        setBossStatus(data.status);
-
-        if (data.status === "cooldown" && data.cooldownEndTime) {
-          const endTime = new Date(data.cooldownEndTime).getTime();
-          const now = Date.now();
-          const remainingTime = Math.max(0, Math.floor((endTime - now) / 1000));
-          setCooldownTimer(remainingTime);
-          toast.info(
-            `Boss defeated! Cooldown: ${Math.ceil(remainingTime / 60)} minutes`
-          );
-        } else if (data.status === "in-battle") {
-          toast.info("Boss battle has started!");
-        } else if (data.status === "active") {
-          setCooldownTimer(0);
-          toast.success("Boss is now available for battle!");
-        }
-      });
-
-      // LISTEN FOR BATTLE START (when enough players join)
-      socket.on("battle:countdown-started", () => {
-        setIsCountdownActive(true);
-        toast.success("Battle starting soon! Get ready!");
-      });
-
-      // ATTEMPT RECONNECTION on socket connect/reconnect
-      const attemptReconnection = () => {
-        // Get user info for reconnection inline
-        let userInfo = null;
-        if (user) {
-          userInfo = {
-            id: user.id,
-            username: user.username,
-            isGuest: user.isGuest,
-          };
-        } else {
-          const guestUser = getGuestUser();
-          if (guestUser) {
-            userInfo = {
-              id: guestUser.id,
-              username: guestUser.username,
-              isGuest: true,
-            };
-          }
-        }
-
-        if (userInfo) {
-          socket.emit("boss-fight:reconnect", {
-            eventBossId,
-            joinCode,
-            userInfo,
-          });
-        } else {
-          console.log("No user info available for reconnection");
-        }
-      };
-
-      // Try reconnection when socket connects
-      if (socket.connected) {
-        attemptReconnection();
-      }
-
-      socket.on("connect", attemptReconnection);
-
-      socket.on("error", (error) => {
-        console.error("Socket error:", error);
-        toast.error(
-          "Socket connection error: " + (error.message || "Unknown error")
-        );
-      });
-
-      socket.on("left-boss-session", (response) => {
-        if (response.success) {
-          toast.success("Successfully left boss session");
-        } else {
-          toast.error(response.message || "Failed to leave session");
-        }
-      });
-
-      return () => {
-        socket.off("boss-preview:joined");
-        socket.off("boss-preview:leaderboard-update");
-        socket.off("player-count:updated");
-        socket.off("online-viewers:updated");
-        socket.off("boss-fight:joined");
-        socket.off("boss-fight:reconnected");
-        socket.off("boss-status:updated");
-        socket.off("battle:countdown-started");
-        socket.off("leaderboard-update");
-        socket.off("connect", attemptReconnection);
-        socket.off("error");
-        socket.off("left-boss-session");
-      };
-    }
-  }, [socket, eventBossId, joinCode, user]);
+  
+  const [bossStatus, setBossStatus] = useState("active");
+  const [cooldownTimer, setCooldownTimer] = useState(0);
 
   const [isJoined, setIsJoined] = useState(false);
-  const [playersOnline, setPlayersOnline] = useState(0); // Players who joined the battle
+  const [playersOnline, setPlayersOnline] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCountdownActive, setIsCountdownActive] = useState(false);
+
+  const [nickname, setNickname] = useState("");
   const [currentPage, setCurrentPage] = useState({
     teams: 1,
     individual: 1,
@@ -480,7 +85,6 @@ const BossPreview = () => {
   });
   const PAGE_SIZE = 10;
 
-  // Real leaderboard data state
   const [realLeaderboardData, setRealLeaderboardData] = useState({
     teamLeaderboard: [],
     individualLeaderboard: [],
@@ -488,7 +92,6 @@ const BossPreview = () => {
     isLoading: true,
   });
 
-  // Use real leaderboard data or fallback to empty arrays
   const teamLeaderboard = realLeaderboardData.teamLeaderboard || [];
   const individualLeaderboard = realLeaderboardData.individualLeaderboard || [];
   const allTimeLeaderboard = realLeaderboardData.allTimeLeaderboard || [];
@@ -497,110 +100,37 @@ const BossPreview = () => {
     navigate(-1);
   };
 
-  useEffect(() => {
-    if (!socket || !socket.connect) return;
+  const validateNickname = (nickname) => {
+    const trimmed = nickname.trim();
 
-    // Only listen for battle start events if the player has already joined
-    if (isJoined) {
-      socket.on("battle:start", (data) => {
-        setSession(data.session);
-        setIsBattleStarted(true);
-        setCountdown(5);
-      });
-
-      socket.on("battle:already-started", (data) => {
-        setSession(data.session);
-        setIsBattleStarted(true);
-        setCountdown(5);
-      });
-    } else {
-      console.log(
-        "Player hasn't joined yet - not listening for battle start events"
-      );
+    if (trimmed.length < 2) {
+      return "Nickname must be at least 2 characters long";
+    }
+    if (trimmed.length > 20) {
+      return "Nickname must be 20 characters or less";
     }
 
-    return () => {
-      socket.off("battle:start");
-      socket.off("battle:already-started");
-    };
-  }, [socket, isJoined]);
-
-  useEffect(() => {
-    // Only process countdown if player has joined
-    if (countdown === null || !isJoined) return;
-
-    if (countdown === 0) {
-      navigate(`/boss-battle/${eventBossId}/${joinCode}`, {
-        state: { session },
-      });
-      return;
+    const validPattern = /^[a-zA-Z0-9\s\-_]+$/;
+    if (!validPattern.test(trimmed)) {
+      return "Nickname can only contain letters, numbers, spaces, hyphens, and underscores";
     }
 
-    const timer = setTimeout(() => {
-      setCountdown((prev) => prev - 1);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [countdown, navigate, session, eventBossId, joinCode, isJoined]);
-
-  const handleJoin = () => {
-    // Validate nickname
-    const validationError = validateNickname(nickname);
-    if (validationError) {
-      toast.error(validationError);
-      return;
+    if (/\s{2,}/.test(trimmed)) {
+      return "Nickname cannot contain consecutive spaces";
     }
 
-    // Get user info for reconnection
-    const userInfo = getUserInfo();
+    if (/^[-_\s]|[-_\s]$/.test(trimmed)) {
+      return "Nickname cannot start or end with spaces, hyphens, or underscores";
+    }
 
-    const playerData = {
-      nickname: nickname.trim(),
-      ...userInfo,
-    };
-
-    // Listen for nickname uniqueness response
-    const handleNicknameResponse = (response) => {
-      if (response.success) {
-        setIsJoined(true);
-        toast.success("Successfully joined boss fight!");
-      } else {
-        toast.error(response.message || "Failed to join session");
-      }
-
-      // Remove the listener
-      socket.off("nickname-check-response", handleNicknameResponse);
-    };
-
-    socket.on("nickname-check-response", handleNicknameResponse);
-
-    socket.emit("boss-fight:join", {
-      eventBossId,
-      joinCode,
-      playerData,
-    });
+    return null;
   };
 
-  const handleUnjoin = () => {
-    if (isProcessing) return; // Prevent rapid clicks
-
-    setIsProcessing(true);
-    setIsJoined(false);
-
-    // Remove any pending nickname check response listener
-    socket.off("nickname-check-response");
-
-    // Emit leave event to backend
-    socket.emit("leave-boss-session");
-
-    // Reset local state - don't manually decrement, wait for backend update
-    setSession(null);
-
-    // Reset processing state after a short delay
-    setTimeout(() => setIsProcessing(false), 1000);
+  const handleNicknameChange = (e) => {
+    const value = e.target.value;
+    setNickname(value);
   };
 
-  // Pagination helpers
   const getPaginatedData = (data, tabKey) => {
     const page = currentPage[tabKey];
     const totalPages = Math.ceil(data.length / PAGE_SIZE);
@@ -632,6 +162,22 @@ const BossPreview = () => {
     return (
       <span className="text-sm font-medium text-muted-foreground">#{rank}</span>
     );
+  };
+
+  // Auto-fill nickname with username when user is available
+  useEffect(() => {
+    if (!nickname) {
+      const name = user?.username || getGuestUser()?.username || "";
+      setNickname(name);
+    }
+  }, [user, nickname]);
+
+  const handleJoin = () => {
+
+  };
+
+  const handleUnjoin = () => {
+
   };
 
   // Pagination component
@@ -717,7 +263,7 @@ const BossPreview = () => {
             {/* Boss Name Header */}
             <CardHeader className="text-center">
               <CardTitle className="capitalize text-xl font-bold">
-                {eventBoss?.boss?.name}
+                {eventBoss?.name}
               </CardTitle>
             </CardHeader>
 
@@ -725,10 +271,10 @@ const BossPreview = () => {
               {/* Boss Image */}
               <div className="relative">
                 <div className="w-full aspect-square bg-muted rounded-lg overflow-hidden">
-                  {eventBoss?.boss?.image ? (
+                  {eventBoss?.image ? (
                     <img
-                      src={getBossImageUrl(eventBoss.boss.image)}
-                      alt={eventBoss?.boss?.name || "Boss Image"}
+                      src={getBossImageUrl(eventBoss.image)}
+                      alt={eventBoss?.name || "Boss Image"}
                       className={`w-full h-full object-cover ${
                         bossStatus === "cooldown" ? "boss-image-paused" : ""
                       }`}
@@ -744,13 +290,23 @@ const BossPreview = () => {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Sleeping Z Animation - Only show when boss is on cooldown */}
                 {bossStatus === "cooldown" && cooldownTimer > 0 && (
                   <div className="absolute top-10 right-20 pointer-events-none">
                     <div className="sleeping-z">Z</div>
-                    <div className="sleeping-z" style={{ left: '8px', top: '4px' }}>Z</div>
-                    <div className="sleeping-z" style={{ left: '16px', top: '8px' }}>Z</div>
+                    <div
+                      className="sleeping-z"
+                      style={{ left: "8px", top: "4px" }}
+                    >
+                      Z
+                    </div>
+                    <div
+                      className="sleeping-z"
+                      style={{ left: "16px", top: "8px" }}
+                    >
+                      Z
+                    </div>
                   </div>
                 )}
               </div>
@@ -758,9 +314,7 @@ const BossPreview = () => {
               {/* Boss Status Display */}
               <div className="text-center pt-2 mb-0">
                 {bossStatus === "cooldown" && cooldownTimer > 0 && (
-                  <div className="font-semibold">
-                    Boss on Cooldown
-                  </div>
+                  <div className="font-semibold">Boss on Cooldown</div>
                 )}
                 {bossStatus === "in-battle" && (
                   <div className="text-purple-600 font-semibold flex items-center justify-center gap-2">
@@ -779,7 +333,9 @@ const BossPreview = () => {
               <div className="text-center">
                 <div className="flex items-center justify-center text-muted-foreground text-sm">
                   <Users className="w-4 h-4 mr-2 text-purple-600" />
-                  <span className="text-purple-600">Players joined: {playersOnline}</span>
+                  <span className="text-purple-600">
+                    Players joined: {playersOnline}
+                  </span>
                 </div>
               </div>
 
@@ -790,8 +346,10 @@ const BossPreview = () => {
                   className="w-full !bg-purple-500 hover:!bg-purple-600 !text-white !border-purple-500 halftone-texture"
                   disabled={!nickname.trim() || bossStatus === "cooldown"}
                 >
-                  {bossStatus === "cooldown" 
-                    ? `Available in: ${Math.floor(cooldownTimer / 60)}m ${String(cooldownTimer % 60).padStart(2, '0')}s`
+                  {bossStatus === "cooldown"
+                    ? `Available in: ${Math.floor(
+                        cooldownTimer / 60
+                      )}m ${String(cooldownTimer % 60).padStart(2, "0")}s`
                     : "Join"}
                 </Button>
               ) : (
@@ -804,16 +362,24 @@ const BossPreview = () => {
                       </Button>
                     )}
                     {isBattleStarted && countdown !== null && (
-                      <Button className="flex-1c w-full halftone-texture" disabled variant="destructive">
+                      <Button
+                        className="flex-1c w-full halftone-texture"
+                        disabled
+                        variant="destructive"
+                      >
                         {countdown > 0
                           ? `Starting in ${countdown}...`
                           : "Battle Starting!"}
                       </Button>
                     )}
                     {isBattleStarted && countdown === null && (
-                      <Button 
-                        className="flex-1c w-full halftone-texture" 
-                        onClick={() => navigate(`/boss-battle/${eventBossId}/${joinCode}`, { state: { session } })}
+                      <Button
+                        className="flex-1c w-full halftone-texture"
+                        onClick={() =>
+                          navigate(`/boss-battle/${eventBossId}/${joinCode}`, {
+                            state: { session },
+                          })
+                        }
                         variant="default"
                       >
                         Return to Battle

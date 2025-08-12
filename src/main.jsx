@@ -44,7 +44,7 @@ import PlayerQRTest from "./pages/Player/QRTest";
 import PlayerJoin from "./pages/Player/Join";
 import PlayerJoinTest from "./pages/Player/JoinTest";
 import PlayerApiTest from "./pages/Player/ApiTest";
-import PlayerBossPreview from "./pages/Player/BossPreview";
+import PlayerBossPreview from "./pages/Player/BossPreview2";
 import PlayerBossBattle from "./pages/Player/BossBattle";
 import PlayerBossPodium from "./pages/Player/BossPodium";
 
@@ -81,7 +81,7 @@ import HostProfile from "./pages/Host/Profile/Profile";
 import BossBattleProvider from "./context/BossBattleProvider";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
+  // <React.StrictMode>
     <ThemeProvider>
       <AuthProvider>
         {/* <BossJoinProvider> */}
@@ -409,5 +409,5 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         </BossBattleProvider>
       </AuthProvider>
     </ThemeProvider>
-  </React.StrictMode>
+  // </React.StrictMode>
 );
