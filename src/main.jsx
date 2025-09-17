@@ -45,7 +45,7 @@ import PlayerJoin from "./pages/Player/Join";
 import PlayerJoinTest from "./pages/Player/JoinTest";
 import PlayerApiTest from "./pages/Player/ApiTest";
 import PlayerBossPreview from "./pages/Player/BossPreview2";
-import PlayerBossBattle from "./pages/Player/BossBattle";
+import PlayerBossBattle from "./pages/Player/BossBattle2";
 import PlayerBossPodium from "./pages/Player/BossPodium";
 
 // ===== HOST PAGES ===== //

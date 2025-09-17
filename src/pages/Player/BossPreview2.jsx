@@ -40,13 +40,12 @@ import {
 // ===== STYLES ===== //
 import "@/index.css";
 
-// // ===== HOOKS ===== //
+// ===== HOOKS ===== //
 import useBossPreview from "@/hooks/useBossPreview";
-// import useBattleQueue from "@/hooks/useBattleQueue";
+import useBattleQueue from "@/hooks/useBattleQueue";
 import { useAuth } from "@/context/useAuth";
 
 // ===== UTILITIES ===== //
-import { getGuestUser } from "@/utils/guestUtils";
 import { getBossImageUrl } from "@/utils/imageUtils";
 import { getUserInfo } from "@/utils/userUtils";
 
@@ -56,26 +55,28 @@ const BossPreview = () => {
   const { user } = useAuth();
 
   const bossPreview = useBossPreview(eventBossId, joinCode);
-  // const battleQueue = useBattleQueue(eventBossId, joinCode);
+  const battleQueue = useBattleQueue(eventBossId, joinCode);
+  const MINIMUM_PLAYERS_REQUIRED = 2;
 
   const {
     eventBoss,
-    isLoading,
-    joinPreview,
-    leavePreview
+    eventBossStatus,
+    cooldownTimer,
+    sessionSize,
+    leaderboard,
+    loading,
   } = bossPreview;
 
-  const [countdown, setCountdown] = useState(null);
-  const [isBattleStarted, setIsBattleStarted] = useState(false);
-  const [session, setSession] = useState(null);
-  
-  const [bossStatus, setBossStatus] = useState("active");
-  const [cooldownTimer, setCooldownTimer] = useState(0);
-
-  const [isJoined, setIsJoined] = useState(false);
-  const [playersOnline, setPlayersOnline] = useState(0);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isCountdownActive, setIsCountdownActive] = useState(false);
+  const {
+    hasJoinedQueue,
+    hasJoinedMidGame,
+    queueSize,
+    isBattleStarted,
+    countdownTimer,
+    joinQueue,
+    leaveQueue,
+    joinMidGame,
+  } = battleQueue;
 
   const [nickname, setNickname] = useState("");
   const [currentPage, setCurrentPage] = useState({
@@ -85,16 +86,9 @@ const BossPreview = () => {
   });
   const PAGE_SIZE = 10;
 
-  const [realLeaderboardData, setRealLeaderboardData] = useState({
-    teamLeaderboard: [],
-    individualLeaderboard: [],
-    allTimeLeaderboard: [],
-    isLoading: true,
-  });
-
-  const teamLeaderboard = realLeaderboardData.teamLeaderboard || [];
-  const individualLeaderboard = realLeaderboardData.individualLeaderboard || [];
-  const allTimeLeaderboard = realLeaderboardData.allTimeLeaderboard || [];
+  const teamLeaderboard = leaderboard?.teamLeaderboard || [];
+  const individualLeaderboard = leaderboard?.individualLeaderboard || [];
+  const allTimeLeaderboard = leaderboard?.allTimeLeaderboard || [];
 
   const goBack = () => {
     navigate(-1);
@@ -167,17 +161,39 @@ const BossPreview = () => {
   // Auto-fill nickname with username when user is available
   useEffect(() => {
     if (!nickname) {
-      const name = user?.username || getGuestUser()?.username || "";
+      const name = getUserInfo()?.username || "";
       setNickname(name);
     }
   }, [user, nickname]);
 
   const handleJoin = () => {
+    const validationError = validateNickname(nickname);
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
 
+    const userInfo = getUserInfo();
+    const playerInfo = {
+      ...userInfo,
+      nickname: nickname.trim(),
+    };
+
+    if (eventBossStatus === "in-battle") {
+      joinMidGame(playerInfo);
+    } else {
+      joinQueue(playerInfo);
+    }
   };
 
-  const handleUnjoin = () => {
+  useEffect(() => {
+    if (countdownTimer === 0) {
+      navigate(`/boss-battle/${eventBossId}/${joinCode}`);
+    }
+  }, [countdownTimer, eventBossId, joinCode, navigate]);
 
+  const handleUnjoin = () => {
+    leaveQueue(getUserInfo()?.id);
   };
 
   // Pagination component
@@ -276,7 +292,9 @@ const BossPreview = () => {
                       src={getBossImageUrl(eventBoss.image)}
                       alt={eventBoss?.name || "Boss Image"}
                       className={`w-full h-full object-cover ${
-                        bossStatus === "cooldown" ? "boss-image-paused" : ""
+                        eventBossStatus === "cooldown"
+                          ? "boss-image-paused"
+                          : ""
                       }`}
                     />
                   ) : (
@@ -292,7 +310,7 @@ const BossPreview = () => {
                 </div>
 
                 {/* Sleeping Z Animation - Only show when boss is on cooldown */}
-                {bossStatus === "cooldown" && cooldownTimer > 0 && (
+                {eventBossStatus === "cooldown" && cooldownTimer > 0 && (
                   <div className="absolute top-10 right-20 pointer-events-none">
                     <div className="sleeping-z">Z</div>
                     <div
@@ -313,16 +331,16 @@ const BossPreview = () => {
 
               {/* Boss Status Display */}
               <div className="text-center pt-2 mb-0">
-                {bossStatus === "cooldown" && cooldownTimer > 0 && (
+                {eventBossStatus === "cooldown" && cooldownTimer > 0 && (
                   <div className="font-semibold">Boss on Cooldown</div>
                 )}
-                {bossStatus === "in-battle" && (
+                {eventBossStatus === "in-battle" && (
                   <div className="text-purple-600 font-semibold flex items-center justify-center gap-2">
                     <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
                     Boss is currently in battle
                   </div>
                 )}
-                {bossStatus === "active" && (
+                {eventBossStatus === "active" && (
                   <div className="text-purple-600 font-semibold">
                     Boss available for battle
                   </div>
@@ -334,19 +352,23 @@ const BossPreview = () => {
                 <div className="flex items-center justify-center text-muted-foreground text-sm">
                   <Users className="w-4 h-4 mr-2 text-purple-600" />
                   <span className="text-purple-600">
-                    Players joined: {playersOnline}
+                    {sessionSize > 0
+                      ? `Players joined: ${sessionSize}`
+                      : queueSize > 0
+                      ? `Players in queue: ${queueSize}`
+                      : `No players joined`}
                   </span>
                 </div>
               </div>
 
               {/* Join/Waiting Button */}
-              {!isJoined ? (
+              {!hasJoinedQueue && !hasJoinedMidGame ? (
                 <Button
                   onClick={handleJoin}
                   className="w-full !bg-purple-500 hover:!bg-purple-600 !text-white !border-purple-500 halftone-texture"
-                  disabled={!nickname.trim() || bossStatus === "cooldown"}
+                  disabled={!nickname.trim() || eventBossStatus === "cooldown"}
                 >
-                  {bossStatus === "cooldown"
+                  {eventBossStatus === "cooldown"
                     ? `Available in: ${Math.floor(
                         cooldownTimer / 60
                       )}m ${String(cooldownTimer % 60).padStart(2, "0")}s`
@@ -355,37 +377,35 @@ const BossPreview = () => {
               ) : (
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    {session?.playersNeededToStart > 0 && (
+                    {queueSize < MINIMUM_PLAYERS_REQUIRED && (
                       <Button className="flex-1" disabled variant="secondary">
-                        Waiting for {session?.playersNeededToStart} more
+                        Waiting for {MINIMUM_PLAYERS_REQUIRED - queueSize} more
                         player(s)
                       </Button>
                     )}
-                    {isBattleStarted && countdown !== null && (
+                    {isBattleStarted && (
                       <Button
                         className="flex-1c w-full halftone-texture"
                         disabled
                         variant="destructive"
                       >
-                        {countdown > 0
-                          ? `Starting in ${countdown}...`
+                        {countdownTimer > 0
+                          ? `Starting in ${countdownTimer}...`
                           : "Battle Starting!"}
                       </Button>
                     )}
-                    {isBattleStarted && countdown === null && (
+                    {isBattleStarted && countdownTimer === 0 && (
                       <Button
                         className="flex-1c w-full halftone-texture"
                         onClick={() =>
-                          navigate(`/boss-battle/${eventBossId}/${joinCode}`, {
-                            state: { session },
-                          })
+                          navigate(`/boss-battle/${eventBossId}/${joinCode}`)
                         }
                         variant="default"
                       >
                         Return to Battle
                       </Button>
                     )}
-                    {!isCountdownActive && !isBattleStarted && (
+                    {!isBattleStarted && (
                       <Button
                         onClick={handleUnjoin}
                         variant="outline"
@@ -412,7 +432,7 @@ const BossPreview = () => {
                   onChange={handleNicknameChange}
                   placeholder="Enter your nickname"
                   maxLength={20}
-                  disabled={isJoined}
+                  disabled={hasJoinedQueue}
                 />
               </div>
             </CardContent>
@@ -488,7 +508,7 @@ const BossPreview = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {realLeaderboardData.isLoading ? (
+                      {loading.leaderboard ? (
                         <TableRow>
                           <TableCell colSpan={4} className="text-center py-8">
                             <div className="flex items-center justify-center gap-2">
@@ -513,7 +533,7 @@ const BossPreview = () => {
                           "teams"
                         ).paginatedData.map((team) => (
                           <TableRow
-                            key={team.rank}
+                            key={team.id}
                             className="hover:bg-muted/50"
                           >
                             <TableCell className="font-medium">
@@ -524,20 +544,20 @@ const BossPreview = () => {
                                 <Avatar className="w-8 h-8">
                                   <AvatarImage
                                     src={team.avatar}
-                                    alt={team.team}
+                                    alt={team.name}
                                   />
                                   <AvatarFallback>
-                                    {team.team[0]}
+                                    {team.name}
                                   </AvatarFallback>
                                 </Avatar>
-                                <span className="font-medium">{team.team}</span>
+                                <span className="font-medium">{team.name}</span>
                               </div>
                             </TableCell>
                             <TableCell className="text-right font-medium">
-                              {team.dmg}
+                              {team.totalDamage}
                             </TableCell>
                             <TableCell className="text-right">
-                              {team.correct}
+                              {team.correctAnswers}
                             </TableCell>
                           </TableRow>
                         ))
@@ -575,7 +595,7 @@ const BossPreview = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {realLeaderboardData.isLoading ? (
+                      {loading.leaderboard ? (
                         <TableRow>
                           <TableCell colSpan={4} className="text-center py-8">
                             <div className="flex items-center justify-center gap-2">
@@ -600,7 +620,7 @@ const BossPreview = () => {
                           "individual"
                         ).paginatedData.map((player) => (
                           <TableRow
-                            key={player.rank}
+                            key={player.id}
                             className="hover:bg-muted/50"
                           >
                             <TableCell className="font-medium">
@@ -611,22 +631,22 @@ const BossPreview = () => {
                                 <Avatar className="w-8 h-8">
                                   <AvatarImage
                                     src={player.avatar}
-                                    alt={player.player}
+                                    alt={player.nickname}
                                   />
                                   <AvatarFallback>
-                                    {player.player[0]}
+                                    {player.name}
                                   </AvatarFallback>
                                 </Avatar>
                                 <span className="font-medium">
-                                  {player.player}
+                                  {player.nickname}
                                 </span>
                               </div>
                             </TableCell>
                             <TableCell className="text-right font-medium">
-                              {player.dmg}
+                              {player.totalDamage}
                             </TableCell>
                             <TableCell className="text-right">
-                              {player.correct}
+                              {player.correctAnswers}
                             </TableCell>
                           </TableRow>
                         ))
@@ -666,7 +686,7 @@ const BossPreview = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {realLeaderboardData.isLoading ? (
+                      {loading.leaderboard ? (
                         <TableRow>
                           <TableCell colSpan={4} className="text-center py-8">
                             <div className="flex items-center justify-center gap-2">
@@ -691,7 +711,7 @@ const BossPreview = () => {
                           "alltime"
                         ).paginatedData.map((player) => (
                           <TableRow
-                            key={player.rank}
+                            key={player.id}
                             className="hover:bg-muted/50"
                           >
                             <TableCell className="font-medium">
@@ -702,22 +722,22 @@ const BossPreview = () => {
                                 <Avatar className="w-8 h-8">
                                   <AvatarImage
                                     src={player.avatar}
-                                    alt={player.player}
+                                    alt={player.username}
                                   />
                                   <AvatarFallback>
-                                    {player.player[0]}
+                                    {player.username}
                                   </AvatarFallback>
                                 </Avatar>
                                 <span className="font-medium">
-                                  {player.player}
+                                  {player.username}
                                 </span>
                               </div>
                             </TableCell>
                             <TableCell className="text-right font-medium">
-                              {player.dmg}
+                              {player.totalDamage}
                             </TableCell>
                             <TableCell className="text-right">
-                              {player.correct}
+                              {player.correctAnswers}
                             </TableCell>
                           </TableRow>
                         ))

@@ -5,47 +5,33 @@ import { toast } from "sonner";
 // ===== HOOKS ===== //
 import useBossBattle from "./useBossBattle";
 
+// ===== SERVICES ===== //
+import { fetchEventBossById } from "@/services/eventBossService";
+
 // ===== UTILITIES ===== //
 import { SOCKET_EVENTS } from "@/utils/socketConstants";
-
-const fetchEventBossData = async (eventBossId) => {
-  try {
-    const response = await fetch(`/api/event-boss/${eventBossId}`);
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch event boss data");
-    }
-
-    const eventBoss = await response.json();
-    return {
-      name: eventBoss.boss.name,
-      description: eventBoss.boss.description,
-      image: eventBoss.boss.image,
-      status: eventBoss.status,
-      cooldownDuration: eventBoss.cooldownDuration,
-      cooldownEndTime: eventBoss.cooldownEndTime,
-    };
-  } catch (error) {
-    console.warn("Error fetching event boss data:", error);
-    return null;
-  }
-};
 
 const useBossPreview = (eventBossId, joinCode) => {
   const { socket } = useBossBattle();
 
   const [eventBoss, setEventBoss] = useState(null);
   const [eventBossStatus, setEventBossStatus] = useState("active");
-  const [cooldownTimer, setCooldownTimer] = useState(null);
+  const [cooldownTimer, setCooldownTimer] = useState(0);
+  const [cooldownEndTime, setCooldownEndTime] = useState(null);
+  const [sessionSize, setSessionSize] = useState(0);
+  const [leaderboard, setLeaderboard] = useState(null);
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState({
+    eventBoss: false,
+    leaderboard: false,
+  });
   const [hasJoinedPreview, setHasJoinedPreview] = useState(false);
 
   // Join preview page
   const joinPreview = useCallback(() => {
     if (!socket || !eventBossId || !joinCode) return;
 
-    setIsLoading(true);
+    setLoading((prev) => ({ ...prev, eventBoss: true }));
     socket.emit(SOCKET_EVENTS.BOSS_PREVIEW.JOIN, { eventBossId, joinCode });
   }, [socket, eventBossId, joinCode]);
 
@@ -57,6 +43,14 @@ const useBossPreview = (eventBossId, joinCode) => {
   }, [socket, eventBossId]);
 
   useEffect(() => {
+    if (!socket || !eventBossId) return;
+
+    socket.emit(SOCKET_EVENTS.BATTLE_SESSION.SIZE.REQUEST, eventBossId);
+    socket.emit(SOCKET_EVENTS.BOSS_PREVIEW.LEADERBOARD.REQUEST, { eventBossId });
+    setLoading((prev) => ({ ...prev, leaderboard: true }));
+  }, [socket, eventBossId]);
+
+  useEffect(() => {
     if (!socket || !eventBossId || !joinCode) return;
 
     if (!hasJoinedPreview) {
@@ -65,37 +59,97 @@ const useBossPreview = (eventBossId, joinCode) => {
     }
 
     const handleJoinedPreview = (payload) => {
-      setIsLoading(false);
+      setLoading((prev) => ({ ...prev, eventBoss: false }));
       setEventBoss(payload.data.eventBoss);
       setEventBossStatus(payload.data.eventBoss.status);
-      setCooldownTimer(payload.data.eventBoss.cooldownEndTime);
+      setCooldownEndTime(
+        new Date(payload.data.eventBoss.cooldownEndTime).getTime() || null
+      );
     };
 
+    const handleBossStatusUpdated = (payload) => {
+      setEventBossStatus(payload.data.eventBoss.status);
+      setCooldownEndTime(
+        new Date(payload.data.eventBoss.cooldownEndTime).getTime() || null
+      );
+    };
+
+    const handleSessionSizeResponse = (payload) => {
+      setSessionSize(payload.data.sessionSize);
+    };
+
+    const handleSessionSizeUpdated = (payload) => {
+      setSessionSize(payload.data.sessionSize);
+    };
+
+    const handlePreviewLeaderboardResponse = (payload) => {
+      setLoading((prev) => ({ ...prev, leaderboard: false }));
+      setLeaderboard(payload.data.leaderboard);
+    };
+
+    const handlePreviewLeaderboardUpdated = (payload) => {
+      setLoading((prev) => ({ ...prev, leaderboard: false }));
+      setLeaderboard(payload.data.leaderboard);
+    }
+
     const handleSocketError = (error) => {
-      setIsLoading(false);
+      setLoading((prev) => ({ ...prev, eventBoss: false, leaderboard: false }));
       toast.error(`Socket error: ${error.message}`);
       console.error("Socket error:", error);
     };
 
     socket.on(SOCKET_EVENTS.BOSS_PREVIEW.JOINED, handleJoinedPreview);
+    socket.on(SOCKET_EVENTS.BOSS_STATUS.UPDATED, handleBossStatusUpdated);
+    socket.on(
+      SOCKET_EVENTS.BATTLE_SESSION.SIZE.RESPONSE,
+      handleSessionSizeResponse
+    );
+    socket.on(
+      SOCKET_EVENTS.BATTLE_SESSION.SIZE.UPDATED,
+      handleSessionSizeUpdated
+    );
+    socket.on(
+      SOCKET_EVENTS.BOSS_PREVIEW.LEADERBOARD.RESPONSE,
+      handlePreviewLeaderboardResponse
+    );
+    socket.on(
+      SOCKET_EVENTS.BOSS_PREVIEW.LEADERBOARD.UPDATED,
+      handlePreviewLeaderboardUpdated
+    );
     socket.on(SOCKET_EVENTS.ERROR, handleSocketError);
 
     return () => {
       socket.off(SOCKET_EVENTS.BOSS_PREVIEW.JOINED, handleJoinedPreview);
+      socket.off(SOCKET_EVENTS.BOSS_STATUS.UPDATED, handleBossStatusUpdated);
+      socket.off(
+        SOCKET_EVENTS.BATTLE_SESSION.SIZE.RESPONSE,
+        handleSessionSizeResponse
+      );
+      socket.off(
+        SOCKET_EVENTS.BATTLE_SESSION.SIZE.UPDATED,
+        handleSessionSizeUpdated
+      );
+      socket.off(
+        SOCKET_EVENTS.BOSS_PREVIEW.LEADERBOARD.RESPONSE,
+        handlePreviewLeaderboardResponse
+      );
+      socket.off(
+        SOCKET_EVENTS.BOSS_PREVIEW.LEADERBOARD.UPDATED,
+        handlePreviewLeaderboardUpdated
+      );
       socket.off(SOCKET_EVENTS.ERROR, handleSocketError);
     };
   }, [socket, eventBossId, joinCode, hasJoinedPreview, joinPreview]);
 
   useEffect(() => {
-    if (!eventBoss && !isLoading && eventBossId && hasJoinedPreview) {
+    if (!eventBoss && !loading.eventBoss && eventBossId && hasJoinedPreview) {
       const fallbackTimer = setTimeout(() => {
         console.warn("Using HTTP fallback event boss data");
-        fetchEventBossData(eventBossId)
+        fetchEventBossById(eventBossId)
           .then((eventBoss) => {
             if (eventBoss) {
               setEventBoss(eventBoss);
-              setEventBossStatus(eventBoss.status);
-              setCooldownTimer(eventBoss.cooldownEndTime);
+              setCooldownEndTime(eventBoss.cooldownEndTime.getTime());
             }
           })
           .catch((error) => {
@@ -105,9 +159,33 @@ const useBossPreview = (eventBossId, joinCode) => {
 
       return () => clearTimeout(fallbackTimer);
     }
-  }, [eventBoss, isLoading, eventBossId, hasJoinedPreview]);
+  }, [eventBoss, loading.eventBoss, eventBossId, hasJoinedPreview]);
 
-  return { eventBoss, isLoading, joinPreview, leavePreview };
+  useEffect(() => {
+    if (!cooldownEndTime) return;
+
+    const interval = setInterval(() => {
+      const timeLeft = Math.max(
+        0,
+        Math.ceil((cooldownEndTime - Date.now()) / 1000)
+      );
+      setCooldownTimer(timeLeft);
+      console.log("Cooldown time left:", timeLeft);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [cooldownEndTime]);
+
+  return {
+    eventBoss,
+    eventBossStatus,
+    cooldownTimer,
+    loading,
+    sessionSize,
+    leaderboard,
+    joinPreview,
+    leavePreview,
+  };
 };
 
 export default useBossPreview;
