@@ -46,6 +46,10 @@ const useBattleSession = (eventBossId, joinCode) => {
   const [isDefeatCountdownVisible, setIsDefeatCountdownVisible] =
     useState(false);
 
+  const [badgeNotification, setBadgeNotification] = useState(null);
+  const [badgeQueue, setBadgeQueue] = useState([]);
+  const [isBadgeDisplaying, setIsBadgeDisplaying] = useState(false);
+
   const [loading, setLoading] = useState({
     eventBoss: false,
     question: false,
@@ -191,6 +195,7 @@ const useBattleSession = (eventBossId, joinCode) => {
     [socket, eventBossId]
   );
 
+  // Submit revival code
   const submitRevivalCode = useCallback(
     (revivalCode) => {
       if (!socket || !eventBossId || !revivalCode) return;
@@ -227,6 +232,43 @@ const useBattleSession = (eventBossId, joinCode) => {
       );
     }, 2000);
   }, []);
+
+  // Function to remove badge notification
+  const removeBadgeNotification = useCallback(() => {
+    setBadgeNotification(null);
+    setIsBadgeDisplaying(false);
+  }, []);
+
+  // Function to process the next badge in the queue
+  const processNextBadge = useCallback(() => {
+    if (badgeQueue.length > 0 && !isBadgeDisplaying) {
+      const nextBadge = badgeQueue[0];
+      setBadgeNotification(nextBadge);
+      setIsBadgeDisplaying(true);
+      setBadgeQueue((prev) => prev.slice(1));
+    }
+  }, [badgeQueue, isBadgeDisplaying]);
+
+  // Function to add badge to the queue
+  const addBadgeToQueue = useCallback((badge, message) => {
+    const badgeNotification = {
+      id: Date.now() + Math.random(),
+      badgeId: badge.id,
+      code: badge.code,
+      name: badge.name,
+      type: badge.type,
+      threshold: badge.threshold,
+      message
+    };
+    console.log("Adding badge to queue:", badgeNotification);
+    setBadgeQueue((prev) => [...prev, badgeNotification]);
+  }, []);
+
+  useEffect(() => {
+    if (!isBadgeDisplaying && badgeQueue.length > 0) {
+      processNextBadge();
+    }
+  }, [isBadgeDisplaying, badgeQueue, processNextBadge]);
 
   useEffect(() => {
     if (!socket || !eventBossId || !joinCode || hasJoinedSession) return;
@@ -420,6 +462,12 @@ const useBattleSession = (eventBossId, joinCode) => {
       }
     };
 
+    const handleBadgeEarned = (payload) => {
+      console.log("Badge earned:", payload);
+      addBadgeToQueue(payload.data.badge, payload.message);
+      processNextBadge();
+    };
+
     const handleSocketError = (error) => {
       setLoading((prev) => ({ ...prev, eventBoss: false }));
       toast.error(`Socket error: ${error.message}`);
@@ -467,6 +515,7 @@ const useBattleSession = (eventBossId, joinCode) => {
     );
     socket.on(SOCKET_EVENTS.BATTLE_SESSION.PLAYER.REVIVED, handleRevived);
     socket.on(SOCKET_EVENTS.BATTLE_SESSION.ENDED, handleSessionEnded);
+    socket.on(SOCKET_EVENTS.BADGE.EARNED, handleBadgeEarned);
     socket.on(SOCKET_EVENTS.ERROR, handleSocketError);
 
     return () => {
@@ -523,6 +572,7 @@ const useBattleSession = (eventBossId, joinCode) => {
       );
       socket.off(SOCKET_EVENTS.BATTLE_SESSION.PLAYER.REVIVED, handleRevived);
       socket.off(SOCKET_EVENTS.BATTLE_SESSION.ENDED, handleSessionEnded);
+      socket.off(SOCKET_EVENTS.BADGE.EARNED, handleBadgeEarned);
       socket.off(SOCKET_EVENTS.ERROR, handleSocketError);
     };
   }, [
@@ -540,6 +590,8 @@ const useBattleSession = (eventBossId, joinCode) => {
     requestNextQuestion,
     generateDamageNumber,
     reconnectSession,
+    addBadgeToQueue,
+    processNextBadge,
   ]);
 
   useEffect(() => {
@@ -656,11 +708,14 @@ const useBattleSession = (eventBossId, joinCode) => {
     isDefeatCountdownVisible,
     loading,
     hasJoinedSession,
+    badgeNotification,
+    isBadgeDisplaying,
     joinSession,
     leaveSession,
     requestNextQuestion,
     submitAnswer,
     submitRevivalCode,
+    removeBadgeNotification,
   };
 };
 

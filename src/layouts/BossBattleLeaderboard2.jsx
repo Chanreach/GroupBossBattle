@@ -231,7 +231,7 @@ const BattleLeaderboard = ({ isOpen, onClose }) => {
 
                           return (
                             <div
-                              key={playerIndex}
+                              key={`${player.playerId || playerName}-${playerIndex}-${team.id}`}
                               className="grid grid-cols-10 gap-3 items-center py-1 px-2 rounded bg-muted/10"
                             >
                               {/* Player Name */}

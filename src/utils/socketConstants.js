@@ -126,6 +126,11 @@ export const SOCKET_EVENTS = {
     UPDATE: "boss-status:update",
     UPDATED: "boss-status:updated",
   },
+
+  // ===== BADGE EVENTS ===== //
+  BADGE: {
+    EARNED: "badge:earned",
+  },
 };
 
 // ===== SOCKET ROOMS ===== //
@@ -154,5 +159,6 @@ export const SOCKET_MESSAGES = {
   BATTLE_QUEUE: {
     JOINED: "Successfully joined the battle queue.",
     LEFT: "Successfully left the battle queue.",
+    
   },
 };

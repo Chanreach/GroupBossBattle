@@ -503,7 +503,7 @@ const BossPreview = () => {
                           DMG
                         </TableHead>
                         <TableHead className="text-right whitespace-normal">
-                          Correct
+                          ACC
                         </TableHead>
                       </TableRow>
                     </TableHeader>
@@ -557,7 +557,7 @@ const BossPreview = () => {
                               {team.totalDamage}
                             </TableCell>
                             <TableCell className="text-right">
-                              {team.correctAnswers}
+                              {(team.accuracy * 100).toFixed(2)}%
                             </TableCell>
                           </TableRow>
                         ))
@@ -590,7 +590,7 @@ const BossPreview = () => {
                           DMG
                         </TableHead>
                         <TableHead className="text-right whitespace-normal">
-                          Correct
+                          ACC
                         </TableHead>
                       </TableRow>
                     </TableHeader>
@@ -646,7 +646,7 @@ const BossPreview = () => {
                               {player.totalDamage}
                             </TableCell>
                             <TableCell className="text-right">
-                              {player.correctAnswers}
+                              {(player.accuracy * 100).toFixed(2)}%
                             </TableCell>
                           </TableRow>
                         ))
@@ -681,7 +681,7 @@ const BossPreview = () => {
                           Total DMG
                         </TableHead>
                         <TableHead className="text-right whitespace-normal">
-                          Total Correct
+                          Accuracy
                         </TableHead>
                       </TableRow>
                     </TableHeader>
@@ -711,7 +711,7 @@ const BossPreview = () => {
                           "alltime"
                         ).paginatedData.map((player) => (
                           <TableRow
-                            key={player.id}
+                            key={player.playerId}
                             className="hover:bg-muted/50"
                           >
                             <TableCell className="font-medium">
@@ -722,22 +722,22 @@ const BossPreview = () => {
                                 <Avatar className="w-8 h-8">
                                   <AvatarImage
                                     src={player.avatar}
-                                    alt={player.username}
+                                    alt={player.playerName}
                                   />
                                   <AvatarFallback>
-                                    {player.username}
+                                    {player.playerName}
                                   </AvatarFallback>
                                 </Avatar>
                                 <span className="font-medium">
-                                  {player.username}
+                                  {player.playerName}
                                 </span>
                               </div>
                             </TableCell>
                             <TableCell className="text-right font-medium">
-                              {player.totalDamage}
+                              {player.totalDamageDealt}
                             </TableCell>
                             <TableCell className="text-right">
-                              {player.correctAnswers}
+                              {(player.accuracy * 100).toFixed(2)}%
                             </TableCell>
                           </TableRow>
                         ))
@@ -750,7 +750,7 @@ const BossPreview = () => {
                   />
                 </TabsContent>{" "}
               </Tabs>
-            </CardContent>
+            </CardContent> 
           </Card>
         </div>
       </div>

@@ -2,6 +2,20 @@ import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
 const BadgeNotification = ({ badge, onClose, index = 0 }) => {
+  const BADGE_CODES = {
+    ACHIEVEMENT: {
+      MVP: "mvp",
+      LAST_HIT: "last-hit",
+      BOSS_DEFEATED: "boss-defeated",
+      TEAM_VICTORY: "team-victory",
+    },
+    MILESTONE: {
+      QUESTIONS_10: "questions_10",
+      QUESTIONS_25: "questions_25",
+      QUESTIONS_50: "questions_50",
+      QUESTIONS_100: "questions_100",
+    },
+  };
   const [isVisible, setIsVisible] = useState(true);
   const [isEntering, setIsEntering] = useState(true);
 
@@ -14,8 +28,8 @@ const BadgeNotification = ({ badge, onClose, index = 0 }) => {
     // Auto-close timer
     const closeTimer = setTimeout(() => {
       setIsVisible(false);
-      setTimeout(onClose, 300); // Wait for exit animation
-    }, 4000); // Show for 4 seconds
+      setTimeout(onClose, 300);
+    }, 4000);
 
     return () => {
       clearTimeout(entryTimer);
@@ -30,26 +44,25 @@ const BadgeNotification = ({ badge, onClose, index = 0 }) => {
 
   const getBadgeIcon = (badgeData) => {
     // Use the icon from the badge data if available
-    if (badgeData.badgeIcon) {
-      return badgeData.badgeIcon;
+    if (badgeData.icon) {
+      return badgeData.icon;
     }
 
-    // Fallback to type/name-based icons
-    const badgeType = badgeData.type || badgeData.badgeName;
-    switch (badgeType) {
-      case "MVP":
+    // Fallback to code-based icons
+    switch (badgeData.code) {
+      case BADGE_CODES.ACHIEVEMENT.MVP:
         return "👑";
-      case "Last Hit":
+      case BADGE_CODES.ACHIEVEMENT.LAST_HIT:
         return "🎯";
-      case "Boss Defeated":
+      case BADGE_CODES.ACHIEVEMENT.TEAM_VICTORY:
         return "⚔️";
-      case "10 Questions":
+      case BADGE_CODES.MILESTONE.QUESTIONS_10:
         return "🏅";
-      case "25 Questions":
+      case BADGE_CODES.MILESTONE.QUESTIONS_25:
         return "🥉";
-      case "50 Questions":
+      case BADGE_CODES.MILESTONE.QUESTIONS_50:
         return "🥈";
-      case "100 Questions":
+      case BADGE_CODES.MILESTONE.QUESTIONS_100:
         return "🥇";
       default:
         return "🏆";
@@ -57,21 +70,20 @@ const BadgeNotification = ({ badge, onClose, index = 0 }) => {
   };
 
   const getBadgeColor = (badgeData) => {
-    const badgeType = badgeData.type || badgeData.badgeName;
-    switch (badgeType) {
-      case "MVP":
+    switch (badgeData.code) {
+      case BADGE_CODES.ACHIEVEMENT.MVP:
         return "from-yellow-400 to-yellow-600";
-      case "Last Hit":
+      case BADGE_CODES.ACHIEVEMENT.LAST_HIT:
         return "from-red-400 to-red-600";
-      case "Boss Defeated":
+      case BADGE_CODES.ACHIEVEMENT.TEAM_VICTORY:
         return "from-purple-400 to-purple-600";
-      case "10 Questions":
+      case BADGE_CODES.MILESTONE.QUESTIONS_10:
         return "from-blue-400 to-blue-600";
-      case "25 Questions":
+      case BADGE_CODES.MILESTONE.QUESTIONS_25:
         return "from-orange-400 to-orange-600";
-      case "50 Questions":
+      case BADGE_CODES.MILESTONE.QUESTIONS_50:
         return "from-green-400 to-green-600";
-      case "100 Questions":
+      case BADGE_CODES.MILESTONE.QUESTIONS_100:
         return "from-pink-400 to-pink-600";
       default:
         return "from-gray-400 to-gray-600";
@@ -105,7 +117,7 @@ const BadgeNotification = ({ badge, onClose, index = 0 }) => {
       {/* Close button */}
       <button
         onClick={handleClose}
-        className="absolute top-2 right-2 p-1 rounded-full bg-black/20 hover:bg-black/40 transition-colors"
+        className="absolute top-2 right-2 p-1 rounded-full bg-black/20 hover:bg-black/40 transition-colors z-10 cursor-pointer"
       >
         <X className="w-4 h-4 text-white" />
       </button>
@@ -120,15 +132,14 @@ const BadgeNotification = ({ badge, onClose, index = 0 }) => {
         {/* Badge info */}
         <div className="flex-1">
           <h3 className="text-lg font-bold text-white drop-shadow-md">
-            {badge.badgeName || badge.name || badge.type || "Badge Earned"}
+            {badge.name || "Badge Earned"}
           </h3>
           <p className="text-sm text-white/90 drop-shadow-sm">
-            {badge.message ||
-              badge.description ||
-              "Congratulations on earning this badge!"}
+            {badge.message || "Congratulations on earning this badge!"}
           </p>
           {badge.value && (
             <p className="text-xs text-white/80 mt-1 font-semibold">
+              Value: Hello
               {badge.value}
             </p>
           )}
@@ -152,12 +163,12 @@ const BadgeNotification = ({ badge, onClose, index = 0 }) => {
       </div>
 
       {/* Progress bar for milestones */}
-      {badge.type?.startsWith("MILESTONE") && badge.progress && (
+      {badge.type === "milestone" && (
         <div className="mt-3 h-2 bg-black/20 rounded-full overflow-hidden">
           <div
             className="h-full bg-white rounded-full transition-all duration-1000 ease-out"
             style={{
-              width: `${badge.progress}%`,
+              width: `100%`,
               transitionDelay: "0.6s",
             }}
           />

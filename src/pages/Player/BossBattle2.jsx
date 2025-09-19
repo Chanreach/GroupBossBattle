@@ -69,9 +69,12 @@ const BossBattle = () => {
     teammateKnockedOutCount,
     isDefeatMessageVisible,
     isDefeatCountdownVisible,
+    badgeNotification,
+    isBadgeDisplaying,
     loading,
     submitAnswer,
     submitRevivalCode,
+    removeBadgeNotification,
   } = battleSession;
   const questionMaxTimeSeconds = currentQuestion?.timeLimit / 1000;
 
@@ -1268,22 +1271,21 @@ const BossBattle = () => {
 
       {/* ========== NOTIFICATIONS - Highest z-index ========== */}
       {/* Badge Notifications - z-30 (stays above most content but below toasts) */}
-      {/* <div className="fixed top-4 right-4 z-30 space-y-2">
-        {badgeNotifications.map((badge, index) => (
+      {badgeNotification && isBadgeDisplaying && (
+        <div className="fixed top-4 right-4 z-30 space-y-2">
           <div
-            key={badge.id}
             style={{
-              transform: `translateY(${index * 0.5}rem)`,
+              transform: "translateY(0.5rem)",
             }}
           >
             <BadgeNotification
-              badge={badge}
-              onClose={() => removeBadgeNotification(badge.id)}
-              duration={5000}
+              badge={badgeNotification}
+              onClose={() => removeBadgeNotification()}
+              duration={1000}
             />
           </div>
-        ))}
-      </div> */}
+        </div>
+      )}
     </main>
   );
 };
