@@ -31,7 +31,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import BattleLeaderboard from "@/layouts/BossBattleLeaderboard2";
+import LeaderboardBattle from "@/components/leaderboard/LeaderboardBattle";
 import BadgeNotification from "@/components/BadgeNotification";
 
 // ===== STYLES ===== //
@@ -68,9 +68,12 @@ const BossBattle = () => {
     revivalTimer,
     teammateKnockedOutCount,
     isDefeatMessageVisible,
-    isDefeatCountdownVisible,
+    isPodiumCountdownVisible,
+    isEventBossDefeated,
+    podiumTimer,
     badgeNotification,
     isBadgeDisplaying,
+    isPlayerNotFound,
     loading,
     submitAnswer,
     submitRevivalCode,
@@ -78,435 +81,19 @@ const BossBattle = () => {
   } = battleSession;
   const questionMaxTimeSeconds = currentQuestion?.timeLimit / 1000;
 
-  const handleAnswerSelect = (choiceIndex) => {
-    const responseTime = currentQuestion.timeLimit - questionTimeRemaining;
-    submitAnswer(getUserInfo().id, choiceIndex, responseTime);
-  };
-
-  // ===== TIMING CONFIGURATION ===== //
-  const BOSS_DEFEAT_MESSAGE_DELAY_MS = 1000;
-  const BOSS_DEFEAT_COUNTDOWN_DELAY_MS = 1000;
-  const BOSS_DEFEAT_COUNTDOWN_DURATION_SECONDS = 5;
-
   // ===== UI ANIMATION STATES ===== //
   const [isLeaderboardVisible, setIsLeaderboardVisible] = useState(false);
   const [isDarkModeEnabled, setIsDarkModeEnabled] = useState(false);
-
-  // ===== BOSS DEFEAT STATES ===== //
-  const [bossDefeatCountdownNumber, setBossDefeatCountdownNumber] = useState(3);
 
   // ===== PLAYER REVIVAL SYSTEM ===== //
   const [isRevivalDialogVisible, setIsRevivalDialogVisible] = useState(false);
   const [revivalOtpInput, setRevivalOtpInput] = useState("");
 
-  // ===== SOCKET.IO INTEGRATION ===== //
-  // useEffect(() => {
-  //   if (!socket) {
-  //     console.error("No socket connection available");
-  //     return;
-  //   }
-
-  //   // Set initial loading state
-  //   setIsLoadingQuestion(true);
-
-  //   socket.emit("question:request", {
-  //     eventBossId,
-  //   });
-
-  //   socket.on("question:received", (data) => {
-  //     // Update question data with new format
-  //     if (data.question) {
-  //       // Keep the original choice structure with indices
-  //       const choicesWithIndices = data.question.choices.map(
-  //         (choice, arrayIndex) => ({
-  //           originalIndex: choice.index, // The index from backend after shuffling
-  //           displayIndex: arrayIndex, // The display position (0, 1, 2, 3)
-  //           text: choice.text,
-  //         })
-  //       );
-
-  //       setCurrentQuestionData({
-  //         questionId: data.question.id,
-  //         categoryId: data.question.categoryId,
-  //         categoryName: data.question.categoryName,
-  //         questionText: data.question.text,
-  //         timeLimitSeconds: data.question.timeLimit, // Already in seconds
-  //         answerOptions: choicesWithIndices.map((c) => c.text), // For display
-  //         choicesWithIndices: choicesWithIndices, // Keep full structure for submission
-  //         correctAnswerIndex: data.question.correctAnswerIndex,
-  //         questionNumber: data.question.questionNumber,
-  //       });
-
-  //       // Reset question timer and states
-  //       setQuestionTimeRemaining(data.question.timeLimit);
-  //       setCurrentQuestionNumber(data.question.questionNumber);
-  //       setIsLoadingQuestion(false);
-  //       setIsWaitingForResult(false); // **NEW: Clear waiting state for new question**
-  //       setPlayerSelectedAnswer(""); // **NEW: Clear previous selection**
-  //     }
-
-  //     // Update battle status
-  //     if (data.battleStatus) {
-  //       // Update boss health with dynamic max HP
-  //       setBossCurrentHealth(data.battleStatus.bossCurrentHp);
-  //       setBossMaxHealth(data.battleStatus.bossMaxHp);
-  //       setPlayerLivesRemaining(data.battleStatus.playerHearts);
-  //       setCurrentPlayerTeam({
-  //         teamId: data.battleStatus.playerTeamId,
-  //         teamName:
-  //           data.battleStatus.playerTeamName ||
-  //           `Team ${data.battleStatus.playerTeamId}`, // **FIXED: Use actual team name or fallback**
-  //       });
-
-  //       // Update knocked out status
-  //       if (data.battleStatus.isKnockedOut) {
-  //         setIsCurrentPlayerKnockedOut(true);
-  //       }
-  //     }
-  //   });
-
-  //   // Listen for answer result feedback
-  //   socket.on("answer-result", (data) => {
-  //     // Always clear loading and waiting states when we get a result
-  //     setIsLoadingQuestion(false);
-  //     setIsWaitingForResult(false); // **NEW: Clear waiting state**
-
-  //     if (data.isCorrect) {
-  //       // Correct answer - play sound effect and show damage number
-  //       if (punchAudioRef.current) {
-  //         punchAudioRef.current.currentTime = 0;
-  //         punchAudioRef.current.play().catch((error) => {
-  //           console.log("Audio play failed:", error);
-  //         });
-  //       }
-
-  //       // Generate floating damage number if damage was dealt
-  //       if (data.damage && data.damage > 0) {
-  //         generateDamageNumber(data.damage, data.responseCategory || "NORMAL");
-
-  //         // Show boss taking damage animation
-  //         setIsBossTakingDamage(true);
-  //         setTimeout(() => setIsBossTakingDamage(false), 500);
-  //       }
-  //     } else {
-  //       // Wrong answer - play hurt sound and show feedback
-  //       playHurtSound();
-  //       setIsPlayerHurt(true);
-  //       setTimeout(() => {
-  //         setIsPlayerHurt(false);
-  //       }, 500);
-  //     }
-
-  //     // Update battle status if provided
-  //     if (data.battleStatus) {
-  //       setBossCurrentHealth(data.battleStatus.bossCurrentHp);
-  //       setBossMaxHealth(data.battleStatus.bossMaxHp);
-  //       setPlayerLivesRemaining(data.battleStatus.playerHearts);
-  //       if (data.battleStatus.isKnockedOut) {
-  //         setIsCurrentPlayerKnockedOut(true);
-  //       }
-  //     }
-
-  //     // **FIXED: Request next question after processing answer result**
-  //     // Only request if player is not knocked out and boss is still alive
-  //     if (
-  //       !data.battleStatus?.isKnockedOut &&
-  //       data.battleStatus?.bossCurrentHp > 0
-  //     ) {
-  //       // Add a small delay to ensure all state updates are processed
-  //       setTimeout(() => {
-  //         if (socket && (eventBossId || fallbackEventId)) {
-  //           const currentEventBossId = eventBossId || fallbackEventId;
-
-  //           socket.emit("question:request", {
-  //             eventBossId: currentEventBossId,
-  //           });
-  //         }
-  //       }, 100);
-  //     } else {
-  //       console.log(
-  //         "📝 Not requesting next question - player knocked out or boss defeated"
-  //       );
-  //     }
-  //   });
-
-  //   // Listen for player attack broadcasts (other players' attacks)
-  //   socket.on("player-attacked", (data) => {
-  //     // Update boss health
-  //     setBossCurrentHealth(data.bossCurrentHp);
-
-  //     // Get current user info to avoid double damage indicators
-  //     const currentUser = getUserInfo();
-  //     const isCurrentPlayerAttack =
-  //       currentUser &&
-  //       (data.playerNickname === currentUser.username ||
-  //         data.playerId === currentUser.id);
-
-  //     // Generate floating damage number only for OTHER players' attacks
-  //     // (Current player's attacks are handled by answer-result event)
-  //     if (data.damage && data.damage > 0 && !isCurrentPlayerAttack) {
-  //       generateDamageNumber(data.damage, data.responseCategory || "NORMAL");
-  //     } else if (isCurrentPlayerAttack) {
-  //       console.log(
-  //         `🎯 Skipping damage number for current player's own attack (handled by answer-result)`
-  //       );
-  //     }
-
-  //     // Show damage animation for all attacks (including current player's)
-  //     setIsBossTakingDamage(true);
-  //     setTimeout(() => setIsBossTakingDamage(false), 500);
-  //   });
-
-  //   // Listen for boss defeated
-  //   socket.on("boss-defeated", (data) => {
-  //     console.log("🏆 Boss Defeated!", data);
-  //     setBossCurrentHealth(0);
-
-  //     // Play victory sound
-  //     if (punchAudioRef.current) {
-  //       punchAudioRef.current.currentTime = 0;
-  //       punchAudioRef.current.play().catch((error) => {
-  //         console.log("Audio play failed:", error);
-  //       });
-  //     }
-  //   });
-
-  //   // **NEW: Listen for final leaderboards data**
-  //   socket.on("final-leaderboards", (data) => {
-  //     console.log("📊 Received final leaderboards in battle:", data);
-  //     setFinalLeaderboardData(data);
-  //   });
-
-  //   // **NEW: Listen for badge notifications**
-  //   socket.on("badge-earned", (data) => {
-  //     console.log("🎖️ Badge Earned!", data);
-
-  //     // Add badge to queue for sequential display
-  //     addBadgeToQueue(data);
-  //   });
-
-  //   // Listen for battle state updates
-  //   socket.on("battle-state-updated", (data) => {
-  //     if (data.session?.bossData) {
-  //       setBossCurrentHealth(data.session.bossData.currentHp);
-  //       setBossMaxHealth(data.session.bossData.maxHp);
-  //     }
-  //   });
-
-  //   // Listen for battle status updates (after heart processing)
-  //   socket.on("battle-status-update", (data) => {
-  //     if (data.battleStatus) {
-  //       setBossCurrentHealth(data.battleStatus.bossCurrentHp);
-  //       setBossMaxHealth(data.battleStatus.bossMaxHp);
-  //       setPlayerLivesRemaining(data.battleStatus.playerHearts);
-  //       if (data.battleStatus.isKnockedOut) {
-  //         console.log(
-  //           "💀 Player marked as knocked out from battle status update"
-  //         );
-  //         setIsCurrentPlayerKnockedOut(true);
-  //       }
-  //     }
-  //   });
-
-  //   // Listen for battle status sync (immediate HP sync for new/rejoining players)
-  //   socket.on("battle-status-sync", (data) => {
-  //     setBossCurrentHealth(data.bossCurrentHp);
-  //     setBossMaxHealth(data.bossMaxHp);
-  //   });
-
-  //   // Listen for team information updates
-  //   socket.on("player:team-info", (data) => {
-  //     if (data.teamId && data.teamName) {
-  //       setCurrentPlayerTeam({
-  //         teamId: data.teamId,
-  //         teamName: data.teamName, // Use actual team name from backend
-  //       });
-
-  //       // **NEW: Show toast message when showToast is true**
-  //       if (data.showToast && data.message) {
-  //         toast.info(data.message);
-  //       }
-  //     }
-  //   });
-
-  //   // **NEW: Listen for new player joining battle notifications**
-  //   socket.on("player:joined-battle", (data) => {
-  //     // Update boss health
-  //     setBossCurrentHealth(data.bossCurrentHp);
-  //     setBossMaxHealth(data.bossMaxHp);
-
-  //     // Show toast notification
-  //     toast.info(data.message);
-  //   });
-
-  //   // **NEW: Listen for teammate knockout notifications**
-  //   socket.on("teammate:knocked-out", (data) => {
-  //     // **FIXED: Add knocked out teammate to the array so revival button shows**
-  //     setTeamKnockedOutPlayers((prev) => {
-  //       console.log("💀 Current knocked out players before update:", prev);
-
-  //       // Check if this player is already in the list
-  //       const existingPlayer = prev.find(
-  //         (p) => p.playerName === data.knockedOutPlayerNickname
-  //       );
-
-  //       if (!existingPlayer) {
-  //         const newPlayer = {
-  //           playerId: data.knockedOutPlayerId || `temp_${Date.now()}`,
-  //           playerName: data.knockedOutPlayerNickname,
-  //           revivalCode: null, // Will be provided when player gets revival code
-  //           timeLeftSeconds: 60,
-  //         };
-
-  //         console.log("💀 Adding new knocked out player:", newPlayer);
-  //         const updatedArray = [...prev, newPlayer];
-  //         console.log("💀 Updated knocked out players array:", updatedArray);
-
-  //         return updatedArray;
-  //       } else {
-  //         console.log("💀 Player already in knocked out list:", existingPlayer);
-  //       }
-  //       return prev;
-  //     });
-
-  //     // **FIXED: Show toast notification using the data message**
-  //     toast.error(
-  //       data.message || `${data.knockedOutPlayerNickname} has been knocked out!`
-  //     );
-  //   });
-
-  //   // **NEW: Listen for player knockout events (when current player gets knocked out)**
-  //   socket.on("player-knocked-out", (data) => {
-  //     // **FIXED: Show toast notification when knocked out**
-  //     toast.error(
-  //       "You have been knocked out! Share your revival code with teammates."
-  //     );
-
-  //     // Set the revival code for display
-  //     setCurrentPlayerRevivalCode(data.reviveCode);
-  //     setCurrentPlayerRevivalTimeLeft(60); // 60 seconds
-  //     setIsCurrentPlayerKnockedOut(true);
-
-  //     // Play heartbeats sound when knocked out
-  //     if (heartbeatsAudioRef.current) {
-  //       heartbeatsAudioRef.current.currentTime = 0;
-  //       heartbeatsAudioRef.current.loop = true;
-  //       heartbeatsAudioRef.current.play().catch((error) => {
-  //         console.log("Heartbeats audio play failed:", error);
-  //       });
-  //     }
-  //   });
-
-  //   // **NEW: Listen for player death events**
-  //   socket.on("player-died", (data) => {
-  //     // Stop heartbeats sound
-  //     if (heartbeatsAudioRef.current) {
-  //       heartbeatsAudioRef.current.pause();
-  //       heartbeatsAudioRef.current.currentTime = 0;
-  //       heartbeatsAudioRef.current.loop = false;
-  //     }
-
-  //     // Show death message
-  //     toast.error(data.message);
-
-  //     // Mark player as dead
-  //     setIsCurrentPlayerDead(true);
-  //     setIsCurrentPlayerKnockedOut(false);
-
-  //     // Auto-redirect after 3 seconds
-  //     if (data.shouldRedirect) {
-  //       setTimeout(() => {
-  //         if (eventBossId && joinCode) {
-  //           // navigate(`/boss-preview/${eventBossId}/${joinCode}`);
-  //           window.location.href = `/boss-preview/${eventBossId}/${joinCode}`;
-  //         } else {
-  //           navigate("/player");
-  //         }
-  //       }, 3000);
-  //     }
-  //   });
-
-  //   // **NEW: Listen for teammate death events**
-  //   socket.on("teammate-died", (data) => {
-  //     // **FIXED: Remove dead player from knocked out list**
-  //     setTeamKnockedOutPlayers((prev) => {
-  //       const updatedArray = prev.filter(
-  //         (p) => p.playerName !== data.deadPlayerNickname
-  //       );
-  //       console.log(
-  //         "☠️ Removed dead player from knocked out list:",
-  //         updatedArray
-  //       );
-  //       return updatedArray;
-  //     });
-
-  //     // Show death notification
-  //     toast.error(data.message);
-  //   });
-
-  //   // **NEW: Listen for successful revival events**
-  //   socket.on("player-revived", (data) => {
-  //     // Stop heartbeats sound
-  //     if (heartbeatsAudioRef.current) {
-  //       heartbeatsAudioRef.current.pause();
-  //       heartbeatsAudioRef.current.currentTime = 0;
-  //       heartbeatsAudioRef.current.loop = false;
-  //     }
-
-  //     // Update player state
-  //     setIsCurrentPlayerKnockedOut(false);
-  //     setIsCurrentPlayerDead(false);
-  //     setPlayerLivesRemaining(data.hearts);
-  //     setCurrentPlayerRevivalCode("");
-  //     setCurrentPlayerRevivalTimeLeft(60);
-
-  //     // Show revival success message
-  //     toast.success(data.message);
-  //   });
-
-  //   // **NEW: Listen for teammate revival events**
-  //   socket.on("teammate-revived", (data) => {
-  //     // **FIXED: Remove revived player from knocked out list**
-  //     setTeamKnockedOutPlayers((prev) => {
-  //       const updatedArray = prev.filter(
-  //         (p) => p.playerName !== data.revivedPlayer
-  //       );
-  //       return updatedArray;
-  //     });
-
-  //     // Show revival notification
-  //     toast.success(data.message);
-  //   });
-
-  //   return () => {
-  //     socket.off("question:received");
-  //     socket.off("answer-result");
-  //     socket.off("player-attacked");
-  //     socket.off("boss-defeated");
-  //     socket.off("final-leaderboards");
-  //     socket.off("badge-earned");
-  //     socket.off("battle-state-updated");
-  //     socket.off("battle-status-update");
-  //     socket.off("battle-status-sync");
-  //     socket.off("player:team-info");
-  //     socket.off("player:joined-battle"); // **NEW**
-  //     socket.off("teammate:knocked-out"); // **NEW**
-  //     socket.off("player-knocked-out"); // **NEW**
-  //     socket.off("player-died"); // **NEW**
-  //     socket.off("teammate-died"); // **NEW**
-  //     socket.off("player-revived"); // **NEW**
-  //     socket.off("teammate-revived"); // **NEW**
-  //   };
-  // }, [
-  //   socket,
-  //   eventBossId,
-  //   playHurtSound,
-  //   generateDamageNumber,
-  //   playerLivesRemaining,
-  //   joinCode, // **NEW: Add joinCode dependency**
-  //   navigate, // **NEW: Add navigate dependency**
-  //   heartbeatsAudioRef, // **NEW: Add heartbeatsAudioRef dependency**
-  // ]);
+  const handleAnswerSelect = (choiceIndex) => {
+    const responseTime =
+      currentQuestion.timeLimit - questionTimeRemaining * 1000;
+    submitAnswer(getUserInfo().id, choiceIndex, responseTime);
+  };
 
   // const leaveBoss = () => {
   //   const currentEventBossId = eventBossId;
@@ -556,106 +143,6 @@ const BossBattle = () => {
     setRevivalOtpInput("");
   };
 
-  // Timer countdown effect
-  // useEffect(() => {
-  //   // Don't run timer if player is knocked out, dead, boss is defeated, or waiting for result
-  //   if (
-  //     isCurrentPlayerKnockedOut ||
-  //     isCurrentPlayerDead ||
-  //     bossCurrentHealth === 0 ||
-  //     !currentQuestionData ||
-  //     isLoadingQuestion ||
-  //     isWaitingForResult // **NEW: Stop timer when waiting for result**
-  //   ) {
-  //     return;
-  //   }
-
-  //   if (questionTimeRemaining > 0) {
-  //     const timer = setTimeout(() => {
-  //       setQuestionTimeRemaining((prev) => prev - 1);
-  //     }, 1000);
-
-  //     return () => clearTimeout(timer);
-  //   } else if (questionTimeRemaining === 0 && !isLoadingQuestion) {
-  //     // Time's up - submit timeout to backend (let backend handle heart deduction)
-  //     if (socket && (eventBossId || fallbackEventId) && currentQuestionData) {
-  //       const currentEventBossId = eventBossId || fallbackEventId;
-
-  //       // Submit timeout as an invalid answer (choice index -1)
-  //       socket.emit("submit-answer", {
-  //         eventBossId: currentEventBossId,
-  //         questionId: currentQuestionData.questionId,
-  //         choiceIndex: -1, // Invalid choice to indicate timeout
-  //         responseTime: currentQuestionData.timeLimitSeconds * 1000, // Full time limit
-  //         isTimeout: true,
-  //       });
-
-  //       setIsLoadingQuestion(true);
-  //       setIsWaitingForResult(true); // **NEW: Set waiting state for timeout**
-  //     }
-  //   }
-  // }, [
-  //   questionTimeRemaining,
-  //   isCurrentPlayerKnockedOut,
-  //   isCurrentPlayerDead,
-  //   bossCurrentHealth,
-  //   currentQuestionData,
-  //   isLoadingQuestion,
-  //   isWaitingForResult, // **NEW: Add waiting state dependency**
-  //   socket,
-  //   eventBossId,
-  //   fallbackEventId,
-  // ]);
-
-  // Effect to handle boss defeat sequence
-  // useEffect(() => {
-  //   if (bossCurrentHealth === 0) {
-  //     // ===== BOSS DEFEAT SEQUENCE TIMING ===== //
-  //     // Show defeat message after configurable delay
-  //     const defeatMessageTimer = setTimeout(() => {
-  //       setIsBossDefeatMessageVisible(true);
-  //     }, BOSS_DEFEAT_MESSAGE_DELAY_MS); // Easy to modify: currently 1 second
-
-  //     // Show countdown after configurable delay
-  //     const countdownTimer = setTimeout(() => {
-  //       setIsBossDefeatCountdownVisible(true);
-
-  //       // Start countdown from configurable duration
-  //       let countdownSeconds = BOSS_DEFEAT_COUNTDOWN_DURATION_SECONDS; // Easy to modify: currently 6 seconds
-  //       setBossDefeatCountdownNumber(countdownSeconds);
-
-  //       const countdownInterval = setInterval(() => {
-  //         countdownSeconds--;
-  //         if (countdownSeconds > 0) {
-  //           setBossDefeatCountdownNumber(countdownSeconds);
-  //         } else {
-  //           clearInterval(countdownInterval);
-  //           setIsBossDefeatCountdownVisible(false);
-  //           setIsBossDefeatMessageVisible(false);
-  //           // Navigate to the victory podium page with leaderboard data
-  //           navigate("/boss-podium", {
-  //             state: {
-  //               leaderboardData: finalLeaderboardData,
-  //               eventBossId: eventBossId || fallbackEventId,
-  //             },
-  //           });
-  //         }
-  //       }, 1000); // 1 second intervals for countdown
-  //     }, BOSS_DEFEAT_COUNTDOWN_DELAY_MS); // Easy to modify: currently 1 second total
-
-  //     return () => {
-  //       clearTimeout(defeatMessageTimer);
-  //       clearTimeout(countdownTimer);
-  //     };
-  //   }
-  // }, [
-  //   bossCurrentHealth,
-  //   navigate,
-  //   eventBossId,
-  //   fallbackEventId,
-  //   finalLeaderboardData,
-  // ]);
-
   // Get timer color based on time remaining
   const getTimerColor = () => {
     const timePercentage =
@@ -668,6 +155,26 @@ const BossBattle = () => {
       return "text-red-500"; // Slow zone (red)
     }
   };
+
+  useEffect(() => {
+    if (isPlayerNotFound) {
+      setTimeout(() => {
+        navigate(`/boss-preview/${eventBossId}/${joinCode}`);
+      }, 500);
+    }
+  }, [isPlayerNotFound, navigate, eventBossId, joinCode]);
+
+  useEffect(() => {
+    if (podiumTimer === 0 && isPodiumCountdownVisible) {
+      navigate(`/boss-podium/${eventBossId}/${joinCode}`);
+    }
+  }, [
+    podiumTimer,
+    isPodiumCountdownVisible,
+    eventBossId,
+    joinCode,
+    navigate,
+  ]);
 
   // ===== ===== ===== RENDER ===== ===== ===== //
   return (
@@ -882,13 +389,13 @@ const BossBattle = () => {
                     </h2>
                   </div>
                   {/* Show countdown under defeat message */}
-                  {isDefeatCountdownVisible && (
+                  {isPodiumCountdownVisible && (
                     <div className="text-center animate-fade-in">
                       <h3 className="text-lg text-muted-foreground py-2">
                         Redirecting to Podium
                       </h3>
                       <div className="text-3xl font-bold text-white">
-                        {bossDefeatCountdownNumber}
+                        {podiumTimer}
                       </div>
                     </div>
                   )}
@@ -1021,19 +528,17 @@ const BossBattle = () => {
             {/* Answer Options */}
             <div className="grid grid-cols-2 gap-2 flex-1 min-h-0 -mb-3">
               {loading.question
-                ? // Loading state
-                  [...Array(4)].map((_, index) => (
+                ? [...Array(4)].map((_, index) => (
                     <Button
                       key={index}
                       variant="outline"
                       className="w-full p-2 h-full text-center whitespace-normal font-medium text-sm bg-muted animate-pulse"
                       disabled
                     >
-                      {loading.result ? "Processing..." : "Loading..."}
+                      Loading...
                     </Button>
                   ))
-                : // Normal answer options
-                  currentQuestion?.answerChoices.map((choice, index) => {
+                : currentQuestion?.answerChoices.map((choice, index) => {
                     const colors = [
                       "!bg-red-500 hover:!bg-red-600 !text-white !border-red-500", // Option A - Red
                       "!bg-purple-500 hover:!bg-purple-600 !text-white !border-purple-500", // Option B - Purple
@@ -1048,6 +553,13 @@ const BossBattle = () => {
                       "!bg-blue-700 !text-white !border-blue-700", // Selected Blue
                     ];
 
+                    const isProcessing =
+                      isPlayerKnockedOut ||
+                      isPlayerDead ||
+                      isEventBossDefeated ||
+                      loading.question ||
+                      loading.result;
+
                     return (
                       <Button
                         key={index}
@@ -1057,22 +569,10 @@ const BossBattle = () => {
                             ? selectedColors[index]
                             : colors[index]
                         } ${
-                          isPlayerKnockedOut ||
-                          isPlayerDead ||
-                          eventBossCurrentHP === 0 ||
-                          loading.question ||
-                          loading.result
-                            ? "opacity-50 cursor-not-allowed"
-                            : ""
+                          isProcessing ? "opacity-50 cursor-not-allowed" : ""
                         }`}
                         onClick={() => handleAnswerSelect(choice.index)}
-                        disabled={
-                          isPlayerKnockedOut ||
-                          isPlayerDead ||
-                          eventBossCurrentHP === 0 ||
-                          loading.question ||
-                          loading.result
-                        }
+                        disabled={isProcessing}
                       >
                         {choice.text}
                       </Button>
@@ -1084,7 +584,7 @@ const BossBattle = () => {
       </div>
 
       {/* Battle Leaderboard - Higher z-index (modal overlay) */}
-      <BattleLeaderboard
+      <LeaderboardBattle
         isOpen={isLeaderboardVisible}
         onClose={() => setIsLeaderboardVisible(false)}
       />
@@ -1097,25 +597,6 @@ const BossBattle = () => {
             {isPlayerDead ? (
               // Dead state - show death message
               <div className="text-center space-y-4">
-                {/* Force stop heartbeats when dead dialog is shown */}
-                {
-                  // (() => {
-                  //   try {
-                  //     if (heartbeatsAudioRef.current) {
-                  //       heartbeatsAudioRef.current.pause();
-                  //       heartbeatsAudioRef.current.currentTime = 0;
-                  //       heartbeatsAudioRef.current.loop = false;
-                  //     }
-                  //   } catch (error) {
-                  //     console.log(
-                  //       "Error stopping heartbeats in dead dialog:",
-                  //       error
-                  //     );
-                  //   }
-                  //   return null;
-                  // })()
-                }
-
                 <div className="flex items-center justify-center gap-2">
                   <Skull className="w-8 h-8 text-foreground" />
                   <AlertDialogTitle className="text-center text-foreground text-xl font-bold">

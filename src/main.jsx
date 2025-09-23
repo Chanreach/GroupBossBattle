@@ -242,7 +242,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   />
                 </Route>
 
-                <Route path="/boss-podium" element={<AppBattle />}>
+                <Route path="/boss-podium/:eventBossId/:joinCode" element={<AppBattle />}>
                   <Route
                     index
                     element={

@@ -14,7 +14,7 @@ import useBattleLeaderboard from "@/hooks/useBattleLeaderboard";
 // ===== STYLES ===== //
 import "@/index.css";
 
-const BattleLeaderboard = ({ isOpen, onClose }) => {
+const LeaderboardBattle = ({ isOpen, onClose }) => {
   const { eventBossId, joinCode } = useParams();
   const { leaderboard, requestLeaderboard } = useBattleLeaderboard(
     eventBossId,
@@ -22,7 +22,6 @@ const BattleLeaderboard = ({ isOpen, onClose }) => {
   );
 
   const [expandedTeams, setExpandedTeams] = useState(new Set());
-  const [leaderboardData, setLeaderboardData] = useState([]);
   const [battleStats, setBattleStats] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
 
@@ -70,7 +69,7 @@ const BattleLeaderboard = ({ isOpen, onClose }) => {
 
   const expandAll = () => {
     const allTeamNames = new Set(
-      displayLeaderboard.map((team) => team.name || "Unknown Team")
+      displayLeaderboard.map((team) => team.id)
     );
     setExpandedTeams(allTeamNames);
   };
@@ -308,4 +307,4 @@ const BattleLeaderboard = ({ isOpen, onClose }) => {
   );
 };
 
-export default BattleLeaderboard;
+export default LeaderboardBattle;

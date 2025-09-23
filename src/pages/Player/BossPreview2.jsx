@@ -1,15 +1,7 @@
 // ===== LIBRARIES ===== //
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  ArrowLeft,
-  Users,
-  X,
-  Trophy,
-  User,
-  TrendingUp,
-  Sword,
-} from "lucide-react";
+import { ArrowLeft, Users, X, Sword } from "lucide-react";
 import { toast } from "sonner";
 
 // ===== COMPONENTS ===== //
@@ -17,25 +9,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from "@/components/ui/table";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationPrevious,
-  PaginationNext,
-} from "@/components/ui/pagination";
+import { LeaderboardOverview } from "@/components/leaderboard/LeaderboardOverview";
 
 // ===== STYLES ===== //
 import "@/index.css";
@@ -77,18 +51,7 @@ const BossPreview = () => {
     leaveQueue,
     joinMidGame,
   } = battleQueue;
-
   const [nickname, setNickname] = useState("");
-  const [currentPage, setCurrentPage] = useState({
-    teams: 1,
-    individual: 1,
-    alltime: 1,
-  });
-  const PAGE_SIZE = 10;
-
-  const teamLeaderboard = leaderboard?.teamLeaderboard || [];
-  const individualLeaderboard = leaderboard?.individualLeaderboard || [];
-  const allTimeLeaderboard = leaderboard?.allTimeLeaderboard || [];
 
   const goBack = () => {
     navigate(-1);
@@ -123,39 +86,6 @@ const BossPreview = () => {
   const handleNicknameChange = (e) => {
     const value = e.target.value;
     setNickname(value);
-  };
-
-  const getPaginatedData = (data, tabKey) => {
-    const page = currentPage[tabKey];
-    const totalPages = Math.ceil(data.length / PAGE_SIZE);
-    const paginatedData = data.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-    return { paginatedData, totalPages, currentPageNum: page };
-  };
-
-  const handlePageChange = (tabKey, newPage) => {
-    setCurrentPage((prev) => ({ ...prev, [tabKey]: newPage }));
-  };
-
-  const getRankBadge = (rank) => {
-    if (rank === 1)
-      return (
-        <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white">
-          1st
-        </Badge>
-      );
-    if (rank === 2)
-      return (
-        <Badge className="bg-gray-400 hover:bg-gray-500 text-white">2nd</Badge>
-      );
-    if (rank === 3)
-      return (
-        <Badge className="bg-amber-600 hover:bg-amber-700 text-white">
-          3rd
-        </Badge>
-      );
-    return (
-      <span className="text-sm font-medium text-muted-foreground">#{rank}</span>
-    );
   };
 
   // Auto-fill nickname with username when user is available
@@ -194,64 +124,6 @@ const BossPreview = () => {
 
   const handleUnjoin = () => {
     leaveQueue(getUserInfo()?.id);
-  };
-
-  // Pagination component
-  const PaginationControls = ({ totalPages, currentPageNum, onPageChange }) => {
-    if (totalPages <= 1) return null;
-
-    return (
-      <div className="absolute bottom-0 left-0 right-0 flex justify-center">
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  onPageChange(currentPageNum > 1 ? currentPageNum - 1 : 1);
-                }}
-                className={
-                  currentPageNum === 1 ? "pointer-events-none opacity-50" : ""
-                }
-              />
-            </PaginationItem>
-            {[...Array(totalPages)].map((_, idx) => (
-              <PaginationItem key={idx}>
-                <PaginationLink
-                  href="#"
-                  isActive={currentPageNum === idx + 1}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onPageChange(idx + 1);
-                  }}
-                >
-                  {idx + 1}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
-            <PaginationItem>
-              <PaginationNext
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  onPageChange(
-                    currentPageNum < totalPages
-                      ? currentPageNum + 1
-                      : totalPages
-                  );
-                }}
-                className={
-                  currentPageNum === totalPages
-                    ? "pointer-events-none opacity-50"
-                    : ""
-                }
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
-    );
   };
 
   return (
@@ -440,319 +312,11 @@ const BossPreview = () => {
         </div>
 
         {/* Leaderboard Card */}
-        <div className="max-w-4xl mx-auto mt-8">
-          <Card className="h-[840px] relative">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trophy className="w-5 h-5" />
-                Live Leaderboard Rankings
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                View performance across different categories
-              </p>
-            </CardHeader>
-            <CardContent className="relative h-full">
-              <Tabs defaultValue="teams" className="space-y-3">
-                {/* Tabs List */}
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger
-                    value="teams"
-                    className="flex items-center gap-2"
-                  >
-                    <Users className="w-4 h-4" />
-                    <span className="hidden sm:inline">Team Rankings</span>
-                    <span className="sm:hidden">Teams</span>
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="individual"
-                    className="flex items-center gap-2"
-                  >
-                    <User className="w-4 h-4" />
-                    <span className="hidden sm:inline">
-                      Individual Rankings
-                    </span>
-                    <span className="sm:hidden">Players</span>
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="alltime"
-                    className="flex items-center gap-2"
-                  >
-                    <Trophy className="w-4 h-4" />
-                    <span className="hidden sm:inline">All-Time</span>
-                    <span className="sm:hidden">All-Time</span>
-                  </TabsTrigger>
-                </TabsList>
-                {/* Team Leaderboard */}
-                <TabsContent value="teams" className="space-y-4">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">
-                      Team Rankings
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Current event team performance
-                    </p>
-                  </div>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-16">Rank</TableHead>
-                        <TableHead className="whitespace-normal">
-                          Team
-                        </TableHead>
-                        <TableHead className="text-right whitespace-normal">
-                          DMG
-                        </TableHead>
-                        <TableHead className="text-right whitespace-normal">
-                          ACC
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {loading.leaderboard ? (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center py-8">
-                            <div className="flex items-center justify-center gap-2">
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                              Loading team leaderboard...
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ) : getPaginatedData(teamLeaderboard, "teams")
-                          .paginatedData.length === 0 ? (
-                        <TableRow>
-                          <TableCell
-                            colSpan={4}
-                            className="text-center py-8 text-muted-foreground"
-                          >
-                            No team data available yet
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        getPaginatedData(
-                          teamLeaderboard,
-                          "teams"
-                        ).paginatedData.map((team) => (
-                          <TableRow
-                            key={team.id}
-                            className="hover:bg-muted/50"
-                          >
-                            <TableCell className="font-medium">
-                              {getRankBadge(team.rank)}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <Avatar className="w-8 h-8">
-                                  <AvatarImage
-                                    src={team.avatar}
-                                    alt={team.name}
-                                  />
-                                  <AvatarFallback>
-                                    {team.name}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <span className="font-medium">{team.name}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right font-medium">
-                              {team.totalDamage}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {(team.accuracy * 100).toFixed(2)}%
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                  <PaginationControls
-                    {...getPaginatedData(teamLeaderboard, "teams")}
-                    onPageChange={(page) => handlePageChange("teams", page)}
-                  />
-                </TabsContent>
-                {/* Individual Leaderboard */}
-                <TabsContent value="individual" className="space-y-4">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">
-                      Individual Rankings
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Current event individual player performance
-                    </p>
-                  </div>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-16">Rank</TableHead>
-                        <TableHead className="whitespace-normal">
-                          Player
-                        </TableHead>
-                        <TableHead className="text-right whitespace-normal">
-                          DMG
-                        </TableHead>
-                        <TableHead className="text-right whitespace-normal">
-                          ACC
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {loading.leaderboard ? (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center py-8">
-                            <div className="flex items-center justify-center gap-2">
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                              Loading individual leaderboard...
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ) : getPaginatedData(individualLeaderboard, "individual")
-                          .paginatedData.length === 0 ? (
-                        <TableRow>
-                          <TableCell
-                            colSpan={4}
-                            className="text-center py-8 text-muted-foreground"
-                          >
-                            No player data available yet
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        getPaginatedData(
-                          individualLeaderboard,
-                          "individual"
-                        ).paginatedData.map((player) => (
-                          <TableRow
-                            key={player.id}
-                            className="hover:bg-muted/50"
-                          >
-                            <TableCell className="font-medium">
-                              {getRankBadge(player.rank)}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <Avatar className="w-8 h-8">
-                                  <AvatarImage
-                                    src={player.avatar}
-                                    alt={player.nickname}
-                                  />
-                                  <AvatarFallback>
-                                    {player.name}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <span className="font-medium">
-                                  {player.nickname}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right font-medium">
-                              {player.totalDamage}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {(player.accuracy * 100).toFixed(2)}%
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                  <PaginationControls
-                    {...getPaginatedData(individualLeaderboard, "individual")}
-                    onPageChange={(page) =>
-                      handlePageChange("individual", page)
-                    }
-                  />
-                </TabsContent>
-                {/* All-Time Leaderboard */}
-                <TabsContent value="alltime" className="space-y-4">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">
-                      All-Time Rankings
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Historical player performance across all events
-                    </p>
-                  </div>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-16">Rank</TableHead>
-                        <TableHead className="whitespace-normal">
-                          Player
-                        </TableHead>
-                        <TableHead className="text-right whitespace-normal">
-                          Total DMG
-                        </TableHead>
-                        <TableHead className="text-right whitespace-normal">
-                          Accuracy
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {loading.leaderboard ? (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center py-8">
-                            <div className="flex items-center justify-center gap-2">
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                              Loading all-time leaderboard...
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ) : getPaginatedData(allTimeLeaderboard, "alltime")
-                          .paginatedData.length === 0 ? (
-                        <TableRow>
-                          <TableCell
-                            colSpan={4}
-                            className="text-center py-8 text-muted-foreground"
-                          >
-                            No historical data available yet
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        getPaginatedData(
-                          allTimeLeaderboard,
-                          "alltime"
-                        ).paginatedData.map((player) => (
-                          <TableRow
-                            key={player.playerId}
-                            className="hover:bg-muted/50"
-                          >
-                            <TableCell className="font-medium">
-                              {getRankBadge(player.rank)}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <Avatar className="w-8 h-8">
-                                  <AvatarImage
-                                    src={player.avatar}
-                                    alt={player.playerName}
-                                  />
-                                  <AvatarFallback>
-                                    {player.playerName}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <span className="font-medium">
-                                  {player.playerName}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right font-medium">
-                              {player.totalDamageDealt}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {(player.accuracy * 100).toFixed(2)}%
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                  <PaginationControls
-                    {...getPaginatedData(allTimeLeaderboard, "alltime")}
-                    onPageChange={(page) => handlePageChange("alltime", page)}
-                  />
-                </TabsContent>{" "}
-              </Tabs>
-            </CardContent> 
-          </Card>
-        </div>
+        <LeaderboardOverview
+          leaderboard={leaderboard}
+          loading={loading.leaderboard}
+          isPreview={true}
+        />
       </div>
     </main>
   );

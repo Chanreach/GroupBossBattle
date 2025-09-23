@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { X } from "lucide-react";
 
-const BadgeNotification = ({ badge, onClose, index = 0 }) => {
+const BadgeNotification = ({ badge, onClose }) => {
   const BADGE_CODES = {
     ACHIEVEMENT: {
       MVP: "mvp",
@@ -16,31 +16,19 @@ const BadgeNotification = ({ badge, onClose, index = 0 }) => {
       QUESTIONS_100: "questions_100",
     },
   };
-  const [isVisible, setIsVisible] = useState(true);
-  const [isEntering, setIsEntering] = useState(true);
+  const [isExiting, setIsExiting] = useState(false);
 
-  useEffect(() => {
-    // Entry animation
-    const entryTimer = setTimeout(() => {
-      setIsEntering(false);
-    }, 100);
-
-    // Auto-close timer
-    const closeTimer = setTimeout(() => {
-      setIsVisible(false);
-      setTimeout(onClose, 300);
-    }, 4000);
-
-    return () => {
-      clearTimeout(entryTimer);
-      clearTimeout(closeTimer);
-    };
+  const handleClose = useCallback(() => {
+    setIsExiting(true);
+    setTimeout(() => {
+      onClose();
+    }, 300);
   }, [onClose]);
 
-  const handleClose = () => {
-    setIsVisible(false);
-    setTimeout(onClose, 300);
-  };
+  useEffect(() => {
+    const timer = setTimeout(() => handleClose(), 2000);
+    return () => clearTimeout(timer);
+  }, [handleClose]);
 
   const getBadgeIcon = (badgeData) => {
     // Use the icon from the badge data if available
@@ -90,8 +78,6 @@ const BadgeNotification = ({ badge, onClose, index = 0 }) => {
     }
   };
 
-  if (!isVisible) return null;
-
   return (
     <div
       className={`
@@ -100,15 +86,14 @@ const BadgeNotification = ({ badge, onClose, index = 0 }) => {
         border border-white/20 backdrop-blur-sm
         transform transition-all duration-300 ease-out
         ${
-          isEntering
+          isExiting
             ? "translate-x-full opacity-0 scale-90"
             : "translate-x-0 opacity-100 scale-100"
         }
-        ${!isVisible ? "translate-x-full opacity-0 scale-90" : ""}
       `}
       style={{
-        top: `${1 + index * 5}rem`,
-        transitionDelay: `${index * 100}ms`,
+        top: "3.5rem",
+        // transitionDelay: `${index * 100}ms`,
       }}
     >
       {/* Glow effect */}
@@ -168,7 +153,7 @@ const BadgeNotification = ({ badge, onClose, index = 0 }) => {
           <div
             className="h-full bg-white rounded-full transition-all duration-1000 ease-out"
             style={{
-              width: `100%`,
+              width: `${badge.threshold ? badge.threshold : 100}%`,
               transitionDelay: "0.6s",
             }}
           />
