@@ -88,6 +88,15 @@ const BossPreview = () => {
     setNickname(value);
   };
 
+  const formatTime = (seconds) => {
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours > 0 ? `${hours}h ` : ""}${mins > 0 ? `${mins}m ` : ""}${secs
+      .toString()
+      .padStart(2, "0")}s`;
+  };
+
   // Auto-fill nickname with username when user is available
   useEffect(() => {
     if (!nickname) {
@@ -241,15 +250,13 @@ const BossPreview = () => {
                   disabled={!nickname.trim() || eventBossStatus === "cooldown"}
                 >
                   {eventBossStatus === "cooldown"
-                    ? `Available in: ${Math.floor(
-                        cooldownTimer / 60
-                      )}m ${String(cooldownTimer % 60).padStart(2, "0")}s`
+                    ? `Available in ${formatTime(cooldownTimer)}`
                     : "Join"}
                 </Button>
               ) : (
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    {queueSize < MINIMUM_PLAYERS_REQUIRED && (
+                    {queueSize > 0 && queueSize < MINIMUM_PLAYERS_REQUIRED && (
                       <Button className="flex-1" disabled variant="secondary">
                         Waiting for {MINIMUM_PLAYERS_REQUIRED - queueSize} more
                         player(s)

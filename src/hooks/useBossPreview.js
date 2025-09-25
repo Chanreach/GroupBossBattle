@@ -100,7 +100,6 @@ const useBossPreview = (eventBossId, joinCode) => {
     };
 
     const handlePreviewLeaderboardResponse = (payload) => {
-      console.log(payload);
       setLoading((prev) => ({ ...prev, leaderboard: false }));
       setLeaderboard(payload.data.leaderboard);
     };
@@ -157,7 +156,7 @@ const useBossPreview = (eventBossId, joinCode) => {
       );
       socket.off(SOCKET_EVENTS.ERROR, handleSocketError);
     };
-  }, [socket, eventBossId, joinCode, hasJoinedPreview, joinPreview]);
+  }, [socket, eventBossId, joinCode, eventBossStatus, hasJoinedPreview, joinPreview]);
 
   useEffect(() => {
     if (!eventBoss && !loading.eventBoss && eventBossId && hasJoinedPreview) {
