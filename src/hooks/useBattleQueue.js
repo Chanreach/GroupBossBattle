@@ -65,7 +65,7 @@ const useBattleQueue = (eventBossId, joinCode) => {
 
       socket.emit(SOCKET_EVENTS.BATTLE_SESSION.MID_GAME.JOIN, {
         eventBossId,
-        playerInfo
+        playerInfo,
       });
     },
     [socket, eventBossId, joinCode, isProcessing]
@@ -82,7 +82,10 @@ const useBattleQueue = (eventBossId, joinCode) => {
     if (!countdownEndTime) return;
 
     const interval = setInterval(() => {
-      const timeLeft = Math.max(0, Math.ceil((countdownEndTime - Date.now()) / 1000));
+      const timeLeft = Math.max(
+        0,
+        Math.ceil((countdownEndTime - Date.now()) / 1000)
+      );
       setCountdownTimer(timeLeft);
       console.log("Battle countdown:", timeLeft);
     }, 1000);
@@ -126,23 +129,43 @@ const useBattleQueue = (eventBossId, joinCode) => {
 
     const handleBattleCountdown = (payload) => {
       setCountdownEndTime(payload.data.countdownEndTime);
-      setCountdownTimer(Math.ceil((payload.data.countdownEndTime - Date.now()) / 1000));
+      setCountdownTimer(
+        Math.ceil((payload.data.countdownEndTime - Date.now()) / 1000)
+      );
       setIsProcessing(false);
     };
 
-    socket.on(SOCKET_EVENTS.BATTLE_QUEUE.QUEUE_SIZE.RESPONSE, handleBattleQueueSizeResponse);
+    socket.on(
+      SOCKET_EVENTS.BATTLE_QUEUE.QUEUE_SIZE.RESPONSE,
+      handleBattleQueueSizeResponse
+    );
     socket.on(SOCKET_EVENTS.BATTLE_QUEUE.JOINED, handleBattleQueueJoined);
     socket.on(SOCKET_EVENTS.BATTLE_QUEUE.LEFT, handleBattleQueueLeft);
-    socket.on(SOCKET_EVENTS.BATTLE_QUEUE.QUEUE_SIZE.UPDATED, handleBattleQueueSizeUpdated);
-    socket.on(SOCKET_EVENTS.BATTLE_SESSION.MID_GAME.JOINED, handleMidGameJoined);
+    socket.on(
+      SOCKET_EVENTS.BATTLE_QUEUE.QUEUE_SIZE.UPDATED,
+      handleBattleQueueSizeUpdated
+    );
+    socket.on(
+      SOCKET_EVENTS.BATTLE_SESSION.MID_GAME.JOINED,
+      handleMidGameJoined
+    );
     socket.on(SOCKET_EVENTS.BATTLE_SESSION.COUNTDOWN, handleBattleCountdown);
 
     return () => {
-      socket.off(SOCKET_EVENTS.BATTLE_QUEUE.QUEUE_SIZE.RESPONSE, handleBattleQueueSizeResponse);
+      socket.off(
+        SOCKET_EVENTS.BATTLE_QUEUE.QUEUE_SIZE.RESPONSE,
+        handleBattleQueueSizeResponse
+      );
       socket.off(SOCKET_EVENTS.BATTLE_QUEUE.JOINED, handleBattleQueueJoined);
       socket.off(SOCKET_EVENTS.BATTLE_QUEUE.LEFT, handleBattleQueueLeft);
-      socket.off(SOCKET_EVENTS.BATTLE_QUEUE.QUEUE_SIZE.UPDATED, handleBattleQueueSizeUpdated);
-      socket.off(SOCKET_EVENTS.BATTLE_SESSION.MID_GAME.JOINED, handleMidGameJoined);
+      socket.off(
+        SOCKET_EVENTS.BATTLE_QUEUE.QUEUE_SIZE.UPDATED,
+        handleBattleQueueSizeUpdated
+      );
+      socket.off(
+        SOCKET_EVENTS.BATTLE_SESSION.MID_GAME.JOINED,
+        handleMidGameJoined
+      );
       socket.off(SOCKET_EVENTS.BATTLE_SESSION.COUNTDOWN, handleBattleCountdown);
     };
   }, [socket, eventBossId, joinCode]);

@@ -1,23 +1,22 @@
 // ===== LIBRARIES ===== //
-import { useState, useEffect } from "react";
-import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Home, Users, Trophy, Crown, Medal, Award } from "lucide-react";
 
 // ===== COMPONENTS ===== //
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LeaderboardOverview } from "@/components/leaderboard/LeaderboardOverview";
+import BadgeNotification from "@/components/BadgeNotification";
 
 // ===== LAYOUTS ===== //
 import Spotlight from "@/lib/Spotlight";
 
 // ===== CONTEXTS ===== //
-import useBossBattle from "@/hooks/useBossBattle";
 import useBossPodium from "@/hooks/useBossPodium";
 
 // ===== UTILITIES ===== //
 import { startConfettiCelebration } from "@/lib/Confetti";
-import { leaderboardAPI } from "@/services/api";
 
 // ===== AUDIOS ===== //
 import victoryDrumsSound from "@/assets/Audio/victory-drums.mp3";
@@ -31,136 +30,21 @@ const BossPodium = () => {
   const navigate = useNavigate();
 
   const bossPodium = useBossPodium(eventBossId, joinCode);
+  const {
+    eventBoss,
+    currentPlayerBadge,
+    isBadgeDisplaying,
+    leaderboard,
+    podium,
+    loading,
+    hasJoinedPodium,
+    removeCurrentBadge,
+    shouldNavigateAway,
+  } = bossPodium;
 
-  const location = useLocation();
-  const { socket } = useBossBattle();
-  const [leaderboardData, setLeaderboardData] = useState({
-    teamLeaderboard: [],
-    individualLeaderboard: [],
-    allTimeLeaderboard: [],
-    winningTeam: null,
-    mvpPlayer: null,
-    battleStats: null,
-    isLoading: true,
-    eventBossInfo: null,
-  });
-
-  // Top 3 teams for podium display
-  const podiumTeams = leaderboardData.teamLeaderboard.slice(0, 3);
-
-  // ===== BOSS CONFIGURATION ===== //
-  const BOSS_NAME = leaderboardData.eventBossInfo?.bossName || "Boss";
-
-  // ===== EFFECT: Scroll to top on component mount ===== //
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-
-  // ===== EFFECT: Load leaderboard data and set up socket listeners ===== //
-  useEffect(() => {
-    if (!socket) return;
-
-    // Listen for final leaderboards from backend
-    const handleFinalLeaderboards = (data) => {
-      setLeaderboardData((prev) => ({
-        ...prev,
-        teamLeaderboard: data.teamLeaderboard || [],
-        individualLeaderboard: data.playerLeaderboard || [],
-        winningTeam: data.winningTeam,
-        mvpPlayer: data.mvpPlayer,
-        battleStats: data.battleStats,
-        eventBossInfo: {
-          eventBossId: data.eventBossId,
-          bossName: data.bossName || "Boss",
-        },
-        isLoading: false,
-      }));
-    };
-
-    // Also try to get data from location state (passed from battle)
-    if (location.state && location.state.leaderboardData) {
-      const data = location.state.leaderboardData;
-      setLeaderboardData((prev) => ({
-        ...prev,
-        teamLeaderboard: data.teamLeaderboard || [],
-        individualLeaderboard: data.playerLeaderboard || [],
-        winningTeam: data.winningTeam,
-        mvpPlayer: data.mvpPlayer,
-        battleStats: data.battleStats,
-        eventBossInfo: {
-          eventBossId: data.eventBossId,
-          bossName: data.bossName || "Boss",
-        },
-        isLoading: false,
-      }));
-    }
-
-    socket.on("final-leaderboards", handleFinalLeaderboards);
-
-    // Load all-time leaderboard from API
-    const loadAllTimeLeaderboard = async () => {
-      try {
-        // Use eventBossId from params or get from current session
-        const currentEventBossId = eventBossId || location.state?.eventBossId;
-
-        if (currentEventBossId) {
-          // Get the boss ID from the event boss
-          const eventData = location.state?.eventData;
-          const bossId = eventData?.bossId;
-
-          if (bossId) {
-            const response = await leaderboardAPI.getBossAllTimeLeaderboard(
-              bossId,
-              50
-            );
-            setLeaderboardData((prev) => ({
-              ...prev,
-              allTimeLeaderboard: response.leaderboard || [],
-            }));
-          } else {
-            // Fallback to general all-time leaderboard
-            const response = await leaderboardAPI.getAllTimeLeaderboard(50);
-            setLeaderboardData((prev) => ({
-              ...prev,
-              allTimeLeaderboard: response.leaderboard || [],
-            }));
-          }
-        } else {
-          console.warn("⚠️ No eventBossId available for all-time leaderboard");
-          // Load general all-time leaderboard as fallback
-          const response = await leaderboardAPI.getAllTimeLeaderboard(50);
-          setLeaderboardData((prev) => ({
-            ...prev,
-            allTimeLeaderboard: response.leaderboard || [],
-          }));
-        }
-      } catch (error) {
-        console.error("Error loading all-time leaderboard:", error);
-        // Set empty array on error
-        setLeaderboardData((prev) => ({
-          ...prev,
-          allTimeLeaderboard: [],
-        }));
-      }
-    };
-
-    loadAllTimeLeaderboard();
-
-    // If no data is received initially, try to fetch from session storage or show empty state
-    const timeout = setTimeout(() => {
-      setLeaderboardData((prev) => {
-        if (prev.isLoading && prev.teamLeaderboard.length === 0) {
-          return { ...prev, isLoading: false };
-        }
-        return prev;
-      });
-    }, 3000); // Shorter timeout
-
-    return () => {
-      socket.off("final-leaderboards", handleFinalLeaderboards);
-      clearTimeout(timeout);
-    };
-  }, [socket, eventBossId, location.state]);
 
   const goBack = () => {
     navigate("/");
@@ -180,6 +64,21 @@ const BossPodium = () => {
     if (rank === 3) return <Award className="w-4 h-4 text-white" />;
     return null;
   };
+
+  useEffect(() => {
+    if (!hasJoinedPodium) return;
+
+    if (shouldNavigateAway()) {
+      // navigate(`/boss-preview/${eventBossId}/${joinCode}`);
+      console.log("Navigating away from podium due to battle state...");
+    }
+  }, [
+    hasJoinedPodium,
+    shouldNavigateAway,
+    navigate,
+    eventBossId,
+    joinCode,
+  ]);
 
   // Confetti celebration and victory sounds on component mount
   useEffect(() => {
@@ -269,14 +168,14 @@ const BossPodium = () => {
                   </div>
                 </CardTitle>
                 <p className="text-muted-foreground mt-2 text-sm sm:text-base">
-                  {BOSS_NAME} has been defeated!
+                  {eventBoss?.name} has been defeated!
                 </p>
               </CardHeader>
               <CardContent>
                 {/* Podium */}
                 <div className="flex items-end justify-center gap-6 pt-4">
-                  {podiumTeams.length > 0 ? (
-                    podiumTeams.map((team, idx) => {
+                  {podium.length > 0 ? (
+                    podium.map((team, index) => {
                       // Height for podium effect
                       let height =
                         team.rank === 1 ? 120 : team.rank === 2 ? 80 : 60;
@@ -289,11 +188,11 @@ const BossPodium = () => {
                           : "animate-bounce-excited-third";
                       return (
                         <div
-                          key={team.teamId}
+                          key={index}
                           className={`flex flex-col items-center ${
-                            idx === 0
+                            index === 0
                               ? "order-2"
-                              : idx === 1
+                              : index === 1
                               ? "order-1"
                               : "order-3"
                           }`}
@@ -321,7 +220,7 @@ const BossPodium = () => {
                             </div>
                           </div>
                           <div className="font-bold text-lg mb-1 text-center">
-                            {team.teamName || `Team ${team.teamId}`}
+                            {team.name || `Team ${team.id}`}
                           </div>
                           <div className="text-xs text-muted-foreground mb-1">
                             {(
@@ -336,23 +235,7 @@ const BossPodium = () => {
                             {team.playerCount !== 1 ? "s" : ""}
                           </div>
                           <div className="text-xs text-muted-foreground mb-2">
-                            {team.players && team.players.length > 0
-                              ? Math.round(
-                                  team.players.reduce(
-                                    (sum, p) =>
-                                      sum +
-                                      (parseFloat(
-                                        p.totalCorrectAnswers || p.accuracy
-                                      ) || 0),
-                                    0
-                                  ) / team.players.length
-                                )
-                              : 0}
-                            {team.players &&
-                            team.players[0] &&
-                            team.players[0].totalCorrectAnswers !== undefined
-                              ? " Avg Correct"
-                              : "% Avg Accuracy"}
+                            {(team.accuracy * 100).toFixed(2)}% Accuracy
                           </div>
                           <div
                             className={`w-20 md:w-24 h-6 rounded-t-lg ${getPodiumColor(
@@ -373,12 +256,12 @@ const BossPodium = () => {
                     <div className="text-center py-8">
                       <Trophy className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
                       <p className="text-muted-foreground text-lg font-medium mb-2">
-                        {leaderboardData.isLoading
+                        {loading.leaderboard
                           ? "Loading battle results..."
                           : "No battle results yet"}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {leaderboardData.isLoading
+                        {loading.leaderboard
                           ? "Please wait while we process the final rankings..."
                           : "Complete a boss battle to see the victory podium"}
                       </p>
@@ -390,11 +273,27 @@ const BossPodium = () => {
 
             {/* ===== Final Results Leaderboard ===== */}
             <LeaderboardOverview
-              leaderboard={leaderboardData}
-              loading={leaderboardData.isLoading}
+              leaderboard={leaderboard}
+              loading={loading.leaderboard}
               isPreview={false}
             />
           </div>
+
+          {currentPlayerBadge && isBadgeDisplaying && (
+            <div className="fixed top-4 right-4 z-30 space-y-2">
+              <div
+                style={{
+                  transform: "translateY(0.5rem)",
+                }}
+              >
+                <BadgeNotification
+                  badge={currentPlayerBadge}
+                  onClose={removeCurrentBadge}
+                  duration={3000}
+                />
+              </div>
+            </div>
+          )}
         </main>
       )}
     </Spotlight>

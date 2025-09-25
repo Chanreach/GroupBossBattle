@@ -1,6 +1,6 @@
 // ===== LIBRARIES ===== //
 import { useState } from "react";
-import { Users, Trophy, User } from "lucide-react";
+import { Users, Trophy, User, Medal, Award } from "lucide-react";
 
 // ===== COMPONENTS ===== //
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -382,7 +382,7 @@ const LeaderboardOverview = ({ leaderboard, loading, isPreview }) => {
                             </div>
                           </TableCell>
                           <TableCell className="text-right font-medium">
-                            {item.totalDamage || item.totalDamageDealt}
+                            {item.totalDamage || item.totalDamageDealt || 0}
                           </TableCell>
                           <TableCell className="text-right">
                             {(item.accuracy * 100).toFixed(2)}%

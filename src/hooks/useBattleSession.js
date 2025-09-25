@@ -48,8 +48,8 @@ const useBattleSession = (eventBossId, joinCode) => {
   const [podiumTimer, setPodiumTimer] = useState(null);
   const [podiumEndTime, setPodiumEndTime] = useState(null);
 
-  const [badgeNotification, setBadgeNotification] = useState(null);
-  const [badgeQueue, setBadgeQueue] = useState([]);
+  const [playerBadges, setPlayerBadges] = useState([]);
+  const [currentPlayerBadge, setCurrentPlayerBadge] = useState(null);
   const [isBadgeDisplaying, setIsBadgeDisplaying] = useState(false);
 
   const [loading, setLoading] = useState({
@@ -236,42 +236,23 @@ const useBattleSession = (eventBossId, joinCode) => {
     }, 2000);
   }, []);
 
-  // Function to remove badge notification
-  const removeBadgeNotification = useCallback(() => {
-    setBadgeNotification(null);
-    setIsBadgeDisplaying(false);
-  }, []);
-
-  // Function to process the next badge in the queue
-  const processNextBadge = useCallback(() => {
-    if (badgeQueue.length > 0 && !isBadgeDisplaying) {
-      const nextBadge = badgeQueue[0];
-      setBadgeNotification(nextBadge);
-      setIsBadgeDisplaying(true);
-      setBadgeQueue((prev) => prev.slice(1));
-    }
-  }, [badgeQueue, isBadgeDisplaying]);
-
-  // Function to add badge to the queue
-  const addBadgeToQueue = useCallback((badge, message) => {
+  const addPlayerBadgeToQueue = useCallback((badge, message) => {
     const badgeNotification = {
       id: Date.now() + Math.random(),
       badgeId: badge.id,
-      code: badge.code,
       name: badge.name,
+      code: badge.code,
       type: badge.type,
       threshold: badge.threshold,
       message,
     };
-    console.log("Adding badge to queue:", badgeNotification);
-    setBadgeQueue((prev) => [...prev, badgeNotification]);
+    setPlayerBadges((prev) => [...prev, badgeNotification]);
   }, []);
 
-  useEffect(() => {
-    if (!isBadgeDisplaying && badgeQueue.length > 0) {
-      processNextBadge();
-    }
-  }, [isBadgeDisplaying, badgeQueue, processNextBadge]);
+  const removeCurrentBadge = useCallback(() => {
+    setCurrentPlayerBadge(null);
+    setIsBadgeDisplaying(false);
+  }, []);
 
   useEffect(() => {
     if (!socket || !eventBossId || !joinCode || hasJoinedSession) return;
@@ -283,9 +264,83 @@ const useBattleSession = (eventBossId, joinCode) => {
   useEffect(() => {
     if (!socket || !eventBossId || !joinCode || isReconnected) return;
 
-    console.log("Attempting to reconnect to battle session...");
     reconnectSession(getUserInfo().id);
   }, [socket, eventBossId, joinCode, isReconnected, reconnectSession]);
+
+  useEffect(() => {
+    if (playerBadges.length === 0 || isBadgeDisplaying) return;
+
+    setCurrentPlayerBadge(playerBadges[0]);
+    setPlayerBadges((prev) => prev.slice(1));
+    setIsBadgeDisplaying(true);
+  }, [playerBadges, isBadgeDisplaying]);
+
+  useEffect(() => {
+    if (
+      isPlayerKnockedOut ||
+      isPlayerDead ||
+      isEventBossDefeated ||
+      !currentQuestion ||
+      loading.question ||
+      loading.result
+    ) {
+      return;
+    }
+    if (questionTimeRemaining > 0) {
+      const timer = setInterval(() => {
+        setQuestionTimeRemaining((prev) => prev - 1);
+      }, 1000);
+
+      return () => clearInterval(timer);
+    } else if (questionTimeRemaining === 0 && currentQuestion) {
+      submitAnswer(getUserInfo().id, -1, currentQuestion.timeLimit);
+    }
+  }, [
+    isPlayerKnockedOut,
+    isPlayerDead,
+    isEventBossDefeated,
+    loading.question,
+    loading.result,
+    questionTimeRemaining,
+    currentQuestion,
+    submitAnswer,
+  ]);
+
+  useEffect(() => {
+    if (!revivalEndTime) return;
+
+    const interval = setInterval(() => {
+      const timeLeft = Math.max(
+        0,
+        Math.ceil((revivalEndTime - Date.now()) / 1000)
+      );
+      setRevivalTimer(timeLeft);
+    }, 1000);
+
+    if (revivalTimer === 0) {
+      socket.emit(SOCKET_EVENTS.BATTLE_SESSION.REVIVAL_CODE.EXPIRED, {
+        eventBossId,
+        playerId: getUserInfo().id,
+      });
+    }
+
+    return () => clearInterval(interval);
+  }, [revivalEndTime, socket, eventBossId, revivalTimer]);
+
+  useEffect(() => {
+    if (!podiumEndTime) return;
+
+    const interval = setInterval(() => {
+      const timeLeft = Math.max(
+        0,
+        Math.ceil((podiumEndTime - Date.now()) / 1000)
+      );
+      setPodiumTimer(timeLeft);
+      console.log("Podium countdown:", timeLeft);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [podiumEndTime]);
 
   useEffect(() => {
     if (!socket || !eventBossId || !joinCode) return;
@@ -480,9 +535,7 @@ const useBattleSession = (eventBossId, joinCode) => {
     };
 
     const handleBadgeEarned = (payload) => {
-      console.log("Badge earned:", payload);
-      addBadgeToQueue(payload.data.badge, payload.message);
-      processNextBadge();
+      addPlayerBadgeToQueue(payload.data.playerBadge.badge, payload.message);
     };
 
     const handlePlayerNotFound = (payload) => {
@@ -491,7 +544,6 @@ const useBattleSession = (eventBossId, joinCode) => {
     };
 
     const handleSocketError = (error) => {
-      setLoading((prev) => ({ ...prev, eventBoss: false }));
       toast.error(`Socket error: ${error.message}`);
       console.error("Socket error:", error);
     };
@@ -513,7 +565,10 @@ const useBattleSession = (eventBossId, joinCode) => {
       SOCKET_EVENTS.BATTLE_SESSION.BOSS.HP_UPDATED,
       handleBossHPUpdated
     );
-    socket.on(SOCKET_EVENTS.BATTLE_SESSION.TEAMMATE.KNOCKED_OUT_COUNT, handleTeammateKnockedOutCount);
+    socket.on(
+      SOCKET_EVENTS.BATTLE_SESSION.TEAMMATE.KNOCKED_OUT_COUNT,
+      handleTeammateKnockedOutCount
+    );
     socket.on(
       SOCKET_EVENTS.BATTLE_SESSION.PLAYER.KNOCKED_OUT,
       handlePlayerKnockedOut
@@ -621,8 +676,7 @@ const useBattleSession = (eventBossId, joinCode) => {
     requestNextQuestion,
     generateDamageNumber,
     reconnectSession,
-    addBadgeToQueue,
-    processNextBadge,
+    addPlayerBadgeToQueue,
   ]);
 
   useEffect(() => {
@@ -643,73 +697,6 @@ const useBattleSession = (eventBossId, joinCode) => {
       return () => clearTimeout(fallbackTimer);
     }
   }, [eventBoss, loading, eventBossId, hasJoinedSession]);
-
-  useEffect(() => {
-    if (
-      isPlayerKnockedOut ||
-      isPlayerDead ||
-      isEventBossDefeated ||
-      !currentQuestion ||
-      loading.question ||
-      loading.result
-    ) {
-      return;
-    }
-    if (questionTimeRemaining > 0) {
-      const timer = setInterval(() => {
-        setQuestionTimeRemaining((prev) => prev - 1);
-      }, 1000);
-
-      return () => clearInterval(timer);
-    } else if (questionTimeRemaining === 0 && currentQuestion) {
-      submitAnswer(getUserInfo().id, -1, currentQuestion.timeLimit);
-    }
-  }, [
-    isPlayerKnockedOut,
-    isPlayerDead,
-    isEventBossDefeated,
-    loading.question,
-    loading.result,
-    questionTimeRemaining,
-    currentQuestion,
-    submitAnswer,
-  ]);
-
-  useEffect(() => {
-    if (!revivalEndTime) return;
-
-    const interval = setInterval(() => {
-      const timeLeft = Math.max(
-        0,
-        Math.ceil((revivalEndTime - Date.now()) / 1000)
-      );
-      setRevivalTimer(timeLeft);
-    }, 1000);
-
-    if (revivalTimer === 0) {
-      socket.emit(SOCKET_EVENTS.BATTLE_SESSION.REVIVAL_CODE.EXPIRED, {
-        eventBossId,
-        playerId: getUserInfo().id,
-      });
-    }
-
-    return () => clearInterval(interval);
-  }, [revivalEndTime, socket, eventBossId, revivalTimer]);
-
-  useEffect(() => {
-    if (!podiumEndTime) return;
-
-    const interval = setInterval(() => {
-      const timeLeft = Math.max(
-        0,
-        Math.ceil((podiumEndTime - Date.now()) / 1000)
-      );
-      setPodiumTimer(timeLeft);
-      console.log("Podium countdown:", timeLeft);
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [podiumEndTime]);
 
   // Cleanup effect to stop heartbeats sound when component unmounts or player becomes dead
   useEffect(() => {
@@ -762,7 +749,8 @@ const useBattleSession = (eventBossId, joinCode) => {
     isDefeatMessageVisible,
     isPodiumCountdownVisible,
     podiumTimer,
-    badgeNotification,
+    playerBadges,
+    currentPlayerBadge,
     isBadgeDisplaying,
     loading,
     hasJoinedSession,
@@ -772,7 +760,7 @@ const useBattleSession = (eventBossId, joinCode) => {
     requestNextQuestion,
     submitAnswer,
     submitRevivalCode,
-    removeBadgeNotification,
+    removeCurrentBadge,
   };
 };
 

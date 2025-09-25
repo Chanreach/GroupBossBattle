@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { X } from "lucide-react";
 
-const BadgeNotification = ({ badge, onClose }) => {
+const BadgeNotification = ({ badge, onClose, duration = 3000 }) => {
   const BADGE_CODES = {
     ACHIEVEMENT: {
       MVP: "mvp",
@@ -16,6 +16,7 @@ const BadgeNotification = ({ badge, onClose }) => {
       QUESTIONS_100: "questions_100",
     },
   };
+
   const [isExiting, setIsExiting] = useState(false);
 
   const handleClose = useCallback(() => {
@@ -26,18 +27,18 @@ const BadgeNotification = ({ badge, onClose }) => {
   }, [onClose]);
 
   useEffect(() => {
-    const timer = setTimeout(() => handleClose(), 2000);
+    const timer = setTimeout(() => handleClose(), duration);
     return () => clearTimeout(timer);
-  }, [handleClose]);
+  }, [handleClose, duration]);
 
-  const getBadgeIcon = (badgeData) => {
+  const getBadgeIcon = (badge) => {
     // Use the icon from the badge data if available
-    if (badgeData.icon) {
-      return badgeData.icon;
+    if (badge.icon) {
+      return badge.icon;
     }
 
     // Fallback to code-based icons
-    switch (badgeData.code) {
+    switch (badge.code) {
       case BADGE_CODES.ACHIEVEMENT.MVP:
         return "👑";
       case BADGE_CODES.ACHIEVEMENT.LAST_HIT:
@@ -57,8 +58,8 @@ const BadgeNotification = ({ badge, onClose }) => {
     }
   };
 
-  const getBadgeColor = (badgeData) => {
-    switch (badgeData.code) {
+  const getBadgeColor = (badge) => {
+    switch (badge.code) {
       case BADGE_CODES.ACHIEVEMENT.MVP:
         return "from-yellow-400 to-yellow-600";
       case BADGE_CODES.ACHIEVEMENT.LAST_HIT:
@@ -92,7 +93,7 @@ const BadgeNotification = ({ badge, onClose }) => {
         }
       `}
       style={{
-        top: "3.5rem",
+        // top: "3.5rem",
         // transitionDelay: `${index * 100}ms`,
       }}
     >
@@ -124,7 +125,6 @@ const BadgeNotification = ({ badge, onClose }) => {
           </p>
           {badge.value && (
             <p className="text-xs text-white/80 mt-1 font-semibold">
-              Value: Hello
               {badge.value}
             </p>
           )}

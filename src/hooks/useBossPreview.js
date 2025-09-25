@@ -46,9 +46,26 @@ const useBossPreview = (eventBossId, joinCode) => {
     if (!socket || !eventBossId) return;
 
     socket.emit(SOCKET_EVENTS.BATTLE_SESSION.SIZE.REQUEST, eventBossId);
-    socket.emit(SOCKET_EVENTS.BOSS_PREVIEW.LEADERBOARD.REQUEST, { eventBossId });
+    socket.emit(SOCKET_EVENTS.BOSS_PREVIEW.LEADERBOARD.REQUEST, {
+      eventBossId,
+    });
     setLoading((prev) => ({ ...prev, leaderboard: true }));
   }, [socket, eventBossId]);
+
+  useEffect(() => {
+    if (!cooldownEndTime) return;
+
+    const interval = setInterval(() => {
+      const timeLeft = Math.max(
+        0,
+        Math.ceil((cooldownEndTime - Date.now()) / 1000)
+      );
+      setCooldownTimer(timeLeft);
+      console.log("Cooldown time left:", timeLeft);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [cooldownEndTime]);
 
   useEffect(() => {
     if (!socket || !eventBossId || !joinCode) return;
@@ -83,6 +100,7 @@ const useBossPreview = (eventBossId, joinCode) => {
     };
 
     const handlePreviewLeaderboardResponse = (payload) => {
+      console.log(payload);
       setLoading((prev) => ({ ...prev, leaderboard: false }));
       setLeaderboard(payload.data.leaderboard);
     };
@@ -90,7 +108,7 @@ const useBossPreview = (eventBossId, joinCode) => {
     const handlePreviewLeaderboardUpdated = (payload) => {
       setLoading((prev) => ({ ...prev, leaderboard: false }));
       setLeaderboard(payload.data.leaderboard);
-    }
+    };
 
     const handleSocketError = (error) => {
       setLoading((prev) => ({ ...prev, eventBoss: false, leaderboard: false }));
@@ -160,21 +178,6 @@ const useBossPreview = (eventBossId, joinCode) => {
       return () => clearTimeout(fallbackTimer);
     }
   }, [eventBoss, loading.eventBoss, eventBossId, hasJoinedPreview]);
-
-  useEffect(() => {
-    if (!cooldownEndTime) return;
-
-    const interval = setInterval(() => {
-      const timeLeft = Math.max(
-        0,
-        Math.ceil((cooldownEndTime - Date.now()) / 1000)
-      );
-      setCooldownTimer(timeLeft);
-      console.log("Cooldown time left:", timeLeft);
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [cooldownEndTime]);
 
   return {
     eventBoss,

@@ -71,13 +71,13 @@ const BossBattle = () => {
     isPodiumCountdownVisible,
     isEventBossDefeated,
     podiumTimer,
-    badgeNotification,
+    currentPlayerBadge,
     isBadgeDisplaying,
     isPlayerNotFound,
     loading,
     submitAnswer,
     submitRevivalCode,
-    removeBadgeNotification,
+    removeCurrentBadge,
   } = battleSession;
   const questionMaxTimeSeconds = currentQuestion?.timeLimit / 1000;
 
@@ -168,13 +168,7 @@ const BossBattle = () => {
     if (podiumTimer === 0 && isPodiumCountdownVisible) {
       navigate(`/boss-podium/${eventBossId}/${joinCode}`);
     }
-  }, [
-    podiumTimer,
-    isPodiumCountdownVisible,
-    eventBossId,
-    joinCode,
-    navigate,
-  ]);
+  }, [podiumTimer, isPodiumCountdownVisible, eventBossId, joinCode, navigate]);
 
   // ===== ===== ===== RENDER ===== ===== ===== //
   return (
@@ -750,9 +744,7 @@ const BossBattle = () => {
         </div>
       )}
 
-      {/* ========== NOTIFICATIONS - Highest z-index ========== */}
-      {/* Badge Notifications - z-30 (stays above most content but below toasts) */}
-      {badgeNotification && isBadgeDisplaying && (
+      {currentPlayerBadge && isBadgeDisplaying && (
         <div className="fixed top-4 right-4 z-30 space-y-2">
           <div
             style={{
@@ -760,9 +752,9 @@ const BossBattle = () => {
             }}
           >
             <BadgeNotification
-              badge={badgeNotification}
-              onClose={() => removeBadgeNotification()}
-              duration={1000}
+              badge={currentPlayerBadge}
+              onClose={removeCurrentBadge}
+              duration={3000}
             />
           </div>
         </div>
