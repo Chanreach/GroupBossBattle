@@ -231,14 +231,18 @@ const BossPreview = () => {
               {/* Players Joined */}
               <div className="text-center">
                 <div className="flex items-center justify-center text-muted-foreground text-sm">
-                  <Users className="w-4 h-4 mr-2 text-purple-600" />
-                  <span className="text-purple-600">
-                    {sessionSize > 0
-                      ? `Players joined: ${sessionSize}`
-                      : queueSize > 0
-                      ? `Players in queue: ${queueSize}`
-                      : `No players joined`}
-                  </span>
+                  {eventBossStatus !== "cooldown" && (
+                    <>
+                      <Users className="w-4 h-4 mr-2 text-purple-600" />
+                      <span className="text-purple-600">
+                        {sessionSize > 0
+                          ? `Players joined: ${sessionSize}`
+                          : queueSize > 0
+                          ? `Players in queue: ${queueSize}`
+                          : `No players joined`}
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
 
