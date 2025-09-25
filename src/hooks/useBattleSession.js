@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 // ===== HOOKS ===== //
 import useBossBattle from "./useBossBattle";
+import { useAuth } from "@/context/useAuth";
 
 // ===== SERVICES ===== //
 import { fetchEventBossById } from "@/services/eventBossService";
@@ -20,6 +21,7 @@ import heartbeatsSound from "@/assets/Audio/heartbeats.mp3";
 
 const useBattleSession = (eventBossId, joinCode) => {
   const { socket } = useBossBattle();
+  const { user } = useAuth();
 
   const [eventBoss, setEventBoss] = useState(null);
   const [eventBossCurrentHP, setEventBossCurrentHP] = useState(0);
@@ -202,13 +204,15 @@ const useBattleSession = (eventBossId, joinCode) => {
   const submitRevivalCode = useCallback(
     (revivalCode) => {
       if (!socket || !eventBossId || !revivalCode) return;
+
+      const userInfo = getUserInfo(user);
       socket.emit(SOCKET_EVENTS.BATTLE_SESSION.REVIVAL_CODE.SUBMIT, {
         eventBossId,
-        playerId: getUserInfo().id,
+        playerId: userInfo.id || null,
         revivalCode,
       });
     },
-    [socket, eventBossId]
+    [socket, eventBossId, user]
   );
 
   // Function to generate floating damage numbers
@@ -257,15 +261,16 @@ const useBattleSession = (eventBossId, joinCode) => {
   useEffect(() => {
     if (!socket || !eventBossId || !joinCode || hasJoinedSession) return;
 
-    joinSession(getUserInfo().id);
+    const userInfo = getUserInfo(user);
+    joinSession(userInfo.id || null);
     setHasJoinedSession(true);
-  }, [socket, eventBossId, joinCode, hasJoinedSession, joinSession]);
+  }, [socket, eventBossId, joinCode, hasJoinedSession, user, joinSession]);
 
   useEffect(() => {
     if (!socket || !eventBossId || !joinCode || isReconnected) return;
-
-    reconnectSession(getUserInfo().id);
-  }, [socket, eventBossId, joinCode, isReconnected, reconnectSession]);
+    const userInfo = getUserInfo(user);
+    reconnectSession(userInfo.id || null);
+  }, [socket, eventBossId, joinCode, isReconnected, user, reconnectSession]);
 
   useEffect(() => {
     if (playerBadges.length === 0 || isBadgeDisplaying) return;
@@ -293,7 +298,8 @@ const useBattleSession = (eventBossId, joinCode) => {
 
       return () => clearInterval(timer);
     } else if (questionTimeRemaining === 0 && currentQuestion) {
-      submitAnswer(getUserInfo().id, -1, currentQuestion.timeLimit);
+      const userInfo = getUserInfo(user);
+      submitAnswer(userInfo.id || null, -1, currentQuestion.timeLimit);
     }
   }, [
     isPlayerKnockedOut,
@@ -303,6 +309,7 @@ const useBattleSession = (eventBossId, joinCode) => {
     loading.result,
     questionTimeRemaining,
     currentQuestion,
+    user,
     submitAnswer,
   ]);
 
@@ -318,14 +325,15 @@ const useBattleSession = (eventBossId, joinCode) => {
     }, 1000);
 
     if (revivalTimer === 0) {
+      const userInfo = getUserInfo(user);
       socket.emit(SOCKET_EVENTS.BATTLE_SESSION.REVIVAL_CODE.EXPIRED, {
         eventBossId,
-        playerId: getUserInfo().id,
+        playerId: userInfo.id || null,
       });
     }
 
     return () => clearInterval(interval);
-  }, [revivalEndTime, socket, eventBossId, revivalTimer]);
+  }, [revivalEndTime, socket, eventBossId, user, revivalTimer]);
 
   useEffect(() => {
     if (!podiumEndTime) return;
@@ -363,7 +371,8 @@ const useBattleSession = (eventBossId, joinCode) => {
       setLoading((prev) => ({ ...prev, question: false, result: false }));
 
       if (!payload.data.currentQuestion) {
-        requestNextQuestion(getUserInfo().id);
+        const userInfo = getUserInfo(user);
+        requestNextQuestion(userInfo.id || null);
       }
     };
 
@@ -410,7 +419,8 @@ const useBattleSession = (eventBossId, joinCode) => {
       }
 
       if (playerHearts > 0 && !isEventBossDefeated) {
-        setTimeout(() => requestNextQuestion(getUserInfo().id), 500);
+        const userInfo = getUserInfo(user);
+        setTimeout(() => requestNextQuestion(userInfo.id || null), 500);
       }
     };
 
@@ -505,7 +515,8 @@ const useBattleSession = (eventBossId, joinCode) => {
       setPlayerLivesRemaining(payload.data.playerHearts);
       toast.success(payload.message || "You have been revived!");
       if (!isEventBossDefeated) {
-        setTimeout(() => requestNextQuestion(getUserInfo().id), 500);
+        const userInfo = getUserInfo(user);
+        setTimeout(() => requestNextQuestion(userInfo.id || null), 500);
       }
       // Stop heartbeats sound
       if (heartbeatsAudioRef.current) {

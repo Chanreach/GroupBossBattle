@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 // ===== HOOKS ===== //
 import useBossBattle from "./useBossBattle";
+import { useAuth } from "@/context/useAuth";
 
 // ===== SERVICES ===== //
 // import { fetchEventBossById } from "@/services/eventBossService";
@@ -14,6 +15,7 @@ import { getUserInfo } from "@/utils/userUtils";
 
 const useBossPodium = (eventBossId, joinCode) => {
   const { socket } = useBossBattle();
+  const { user } = useAuth();
 
   const [eventBoss, setEventBoss] = useState(null);
   const [battleState, setBattleState] = useState(null);
@@ -82,8 +84,9 @@ const useBossPodium = (eventBossId, joinCode) => {
   useEffect(() => {
     if (!socket || !eventBossId || !joinCode || hasJoinedPodium) return;
 
-    joinPodium(getUserInfo().id);
-  }, [socket, eventBossId, joinCode, hasJoinedPodium, joinPodium]);
+    const userInfo = getUserInfo(user);
+    joinPodium(userInfo.id || null);
+  }, [socket, eventBossId, joinCode, hasJoinedPodium, user, joinPodium]);
 
   useEffect(() => {
     if (

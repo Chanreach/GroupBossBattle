@@ -39,12 +39,14 @@ import "@/index.css";
 
 // ===== HOOKS ===== //
 import useBattleSession from "@/hooks/useBattleSession";
+import { useAuth } from "@/context/useAuth";
 
 // ===== UTILITIES ===== //
 import { getBossImageUrl } from "@/utils/imageUtils";
 import { getUserInfo } from "@/utils/userUtils";
 
 const BossBattle = () => {
+  const { user } = useAuth();
   const { eventBossId, joinCode } = useParams();
   const navigate = useNavigate();
 
@@ -92,7 +94,8 @@ const BossBattle = () => {
   const handleAnswerSelect = (choiceIndex) => {
     const responseTime =
       currentQuestion.timeLimit - questionTimeRemaining * 1000;
-    submitAnswer(getUserInfo().id, choiceIndex, responseTime);
+    const userInfo = getUserInfo(user);
+    submitAnswer(userInfo.id || null, choiceIndex, responseTime);
   };
 
   // const leaveBoss = () => {

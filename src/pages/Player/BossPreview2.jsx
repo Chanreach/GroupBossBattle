@@ -100,7 +100,8 @@ const BossPreview = () => {
   // Auto-fill nickname with username when user is available
   useEffect(() => {
     if (!nickname) {
-      const name = getUserInfo()?.username || "";
+      const userInfo = getUserInfo(user);
+      const name = userInfo?.username || "";
       setNickname(name);
     }
   }, [user, nickname]);
@@ -112,7 +113,7 @@ const BossPreview = () => {
       return;
     }
 
-    const userInfo = getUserInfo();
+    const userInfo = getUserInfo(user);
     const playerInfo = {
       ...userInfo,
       nickname: nickname.trim(),
@@ -132,7 +133,8 @@ const BossPreview = () => {
   }, [countdownTimer, eventBossId, joinCode, navigate]);
 
   const handleUnjoin = () => {
-    leaveQueue(getUserInfo()?.id);
+    const userInfo = getUserInfo(user);
+    leaveQueue(userInfo?.id || null);
   };
 
   return (
