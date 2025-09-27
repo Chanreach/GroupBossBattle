@@ -24,7 +24,7 @@ import {
   PaginationNext,
 } from "@/components/ui/pagination";
 
-const LeaderboardOverview = ({ leaderboard, loading, isPreview }) => {
+const LeaderboardOverview = ({ leaderboard, loading, isPreview, isFullWidth = false }) => {
   const [currentPage, setCurrentPage] = useState({
     teams: 1,
     individual: 1,
@@ -269,7 +269,7 @@ const LeaderboardOverview = ({ leaderboard, loading, isPreview }) => {
       };
 
   return (
-    <div className="max-w-4xl mx-auto mt-8">
+    <div className={`${isFullWidth ? "" : "max-w-4xl"} mx-auto mt-8`}>
       <Card className="h-[840px] relative">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

@@ -591,7 +591,7 @@ const AssignBoss = () => {
                                 className="w-8 h-8 p-0"
                                 onClick={() =>
                                   navigate(
-                                    `/host/events/leaderboard?eventId=${eventId}&eventBossId=${boss.eventBossId}`
+                                    `/host/events/${eventId}/${boss.eventBossId}/leaderboard`
                                   )
                                 }
                               >

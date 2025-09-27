@@ -61,7 +61,7 @@ import HostEventsCreate from "./pages/Host/Events/Create";
 import HostEventsEdit from "./pages/Host/Events/Edit";
 import HostEventsPlayerbadges from "./pages/Host/Events/Playerbadges";
 import HostEventsPlayerBadgesEdit from "./pages/Host/Events/Playerbadgesedit";
-import HostEventsLeaderboard from "./pages/Host/Events/Leaderboard";
+import HostEventsLeaderboard from "./pages/Host/Events/Leaderboard2";
 import HostEventsAllLeaderboard from "./pages/Host/Events/AllLeaderboard";
 // Users
 import HostUsersView from "./pages/Host/Users/View";
@@ -293,7 +293,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                     <Route index element={<HostEventsPlayerBadgesEdit />} />
                   </Route>
 
-                  <Route path="events/leaderboard" element={<AppOP />}>
+                  <Route path="events/:eventId/:eventBossId/leaderboard" element={<AppOP />}>
                     <Route index element={<HostEventsLeaderboard />} />
                   </Route>
 

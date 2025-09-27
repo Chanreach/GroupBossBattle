@@ -676,6 +676,7 @@ const useBattleSession = (eventBossId, joinCode) => {
     socket,
     eventBossId,
     joinCode,
+    user,
     hasJoinedSession,
     currentQuestion,
     isPlayerKnockedOut,
