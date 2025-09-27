@@ -27,7 +27,7 @@ const useBossPodium = (eventBossId, joinCode) => {
   const [podium, setPodium] = useState([]);
   const [loading, setLoading] = useState({ leaderboard: false, podium: false });
   const [hasJoinedPodium, setHasJoinedPodium] = useState(false);
-  const [hasRequestedPodium, setHasRequestedPodium] = useState(false);  
+  const [hasRequestedPodium, setHasRequestedPodium] = useState(false);
   const [isLeaderboardEmpty, setIsLeaderboardEmpty] = useState(true);
   const [isPodiumEmpty, setIsPodiumEmpty] = useState(true);
 
