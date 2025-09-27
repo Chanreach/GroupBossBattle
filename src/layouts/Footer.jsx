@@ -5,8 +5,8 @@ const Footer = () => {
     const currentYear = new Date().getFullYear();
 
     return (
-        <footer className="bg-[#18181b] text-white border-t border-gray-700">
-            <div className="container mx-auto px-6 py-9">
+        <footer className="bg-sidebar text-white border-t">
+            <div className="container mx-auto px-6 py-8">
                 {/* Main Footer Content */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
 
@@ -25,9 +25,6 @@ const Footer = () => {
                                 <p className="text-sm text-gray-400">Group Boss Battle</p>
                             </div>
                         </div>
-                        {/* <p className="text-sm text-gray-400 text-center md:text-left max-w-xs">
-                            Epic multiplayer boss battles for university students. Challenge yourself and compete for glory!
-                        </p> */}
                     </div>
 
                     {/* Project Info */}
@@ -44,7 +41,7 @@ const Footer = () => {
                 </div>
 
                 {/* Divider */}
-                <div className="border-t border-gray-700 my-8"></div>
+                <div className="border-[#737373]/30 border-t my-6"></div>
 
                 {/* Bottom Section */}
                 <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
