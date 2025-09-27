@@ -166,7 +166,7 @@ const QuestionsIndex = () => {
       question.category?.name === categoryFilter;
     const matchesOwnership =
       ownershipFilter === "anyone" ||
-      (ownershipFilter === "me" && question.creatorId === user?.id);
+      (ownershipFilter === "me" && question.creator?.id === user?.id);
     return matchesSearch && matchesCategory && matchesOwnership;
   });
 
