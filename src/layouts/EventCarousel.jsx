@@ -68,9 +68,9 @@ const EventCarousel = () => {
       id: 'placeholder-1',
       name: "No Events Scheduled",
       title: "Stay Tuned for Epic Battles",
-      description: "Amazing boss battle events are being planned! Check back soon for exciting interactive experiences where you can team up with others to defeat powerful bosses.",
-      startTime: "Coming Soon",
-      endTime: "Stay Tuned",
+      description: "Some boss battle events are being planned! Check back soon for exciting interactive experiences where you can team up with others to defeat powerful bosses.",
+      startTime: "--",
+      endTime: "--",
       image: "https://em-content.zobj.net/source/microsoft-3D-fluent/406/crossed-swords_2694-fe0f.png",
       isActive: false,
       status: 'coming-soon',
@@ -153,6 +153,13 @@ const EventCarousel = () => {
         <div className="inline-flex items-center bg-green-500/20 text-green-300 px-3 py-2 rounded-full text-sm sm:text-base font-medium">
           <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
           Happening Now
+        </div>
+      );
+    } else if (event.status === "coming-soon") {
+      return (
+        <div className="inline-flex items-center bg-purple-500/20 text-purple-300 px-3 py-2 rounded-full text-sm sm:text-base font-medium">
+          <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+          Happening Soon!
         </div>
       );
     } else {
@@ -241,14 +248,14 @@ const EventCarousel = () => {
               {/* Card with solid border */}
               <div className={`relative w-full h-full rounded-xl overflow-hidden ${
                 event.isPlaceholder 
-                  ? 'bg-blue-600/50'
+                  ? 'bg-purple-800/60'
                   : 'bg-purple-600'
               } p-[3px]`}>
 
                 <div className="relative w-full h-full rounded-lg overflow-hidden bg-white/10 dark:bg-white/5 backdrop-blur-sm border border-white/20 dark:border-white/20">
                   {/* Dark overlay for better text contrast */}
                   <div className={`absolute inset-0 ${
-                    event.isPlaceholder ? 'bg-black/40 dark:bg-black/60' : 'bg-black/25 dark:bg-black/40'
+                    event.isPlaceholder ? 'bg-black/30 dark:bg-black/50' : 'bg-black/25 dark:bg-black/40'
                   }`}></div>
                   
                   {/* Event Image/Icon */}
@@ -267,7 +274,7 @@ const EventCarousel = () => {
                     {/* Top Content */}
                     <div className="text-white">
                       <h3 className={`text-xl sm:text-2xl lg:text-3xl font-bold mb-3 sm:mb-4 text-white drop-shadow-lg ${
-                        event.isPlaceholder ? 'text-blue-100' : 'text-white'
+                        event.isPlaceholder ? 'text-purple-100' : 'text-white'
                       }`}>
                         {event.name}
                       </h3>
@@ -275,7 +282,7 @@ const EventCarousel = () => {
                       {/* Event Description */}
                       <p className={`text-sm sm:text-base lg:text-lg line-clamp-3 drop-shadow-md ${
                         event.isPlaceholder 
-                          ? 'text-blue-100/80 dark:text-blue-100/60' 
+                          ? 'text-purple-100/80 dark:text-purple-100/70' 
                           : 'text-white/90 dark:text-white/70'
                       }`}>
                         {event.description}
@@ -287,7 +294,7 @@ const EventCarousel = () => {
                       {/* Event Times */}
                       <div className={`space-y-1 mb-3 sm:mb-4 text-sm sm:text-base ${
                         event.isPlaceholder 
-                          ? 'text-blue-100/80 dark:text-blue-100/60' 
+                          ? 'text-purple-100/80 dark:text-purple-100/70' 
                           : 'text-white/90 dark:text-white/70'
                       }`}>
                         <div className="flex items-center justify-center gap-1">

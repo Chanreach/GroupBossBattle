@@ -158,7 +158,7 @@ const PlayerBadges = () => {
                     <Award className="w-5 h-5 text-yellow-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Total Badges</p>
+                    <p className="text-sm text-muted-foreground">Total Badges Earned</p>
                     <p className="text-2xl font-bold">{getTotalBadgeCount()}</p>
                   </div>
                 </div>
@@ -171,7 +171,7 @@ const PlayerBadges = () => {
                     <Trophy className="w-5 h-5 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Redeemed</p>
+                    <p className="text-sm text-muted-foreground">Total Badges Redeemed</p>
                     <p className="text-2xl font-bold">{getRedeemedBadgeCount()}</p>
                   </div>
                 </div>

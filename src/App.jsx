@@ -21,7 +21,7 @@ export default function App() {
 
         <div className="flex flex-col flex-1">
           {/* ===== SIDEBAR TOGGLE & MESSAGE DISPLAY ===== */}
-          <div className="flex items-center gap-4 p-4 border-b sticky top-0 z-11 bg-background">
+          <div className="flex items-center gap-4 p-4 border-b sticky top-0 z-11 bg-background/80 backdrop-blur-lg">
             <SidebarTrigger />
             <PageTitle />
             {/* <MessageDisplay /> */}

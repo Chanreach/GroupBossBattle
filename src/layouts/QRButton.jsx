@@ -11,6 +11,7 @@ const QRButton = () => {
   const navigate = useNavigate()
   const [showQRLabel, setShowQRLabel] = useState(false)
   const [isLabelFadingOut, setIsLabelFadingOut] = useState(false)
+  const [isButtonVisible, setIsButtonVisible] = useState(true)
 
   // Show QR label after component mounts
   useEffect(() => {
@@ -34,6 +35,27 @@ const QRButton = () => {
     }
   }, [])
 
+  // Handle scroll detection for button visibility
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+      const documentHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight
+      const scrollPercentage = (scrollTop / documentHeight) * 100
+
+      // Hide button when scrolled 90% or more, show when less than 90%
+      setIsButtonVisible(scrollPercentage < 80)
+    }
+
+    // Add scroll listener
+    window.addEventListener('scroll', handleScroll)
+    
+    // Initial check
+    handleScroll()
+
+    // Cleanup
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   const handleQRCodeClick = () => {
     setIsLabelFadingOut(true) // Start fade out animation
     // Hide label after animation completes
@@ -45,7 +67,11 @@ const QRButton = () => {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
+    <div className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 transition-all duration-300 ${
+      isButtonVisible 
+        ? 'opacity-100 translate-y-0' 
+        : 'opacity-0 translate-y-2 pointer-events-none'
+    }`}>
       {/* QR Label */}
       {showQRLabel && (
         <div className={`absolute top-1/2 -translate-y-1/2 -left-39 ${
