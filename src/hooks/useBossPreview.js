@@ -10,6 +10,7 @@ import { fetchEventBossById } from "@/services/eventBossService";
 
 // ===== UTILITIES ===== //
 import { SOCKET_EVENTS } from "@/utils/socketConstants";
+import { removePlayerState } from "@/utils/playerUtils";
 
 const useBossPreview = (eventBossId, joinCode) => {
   const { socket } = useBossBattle();
@@ -99,6 +100,12 @@ const useBossPreview = (eventBossId, joinCode) => {
       setSessionSize(payload.data.sessionSize);
     };
 
+    const handleSessionEnded = (payload) => {
+      toast.success(payload.message || "The battle session has ended.");
+      setSessionSize(0);
+      removePlayerState(eventBossId);
+    };
+
     const handlePreviewLeaderboardResponse = (payload) => {
       setLoading((prev) => ({ ...prev, leaderboard: false }));
       setLeaderboard(payload.data.leaderboard);
@@ -117,14 +124,12 @@ const useBossPreview = (eventBossId, joinCode) => {
 
     socket.on(SOCKET_EVENTS.BOSS_PREVIEW.JOINED, handleJoinedPreview);
     socket.on(SOCKET_EVENTS.BOSS_STATUS.UPDATED, handleBossStatusUpdated);
-    socket.on(
-      SOCKET_EVENTS.BATTLE_SESSION.SIZE.RESPONSE,
-      handleSessionSizeResponse
-    );
+    socket.on(SOCKET_EVENTS.BATTLE_SESSION.RESPONSE, handleSessionSizeResponse);
     socket.on(
       SOCKET_EVENTS.BATTLE_SESSION.SIZE.UPDATED,
       handleSessionSizeUpdated
     );
+    socket.on(SOCKET_EVENTS.BOSS_PREVIEW.BATTLE_SESSION.ENDED, handleSessionEnded);
     socket.on(
       SOCKET_EVENTS.BOSS_PREVIEW.LEADERBOARD.RESPONSE,
       handlePreviewLeaderboardResponse
@@ -138,14 +143,12 @@ const useBossPreview = (eventBossId, joinCode) => {
     return () => {
       socket.off(SOCKET_EVENTS.BOSS_PREVIEW.JOINED, handleJoinedPreview);
       socket.off(SOCKET_EVENTS.BOSS_STATUS.UPDATED, handleBossStatusUpdated);
-      socket.off(
-        SOCKET_EVENTS.BATTLE_SESSION.SIZE.RESPONSE,
-        handleSessionSizeResponse
-      );
+      socket.off(SOCKET_EVENTS.BATTLE_SESSION.RESPONSE, handleSessionSizeResponse);
       socket.off(
         SOCKET_EVENTS.BATTLE_SESSION.SIZE.UPDATED,
         handleSessionSizeUpdated
       );
+      socket.off(SOCKET_EVENTS.BATTLE_SESSION.ENDED, handleSessionEnded);
       socket.off(
         SOCKET_EVENTS.BOSS_PREVIEW.LEADERBOARD.RESPONSE,
         handlePreviewLeaderboardResponse
@@ -156,7 +159,14 @@ const useBossPreview = (eventBossId, joinCode) => {
       );
       socket.off(SOCKET_EVENTS.ERROR, handleSocketError);
     };
-  }, [socket, eventBossId, joinCode, eventBossStatus, hasJoinedPreview, joinPreview]);
+  }, [
+    socket,
+    eventBossId,
+    joinCode,
+    eventBossStatus,
+    hasJoinedPreview,
+    joinPreview,
+  ]);
 
   useEffect(() => {
     if (!eventBoss && !loading.eventBoss && eventBossId && hasJoinedPreview) {

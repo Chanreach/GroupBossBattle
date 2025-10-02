@@ -40,6 +40,7 @@ import "@/index.css";
 // ===== HOOKS ===== //
 import useBattleSession from "@/hooks/useBattleSession";
 import { useAuth } from "@/context/useAuth";
+import { useThemeColor } from "@/theme/theme-provider";
 
 // ===== UTILITIES ===== //
 import { getBossImageUrl } from "@/utils/imageUtils";
@@ -77,55 +78,54 @@ const BossBattle = () => {
     isBadgeDisplaying,
     isPlayerNotFound,
     loading,
+    leaveSession,
     submitAnswer,
     submitRevivalCode,
     removeCurrentBadge,
   } = battleSession;
-  const questionMaxTimeSeconds = currentQuestion?.timeLimit / 1000;
+  const questionTimeLimit = currentQuestion?.timeLimit;
 
   // ===== UI ANIMATION STATES ===== //
   const [isLeaderboardVisible, setIsLeaderboardVisible] = useState(false);
-  const [isDarkModeEnabled, setIsDarkModeEnabled] = useState(false);
+  const { colorScheme, toggleColorScheme } = useThemeColor();
 
   // ===== PLAYER REVIVAL SYSTEM ===== //
   const [isRevivalDialogVisible, setIsRevivalDialogVisible] = useState(false);
   const [revivalOtpInput, setRevivalOtpInput] = useState("");
 
   const handleAnswerSelect = (choiceIndex) => {
-    const responseTime =
-      currentQuestion.timeLimit - questionTimeRemaining * 1000;
+    // Add immediate haptic feedback
+    if (navigator.vibrate) {
+      navigator.vibrate(250);
+    }
+
+    console.log(questionTimeLimit, questionTimeRemaining);
+    const responseTime = questionTimeLimit - questionTimeRemaining;
     const userInfo = getUserInfo(user);
-    submitAnswer(userInfo.id || null, choiceIndex, responseTime);
+
+    console.log("Response Time:", responseTime);
+    if (!userInfo.id) {
+      toast.error("User not found, please refresh");
+      return;
+    }
+
+    submitAnswer(userInfo.id, choiceIndex, responseTime);
   };
 
-  // const leaveBoss = () => {
-  //   const currentEventBossId = eventBossId;
-  //   if (socket && currentEventBossId) {
-  //     socket.emit("leave-boss", { eventBossId: currentEventBossId });
-  //   }
-  //   navigate("/player");
-  // };
+  const handleLeave = () => {
+    leaveSession();
 
-  // const handleLeave = () => {
-  //   // Clear the global boss join state
-  //   leaveBoss();
-
-  //   // Redirect back to boss preview with boss/event IDs if available
-  //   if (eventBossId && joinCode) {
-  //     navigate(`/boss-preview/${eventBossId}/${joinCode}`);
-  //   } else {
-  //     navigate("/");
-  //   }
-  // };
+    // Redirect back to boss preview with boss/event IDs if available
+    if (eventBossId && joinCode) {
+      navigate(`/boss-preview/${eventBossId}/${joinCode}`);
+    } else {
+      navigate("/");
+    }
+  };
 
   const handleLiveLeaderboard = () => {
     setIsLeaderboardVisible((prev) => !prev);
     console.log("Toggling live leaderboard");
-  };
-
-  const toggleDarkMode = () => {
-    setIsDarkModeEnabled((prev) => !prev);
-    document.documentElement.classList.toggle("dark");
   };
 
   // Handle OTP completion
@@ -148,8 +148,7 @@ const BossBattle = () => {
 
   // Get timer color based on time remaining
   const getTimerColor = () => {
-    const timePercentage =
-      (questionTimeRemaining / questionMaxTimeSeconds) * 100;
+    const timePercentage = (questionTimeRemaining / questionTimeLimit) * 100;
     if (timePercentage > 66) {
       return "text-green-500"; // Fast zone (green)
     } else if (timePercentage > 33) {
@@ -173,7 +172,6 @@ const BossBattle = () => {
     }
   }, [podiumTimer, isPodiumCountdownVisible, eventBossId, joinCode, navigate]);
 
-  // ===== ===== ===== RENDER ===== ===== ===== //
   return (
     <main
       className={`h-screen overflow-hidden bg-background relative ${
@@ -204,7 +202,7 @@ const BossBattle = () => {
           <div className="flex items-center justify-between mb-3 flex-shrink-0 relative">
             <div className="flex items-center gap-2">
               <Button
-                // onClick={handleLeave}
+                onClick={handleLeave}
                 variant="outline"
                 size="sm"
                 disabled={isPlayerKnockedOut}
@@ -239,7 +237,7 @@ const BossBattle = () => {
 
             <div className="flex items-center gap-2">
               <Button
-                onClick={toggleDarkMode}
+                onClick={toggleColorScheme}
                 variant="outline"
                 size="sm"
                 className={`flex items-center justify-center ${
@@ -248,8 +246,8 @@ const BossBattle = () => {
                     : ""
                 }`}
               >
-                {isDarkModeEnabled ? (
-                  <Sun
+                {colorScheme === "light" ? (
+                  <Moon
                     className={`w-4 h-4 ${
                       isPlayerKnockedOut ||
                       isPlayerDead ||
@@ -259,7 +257,7 @@ const BossBattle = () => {
                     }`}
                   />
                 ) : (
-                  <Moon
+                  <Sun
                     className={`w-4 h-4 ${
                       isPlayerKnockedOut ||
                       isPlayerDead ||
@@ -476,8 +474,9 @@ const BossBattle = () => {
                       strokeDasharray: "100, 100",
                       strokeDashoffset:
                         100 -
-                          (questionTimeRemaining / questionMaxTimeSeconds) *
-                            100 || 0,
+                          Math.floor(
+                            (questionTimeRemaining / questionTimeLimit) * 100
+                          ) || 0,
                     }}
                     d="M18 2.0845
                       a 15.9155 15.9155 0 0 1 0 31.831
@@ -489,7 +488,7 @@ const BossBattle = () => {
                   className={`absolute inset-0 flex items-center justify-center ${getTimerColor()}`}
                 >
                   <span className="text-xs font-mono font-bold">
-                    {questionTimeRemaining}
+                    {Math.ceil(questionTimeRemaining / 1000)}
                   </span>
                 </div>
               </div>
@@ -550,26 +549,27 @@ const BossBattle = () => {
                       "!bg-blue-700 !text-white !border-blue-700", // Selected Blue
                     ];
 
-                    const isProcessing =
+                    // Use the dedicated areButtonsDisabled state for cleaner logic
+                    const isDisabled =
                       isPlayerKnockedOut ||
                       isPlayerDead ||
                       isEventBossDefeated ||
-                      loading.question ||
-                      loading.result;
+                      loading.result ||
+                      loading.question;
 
                     return (
                       <Button
-                        key={index}
+                        key={`${currentQuestionNumber}-${index}`}
                         variant="outline"
                         className={`w-full p-2 h-full text-center whitespace-normal font-medium transition-all text-sm halftone-texture ${
                           choiceIndexSelected === choice.index
                             ? selectedColors[index]
                             : colors[index]
-                        } ${
-                          isProcessing ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
-                        onClick={() => handleAnswerSelect(choice.index)}
-                        disabled={isProcessing}
+                        } ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                        disabled={isDisabled}
+                        onClick={() => {
+                          handleAnswerSelect(choice.index);
+                        }}
                       >
                         {choice.text}
                       </Button>
@@ -607,9 +607,7 @@ const BossBattle = () => {
 
                 <div className="pt-4">
                   <Button
-                    onClick={() =>
-                      navigate(`/boss-preview/${eventBossId}/${joinCode}`)
-                    }
+                    onClick={handleLeave}
                     variant="outline"
                     className="w-full"
                   >
