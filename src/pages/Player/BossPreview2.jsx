@@ -42,6 +42,7 @@ const BossPreview = () => {
   } = bossPreview;
 
   const {
+    playerContextStatus,
     hasJoinedQueue,
     hasJoinedMidGame,
     queueSize,
@@ -107,6 +108,7 @@ const BossPreview = () => {
   }, [user, nickname]);
 
   const handleJoin = () => {
+    console.log("Attempting to join with nickname:", nickname);
     const validationError = validateNickname(nickname);
     if (validationError) {
       toast.error(validationError);
@@ -249,7 +251,18 @@ const BossPreview = () => {
               </div>
 
               {/* Join/Waiting Button */}
-              {!hasJoinedQueue && !hasJoinedMidGame ? (
+              {playerContextStatus === "in-battle" &&
+              countdownTimer === null ? (
+                <Button
+                  className="flex-1c w-full halftone-texture"
+                  onClick={() =>
+                    navigate(`/boss-battle/${eventBossId}/${joinCode}`)
+                  }
+                  variant="default"
+                >
+                  Return to Battle
+                </Button>
+              ) : !hasJoinedQueue && !hasJoinedMidGame ? (
                 <Button
                   onClick={handleJoin}
                   className="w-full !bg-purple-500 hover:!bg-purple-600 !text-white !border-purple-500 halftone-texture"
@@ -277,17 +290,6 @@ const BossPreview = () => {
                         {countdownTimer > 0
                           ? `Starting in ${countdownTimer}...`
                           : "Battle Starting!"}
-                      </Button>
-                    )}
-                    {isBattleStarted && countdownTimer === 0 && (
-                      <Button
-                        className="flex-1c w-full halftone-texture"
-                        onClick={() =>
-                          navigate(`/boss-battle/${eventBossId}/${joinCode}`)
-                        }
-                        variant="default"
-                      >
-                        Return to Battle
                       </Button>
                     )}
                     {!isBattleStarted && (

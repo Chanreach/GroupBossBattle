@@ -6,11 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 // ===== COMPONENTS ===== //
 import { ThemeProvider } from "./theme/theme-provider";
 import { AuthProvider } from "./context/AuthProvider";
-import { BossJoinProvider } from "./context/BossJoinContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import { AuthenticationCheck } from "./components/AuthenticationCheck";
-import { BossPreviewAuthGuard } from "./components/BossPreviewAuthGuard";
 import PreventAuthenticatedAccess from "./components/PreventAuthenticatedAccess";
 import { PlayerViewGuard } from "./components/PlayerViewGuard";
 import { MessageProvider } from "./context/MessageProvider";

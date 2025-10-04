@@ -167,13 +167,13 @@ const LeaderboardBattle = ({ isOpen, onClose }) => {
             </div>
 
             <div className="space-y-1">
-              {displayLeaderboard.map((team) => {
+              {displayLeaderboard.map((team, teamIndex) => {
                 const isExpanded = expandedTeams.has(team.id);
                 const teamDisplayName = team.name || "Unknown Team";
                 const teamDamage = team.totalDamage || 0;
 
                 return (
-                  <div key={team.id}>
+                  <div key={teamIndex}>
                     {/* Team Row */}
                     <div
                       className={`
@@ -230,7 +230,7 @@ const LeaderboardBattle = ({ isOpen, onClose }) => {
 
                           return (
                             <div
-                              key={`${player.playerId || playerName}-${playerIndex}-${team.id}`}
+                              key={playerIndex}
                               className="grid grid-cols-10 gap-3 items-center py-1 px-2 rounded bg-muted/10"
                             >
                               {/* Player Name */}

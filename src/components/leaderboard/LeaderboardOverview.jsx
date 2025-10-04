@@ -153,7 +153,7 @@ const LeaderboardOverview = ({ leaderboard, loading, isPreview, isFullWidth = fa
 
   const allTimeColumns = [
     { header: "Rank", accessor: "rank" },
-    { header: "Player", accessor: "playerName" },
+    { header: "Player", accessor: "username" },
     { header: "DMG", accessor: "totalDamageDealt" },
     { header: "ACC %", accessor: "accuracy" },
   ];
@@ -346,7 +346,7 @@ const LeaderboardOverview = ({ leaderboard, loading, isPreview, isFullWidth = fa
                         table.type
                       ).paginatedData.map((item) => (
                         <TableRow
-                          key={item.id || item.playerId}
+                          key={item.id || item.userId}
                           className="hover:bg-muted/50"
                         >
                           <TableCell className="font-medium">
@@ -365,19 +365,19 @@ const LeaderboardOverview = ({ leaderboard, loading, isPreview, isFullWidth = fa
                                   alt={
                                     item.name ||
                                     item.nickname ||
-                                    item.playerName
+                                    item.username
                                   }
                                 />
                                 <AvatarFallback className="uppercase">
                                   {getAvatarInitials(
                                     item.name ||
                                       item.nickname ||
-                                      item.playerName
+                                      item.username
                                   )}
                                 </AvatarFallback>
                               </Avatar>
                               <span className="font-medium">
-                                {item.name || item.nickname || item.playerName}
+                                {item.name || item.nickname || item.username}
                               </span>
                             </div>
                           </TableCell>

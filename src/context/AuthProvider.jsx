@@ -60,12 +60,19 @@ export const AuthProvider = ({ children }) => {
       const guestToken = getGuestToken();
 
       if (guestUser && guestToken) {
-        // Set guest user in context
-        setUser(guestUser);
-        // Set authorization header for guest requests
-        apiClient.defaults.headers.common[
-          "Authorization"
-        ] = `Bearer ${guestToken}`;
+        try {
+          console.log("Verifying guest session...");
+          await apiClient.get("/heartbeat", { withCredentials: true });
+
+          setUser(guestUser);
+          apiClient.defaults.headers.common[
+            "Authorization"
+          ] = `Bearer ${guestToken}`;
+        } catch (error) {
+          console.error("Guest session expired or invalid:", error);
+          clearGuestData();
+          setUser(null);
+        }
       }
 
       setIsLoading(false);
@@ -86,6 +93,23 @@ export const AuthProvider = ({ children }) => {
       "Authorization"
     ] = `Bearer ${accessToken}`;
   };
+
+  useEffect(() => {
+    if (!user) return;
+
+    const interval = setInterval(async () => {
+      await apiClient.get("/heartbeat").catch((error) => {
+        console.warn("Heartbeat failed:", error);
+
+        if (error.response && error.response.status === 401) {
+          console.warn("Session expired. Logging out...");
+          logout();
+        }
+      });
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [user]);
 
   return (
     <AuthContext.Provider
