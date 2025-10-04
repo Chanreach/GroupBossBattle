@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { SVG_Boss, SVG_Checkmark } from "@/components/SVG";
 import {
   ArrowLeft,
   Plus,
@@ -245,7 +246,7 @@ const AssignBoss = () => {
   };
 
   const handlePlayerBadges = () => {
-    navigate("/host/events/player_badges");
+    navigate(`/host/events/player_badges?eventId=${eventId}`);
   };
 
   const handleEditEvent = () => {
@@ -298,15 +299,6 @@ const AssignBoss = () => {
             </div>
             <div className="flex items-center gap-2">
               <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-                onClick={handlePlayerBadges}
-              >
-                <BadgeIcon className="w-4 h-4" />
-                <span className="hidden sm:inline">Player Badges</span>
-              </Button>
-              <Button
                 size="sm"
                 onClick={handleAssignBoss}
                 className="flex items-center gap-2"
@@ -322,62 +314,108 @@ const AssignBoss = () => {
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-2">
-                    <h2 className="text-lg font-semibold">
-                      {event.name}
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                      <h2 className="text-lg font-semibold">{event.name}</h2>
                       <Badge
                         variant="outline"
-                        className="bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800 ml-4 mt-auto"
+                        className={`mt-[4px] ${
+                          event.status?.toLowerCase() === "upcoming"
+                            ? "bg-yellow-50 dark:bg-yellow-950 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800 self-start"
+                            : event.status?.toLowerCase() === "ongoing"
+                            ? "bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800 self-start"
+                            : event.status?.toLowerCase() === "completed"
+                            ? "bg-muted text-muted-foreground border-border self-start"
+                            : "bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800 self-start"
+                        }`}
                       >
-                        <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full mr-2"></div>
-                        {event.status || "Active"}
+                        {event.status?.toLowerCase() === "upcoming" ? (
+                          <Clock className="w-3 h-3 mr-1" />
+                        ) : event.status?.toLowerCase() === "ongoing" ? (
+                          <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full animate-pulse mr-1"></div>
+                        ) : event.status?.toLowerCase() === "completed" ? (
+                          <SVG_Checkmark className="w-3 h-3 mr-1" />
+                        ) : (
+                          <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full animate-pulse mr-1"></div>
+                        )}
+                        {event.status
+                          ? event.status.charAt(0).toUpperCase() +
+                            event.status.slice(1).toLowerCase()
+                          : "--"}
                       </Badge>
-                    </h2>
-                    {user?.role === "admin" && (
+                    </div>{" "}
+                    <div className="justify-end flex gap-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={handleEditEvent}
                         className="flex items-center gap-2"
+                        onClick={handlePlayerBadges}
                       >
-                        <Edit className="h-4 w-4" />
-                        Edit Event
+                        <BadgeIcon className="w-4 h-4" />
+                        <span className="hidden sm:inline">Manage Badges</span>
                       </Button>
-                    )}
+                      {user?.role === "admin" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleEditEvent}
+                          className="flex items-center gap-2"
+                        >
+                          <Edit className="h-4 w-4" />
+                          <span className="hidden sm:inline">Edit Event</span>
+                        </Button>
+                      )}
+                    </div>
                   </div>
 
                   {event.description && (
-                    <p className="text-sm text-muted-foreground mt-1 mb-2">
+                    <p className="text-sm text-muted-foreground mt-4 mb-4">
                       {event.description}
                     </p>
                   )}
 
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span>
-                      <strong>Start:</strong>{" "}
-                      {event.startTime
-                        ? new Date(event.startTime).toLocaleDateString() +
-                          " " +
-                          new Date(event.startTime).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
-                        : "N/A"}
-                    </span>
-                    <span>
-                      <strong>End:</strong>{" "}
-                      {event.endTime
-                        ? new Date(event.endTime).toLocaleDateString() +
-                          " " +
-                          new Date(event.endTime).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
-                        : "N/A"}
-                    </span>
-                    <span>
-                      <strong>Bosses:</strong> {assignedBosses.length} assigned
-                    </span>
+                  <div className="flex flex-wrap items-center gap-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">Start:</span>
+                      <span className="font-medium text-muted-foreground">
+                        {event.startTime
+                          ? new Date(event.startTime).toLocaleDateString() +
+                            " " +
+                            new Date(event.startTime).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : "N/A"}
+                      </span>
+                    </div>
+
+                    <div className="hidden sm:block h-4 w-px bg-border"></div>
+
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">End:</span>
+                      <span className="font-medium text-muted-foreground">
+                        {event.endTime
+                          ? new Date(event.endTime).toLocaleDateString() +
+                            " " +
+                            new Date(event.endTime).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : "N/A"}
+                      </span>
+                    </div>
+
+                    <div className="hidden sm:block h-4 w-px bg-border"></div>
+
+                    <div className="flex items-center gap-1">
+                      <SVG_Boss className="w-6 h-6 text-muted-foreground" />
+                      <span className="text-muted-foreground">Bosses:</span>
+                      <span className="font-medium text-muted-foreground">
+                        {assignedBosses.length} assigned
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>

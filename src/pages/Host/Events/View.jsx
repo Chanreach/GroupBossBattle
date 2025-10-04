@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Calendar, Clock, ChevronRight, Plus } from "lucide-react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SVG_Boss, SVG_Checkmark } from "@/components/SVG";
 import { apiClient } from "@/api";
 import { useAuth } from "@/context/useAuth";
 import { toast } from "sonner";
@@ -34,13 +36,41 @@ const ViewEvents = () => {
   const formatEventsForUI = (apiEvents) => {
     return apiEvents.map((event) => ({
       id: event.id,
-      title: event.name,
+      name: event.name,
+      description: event.description,
+      status: event.status,
       startTime: event.startTime,
       endTime: event.endTime,
+      eventBosses: event.eventBosses || [],
     }));
   };
 
-  const formattedEvents = formatEventsForUI(events);
+  // Sort events by status priority: Ongoing -> Upcoming -> Completed
+  const sortEventsByStatus = (events) => {
+    const statusPriority = {
+      'ongoing': 1,
+      'upcoming': 2,
+      'completed': 3
+    };
+
+    return events.sort((a, b) => {
+      const priorityA = statusPriority[a.status?.toLowerCase()] || 999;
+      const priorityB = statusPriority[b.status?.toLowerCase()] || 999;
+      
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB;
+      }
+      
+      // If same status, sort by start time (newest first for ongoing/upcoming, oldest first for completed)
+      if (a.status?.toLowerCase() === 'completed' && b.status?.toLowerCase() === 'completed') {
+        return new Date(a.startTime) - new Date(b.startTime);
+      } else {
+        return new Date(b.startTime) - new Date(a.startTime);
+      }
+    });
+  };
+
+  const formattedEvents = sortEventsByStatus(formatEventsForUI(events));
 
   // Get status badge style
   const getStatusBadgeStyle = (status) => {
@@ -115,52 +145,92 @@ const ViewEvents = () => {
               className="cursor-pointer transition-all duration-200 hover:shadow-md hover:border-primary/30 border border-border/50 w-full"
               onClick={() => handleEventClick(event.id)}
             >
-              <CardContent className="p-4 sm:p-6">
-                <div className="space-y-3 sm:space-y-4">
-                  {/* Event Title */}
-                  <h3 className="text-lg font-semibold text-foreground">
-                    {event.title}
-                  </h3>
-
-                  <div className="flex flex-col sm:flex-row sm:gap-8 gap-2">
-                    {/* Start Date/Time */}
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-foreground">
-                        <span className="text-muted-foreground">Start:</span>{" "}
-                        {new Date(event.startTime).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "2-digit",
-                          day: "2-digit",
-                        })}{" "}
-                        -{" "}
-                        {new Date(event.startTime).toLocaleTimeString("en-US", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          hour12: true,
-                        })}
-                      </p>
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="text-lg font-semibold flex items-center">
+                        <div className="me-2">{event.name}</div>
+                        <Badge
+                          variant="outline"
+                          className={
+                            event.status?.toLowerCase() === "upcoming"
+                              ? "bg-yellow-50 dark:bg-yellow-950 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800 mt-auto"
+                              : event.status?.toLowerCase() === "ongoing"
+                              ? "bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800 mt-auto"
+                              : event.status?.toLowerCase() === "completed"
+                              ? "bg-muted text-muted-foreground border-border mt-auto"
+                              : "bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800 mt-auto"
+                          }
+                        >
+                          {event.status?.toLowerCase() === "upcoming" ? (
+                            <Clock className="w-3 h-3 mr-1" />
+                          ) : event.status?.toLowerCase() === "ongoing" ? (
+                            <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full animate-pulse mr-1"></div>
+                          ) : event.status?.toLowerCase() === "completed" ? (
+                            <SVG_Checkmark className="w-3 h-3 mr-1" />
+                          ) : (
+                            <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full animate-pulse mr-1"></div>
+                          )}
+                          {event.status 
+                            ? event.status.charAt(0).toUpperCase() + event.status.slice(1).toLowerCase()
+                            : "--"}
+                        </Badge>
+                      </h2>
                     </div>
-
-                    {/* End Date/Time */}
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-foreground">
-                        <span className="text-muted-foreground">End:</span>{" "}
-                        {new Date(event.endTime).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "2-digit",
-                          day: "2-digit",
-                        })}{" "}
-                        -{" "}
-                        {new Date(event.endTime).toLocaleTimeString("en-US", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          hour12: true,
-                        })}
+                    
+                    {event.description && (
+                      <p className="text-sm text-muted-foreground mt-4 mb-4">
+                        {event.description}
                       </p>
+                    )}
+                    
+                    <div className="flex flex-wrap items-center gap-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">Start:</span>
+                        <span className="font-medium text-muted-foreground">
+                          {event.startTime 
+                            ? new Date(event.startTime).toLocaleDateString() + 
+                              " " + 
+                              new Date(event.startTime).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
+                            : "N/A"}
+                        </span>
+                      </div>
+
+                      <div className="hidden sm:block h-4 w-px bg-border"></div>
+
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">End:</span>
+                        <span className="font-medium text-muted-foreground">
+                          {event.endTime 
+                            ? new Date(event.endTime).toLocaleDateString() + 
+                              " " + 
+                              new Date(event.endTime).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
+                            : "N/A"}
+                        </span>
+                      </div>
+
+                      <div className="hidden sm:block h-4 w-px bg-border"></div>
+
+                      <div className="flex items-center gap-1">
+                        <SVG_Boss className="w-6 h-6 text-muted-foreground" />
+                        <span className="text-muted-foreground">Bosses:</span>
+                        <span className="font-medium text-muted-foreground">
+                          {event.eventBosses.length} assigned
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </CardContent>
+              </CardHeader>
             </Card>
           ))
         )}

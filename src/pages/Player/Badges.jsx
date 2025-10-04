@@ -1,6 +1,6 @@
 // ===== LIBRARIES ===== //
 import { useState } from "react";
-import { Award, Trophy, Star, Shield, Sword, Target, Crown, Medal, Zap, Lock, Users, Calendar, Sparkles } from "lucide-react";
+import { Award, Trophy, Star, Shield, Sword, Target, Crown, Medal, Zap, Lock, Users, Calendar, Sparkles, Skull } from "lucide-react";
 
 // ===== COMPONENTS (Shadcn.ui) ===== //
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,7 @@ const eventsData = [
             id: 1,
             name: "Boss Defeated",
             description: "Awarded to every player on the team that deals the highest total damage to the boss during the fight.",
-            icon: Users,
+            icon: Skull,
             earned: true,
             earnedDate: "2025-01-15"
           },
@@ -53,7 +53,7 @@ const eventsData = [
           {
             id: 3,
             name: "MVP",
-            description: "Awarded to the individual player with the highest total damage dealt during the boss fight, regardless of team outcome.",
+            description: "Awarded to a player with the highest total damage dealt during the boss fight, regardless of team outcome.",
             icon: Crown,
             earned: false,
             earnedDate: null
@@ -69,7 +69,7 @@ const eventsData = [
             id: 4,
             name: "Boss Defeated",
             description: "Awarded to every player on the team that deals the highest total damage to the boss during the fight.",
-            icon: Users,
+            icon: Skull,
             earned: true,
             earnedDate: "2025-01-15"
           },
@@ -84,7 +84,7 @@ const eventsData = [
           {
             id: 6,
             name: "MVP",
-            description: "Awarded to the individual player with the highest total damage dealt during the boss fight, regardless of team outcome.",
+            description: "Awarded to a player with the highest total damage dealt during the boss fight, regardless of team outcome.",
             icon: Crown,
             earned: false,
             earnedDate: null
@@ -100,7 +100,7 @@ const eventsData = [
             id: 7,
             name: "Boss Defeated",
             description: "Awarded to every player on the team that deals the highest total damage to the boss during the fight.",
-            icon: Users,
+            icon: Skull,
             earned: false,
             earnedDate: null
           },
@@ -115,7 +115,7 @@ const eventsData = [
           {
             id: 9,
             name: "MVP",
-            description: "Awarded to the individual player with the highest total damage dealt during the boss fight, regardless of team outcome.",
+            description: "Awarded to a player with the highest total damage dealt during the boss fight, regardless of team outcome.",
             icon: Crown,
             earned: false,
             earnedDate: null
@@ -204,7 +204,7 @@ const eventsData = [
           {
             id: 12,
             name: "MVP",
-            description: "Awarded to the individual player with the highest total damage dealt during the boss fight, regardless of team outcome.",
+            description: "Awarded to a player with the highest total damage dealt during the boss fight, regardless of team outcome.",
             icon: Crown,
             earned: false,
             earnedDate: null
@@ -292,7 +292,7 @@ const eventsData = [
           {
             id: 15,
             name: "MVP",
-            description: "Awarded to the individual player with the highest total damage dealt during the boss fight, regardless of team outcome.",
+            description: "Awarded to a player with the highest total damage dealt during the boss fight, regardless of team outcome.",
             icon: Crown,
             earned: false,
             earnedDate: null
