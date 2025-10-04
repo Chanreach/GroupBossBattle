@@ -1,6 +1,6 @@
 // ===== LIBRARIES ===== //
 import { useState } from "react";
-import { Award, Trophy, Star, Shield, Sword, Target, Crown, Medal, Zap, Lock, Users, Calendar, Sparkles, Skull } from "lucide-react";
+import { Award, Trophy, Star, Shield, Sword, Target, Crown, Medal, Zap, Lock, Users, Calendar, Gift, Skull } from "lucide-react";
 
 // ===== COMPONENTS (Shadcn.ui) ===== //
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,6 @@ const eventsData = [
       {
         id: 1,
         name: "Neil Ian Uy",
-        description: "A powerful boss that tests your general knowledge",
         badges: [
           {
             id: 1,
@@ -40,6 +39,7 @@ const eventsData = [
             description: "Awarded to every player on the team that deals the highest total damage to the boss during the fight.",
             icon: Skull,
             earned: true,
+            redeemed: true,
             earnedDate: "2025-01-15"
           },
           {
@@ -48,6 +48,7 @@ const eventsData = [
             description: "Awarded to the player who lands the final blow that defeats the boss.",
             icon: Target,
             earned: true,
+            redeemed: false,
             earnedDate: "2025-01-15"
           },
           {
@@ -56,6 +57,7 @@ const eventsData = [
             description: "Awarded to a player with the highest total damage dealt during the boss fight, regardless of team outcome.",
             icon: Crown,
             earned: false,
+            redeemed: false,
             earnedDate: null
           }
         ]
@@ -63,7 +65,6 @@ const eventsData = [
       {
         id: 2,
         name: "Knowledge Guardian",
-        description: "A powerful boss that tests your general knowledge",
         badges: [
           {
             id: 4,
@@ -71,6 +72,7 @@ const eventsData = [
             description: "Awarded to every player on the team that deals the highest total damage to the boss during the fight.",
             icon: Skull,
             earned: true,
+            redeemed: false,
             earnedDate: "2025-01-15"
           },
           {
@@ -79,6 +81,7 @@ const eventsData = [
             description: "Awarded to the player who lands the final blow that defeats the boss.",
             icon: Target,
             earned: true,
+            redeemed: false,
             earnedDate: "2025-01-15"
           },
           {
@@ -87,6 +90,7 @@ const eventsData = [
             description: "Awarded to a player with the highest total damage dealt during the boss fight, regardless of team outcome.",
             icon: Crown,
             earned: false,
+            redeemed: false,
             earnedDate: null
           }
         ]
@@ -94,7 +98,6 @@ const eventsData = [
       {
         id: 3,
         name: "Tech Titan",
-        description: "Master of all things technology and programming",
         badges: [
           {
             id: 7,
@@ -102,6 +105,7 @@ const eventsData = [
             description: "Awarded to every player on the team that deals the highest total damage to the boss during the fight.",
             icon: Skull,
             earned: false,
+            redeemed: false,
             earnedDate: null
           },
           {
@@ -110,6 +114,7 @@ const eventsData = [
             description: "Awarded to the player who lands the final blow that defeats the boss.",
             icon: Target,
             earned: false,
+            redeemed: false,
             earnedDate: null
           },
           {
@@ -118,6 +123,7 @@ const eventsData = [
             description: "Awarded to a player with the highest total damage dealt during the boss fight, regardless of team outcome.",
             icon: Crown,
             earned: false,
+            redeemed: false,
             earnedDate: null
           }
         ]
@@ -131,6 +137,7 @@ const eventsData = [
         description: "Answer 10 questions correctly during the Open House 2025 event.",
         icon: Medal,
         earned: true,
+        redeemed: true,
         earnedDate: "2025-01-12",
         progress: 15,
         target: 10
@@ -141,6 +148,7 @@ const eventsData = [
         description: "Answer 25 questions correctly during the Open House 2025 event.",
         icon: Medal,
         earned: false,
+        redeemed: false,
         earnedDate: null,
         progress: 15,
         target: 25
@@ -151,6 +159,7 @@ const eventsData = [
         description: "Answer 50 questions correctly during the Open House 2025 event.",
         icon: Medal,
         earned: false,
+        redeemed: false,
         earnedDate: null,
         progress: 15,
         target: 50
@@ -161,6 +170,7 @@ const eventsData = [
         description: "Answer 100 questions correctly during the Open House 2025 event.",
         icon: Medal,
         earned: false,
+        redeemed: false,
         earnedDate: null,
         progress: 15,
         target: 100
@@ -171,6 +181,7 @@ const eventsData = [
         description: "Awarded to the player who defeats every boss in the Open House 2025 event.",
         icon: Trophy,
         earned: false,
+        redeemed: false,
         earnedDate: null
       }
     ]
@@ -183,7 +194,6 @@ const eventsData = [
       {
         id: 3,
         name: "Algorithm Beast",
-        description: "A fierce boss that challenges your algorithmic thinking",
         badges: [
           {
             id: 10,
@@ -191,6 +201,7 @@ const eventsData = [
             description: "Awarded to every player on the team that deals the highest total damage to the boss during the fight.",
             icon: Users,
             earned: false,
+            redeemed: false,
             earnedDate: null
           },
           {
@@ -199,6 +210,7 @@ const eventsData = [
             description: "Awarded to the player who lands the final blow that defeats the boss.",
             icon: Target,
             earned: false,
+            redeemed: false,
             earnedDate: null
           },
           {
@@ -207,6 +219,7 @@ const eventsData = [
             description: "Awarded to a player with the highest total damage dealt during the boss fight, regardless of team outcome.",
             icon: Crown,
             earned: false,
+            redeemed: false,
             earnedDate: null
           }
         ]
@@ -219,6 +232,7 @@ const eventsData = [
         description: "Answer 10 questions correctly during the Tech Conference 2025 event.",
         icon: Medal,
         earned: false,
+        redeemed: false,
         earnedDate: null,
         progress: 0,
         target: 10
@@ -229,6 +243,7 @@ const eventsData = [
         description: "Answer 25 questions correctly during the Tech Conference 2025 event.",
         icon: Medal,
         earned: false,
+        redeemed: false,
         earnedDate: null,
         progress: 0,
         target: 25
@@ -239,6 +254,7 @@ const eventsData = [
         description: "Answer 50 questions correctly during the Tech Conference 2025 event.",
         icon: Medal,
         earned: false,
+        redeemed: false,
         earnedDate: null,
         progress: 0,
         target: 50
@@ -249,6 +265,7 @@ const eventsData = [
         description: "Answer 100 questions correctly during the Tech Conference 2025 event.",
         icon: Medal,
         earned: false,
+        redeemed: false,
         earnedDate: null,
         progress: 0,
         target: 100
@@ -259,6 +276,7 @@ const eventsData = [
         description: "Awarded to the player who defeats every boss in the Tech Conference 2025 event.",
         icon: Trophy,
         earned: false,
+        redeemed: false,
         earnedDate: null
       }
     ]
@@ -271,7 +289,6 @@ const eventsData = [
       {
         id: 4,
         name: "Science Overlord",
-        description: "The ultimate test of scientific knowledge",
         badges: [
           {
             id: 13,
@@ -279,6 +296,7 @@ const eventsData = [
             description: "Awarded to every player on the team that deals the highest total damage to the boss during the fight.",
             icon: Users,
             earned: false,
+            redeemed: false,
             earnedDate: null
           },
           {
@@ -287,6 +305,7 @@ const eventsData = [
             description: "Awarded to the player who lands the final blow that defeats the boss.",
             icon: Target,
             earned: false,
+            redeemed: false,
             earnedDate: null
           },
           {
@@ -295,6 +314,7 @@ const eventsData = [
             description: "Awarded to a player with the highest total damage dealt during the boss fight, regardless of team outcome.",
             icon: Crown,
             earned: false,
+            redeemed: false,
             earnedDate: null
           }
         ]
@@ -307,6 +327,7 @@ const eventsData = [
         description: "Answer 10 questions correctly during the Science Fair 2025 event.",
         icon: Medal,
         earned: false,
+        redeemed: false,
         earnedDate: null,
         progress: 0,
         target: 10
@@ -317,6 +338,7 @@ const eventsData = [
         description: "Answer 25 questions correctly during the Science Fair 2025 event.",
         icon: Medal,
         earned: false,
+        redeemed: false,
         earnedDate: null,
         progress: 0,
         target: 25
@@ -327,6 +349,7 @@ const eventsData = [
         description: "Answer 50 questions correctly during the Science Fair 2025 event.",
         icon: Medal,
         earned: false,
+        redeemed: false,
         earnedDate: null,
         progress: 0,
         target: 50
@@ -337,6 +360,7 @@ const eventsData = [
         description: "Answer 100 questions correctly during the Science Fair 2025 event.",
         icon: Medal,
         earned: false,
+        redeemed: false,
         earnedDate: null,
         progress: 0,
         target: 100
@@ -347,6 +371,7 @@ const eventsData = [
         description: "Awarded to the player who defeats every boss in the Science Fair 2025 event.",
         icon: Trophy,
         earned: false,
+        redeemed: false,
         earnedDate: null
       }
     ]
@@ -378,13 +403,22 @@ const BadgeCard = ({ badge, isMilestone = false }) => {
 
         {/* Badge Icon */}
         <div
-          className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-2 sm:mb-3 ring-1 ring-inset ${
+          className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-2 sm:mb-3 ring-1 ring-inset relative ${
             badge.earned
               ? "bg-gradient-to-tr from-emerald-500 to-green-400 text-white ring-emerald-300/70"
               : "bg-gradient-to-tr from-gray-200 to-gray-300 text-gray-600 dark:from-gray-700 dark:to-gray-600 dark:text-gray-300 ring-gray-300/60 dark:ring-gray-500/50"
-          }`}
+          } ${badge.redeemed ? 'opacity-70' : ''}`}
         >
           <IconComponent className="h-5 w-5 sm:h-6 sm:w-6" />
+          {badge.redeemed && (
+            <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center">
+              <span
+                className="text-white/70 text-[6px] font-bold whitespace-nowrap bg-green-900 ms-[2px] px-[7px] py-[1px] rounded-[1px] rotate-[45deg]"
+              >
+                REDEEMED
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Badge Info */}
@@ -418,7 +452,12 @@ const BadgeCard = ({ badge, isMilestone = false }) => {
 
         {/* Earned Status / Date */}
         <div className="flex items-center justify-between">
-          {badge.earned ? (
+          {badge.redeemed ? (
+            <span className="inline-flex items-center gap-1 text-[11px] sm:text-xs text-green-600 dark:text-green-400 font-medium">
+              <Gift className="h-3 w-3" />
+              Redeemed
+            </span>
+          ) : badge.earned ? (
             <span className="inline-flex items-center gap-1 text-[11px] sm:text-xs text-green-600 dark:text-green-400 font-medium">
               <CheckMark className="h-3 w-3 me-0" />
               Earned
@@ -445,7 +484,7 @@ const BadgeCard = ({ badge, isMilestone = false }) => {
 const Badges = () => {
   const [selectedEvent, setSelectedEvent] = useState(eventsData[0]);
   const [selectedBoss, setSelectedBoss] = useState(null); // null means show all bosses
-  const [filter, setFilter] = useState("all"); // all, earned, unearned
+  const [filter, setFilter] = useState("all"); // all, earned, unearned, redeemed
 
   // Calculate total stats
   const allBadges = eventsData.flatMap(event => [
@@ -502,6 +541,7 @@ const Badges = () => {
   const getFilteredBadges = (badges) => {
     if (filter === "earned") return badges.filter(badge => badge.earned);
     if (filter === "unearned") return badges.filter(badge => !badge.earned);
+    if (filter === "redeemed") return badges.filter(badge => badge.redeemed);
     return badges;
   };
 
@@ -660,9 +700,9 @@ const Badges = () => {
 
 
 
-                {/* ===== ALL/EARNED/UNEARNED FILTER ===== */}
+                {/* ===== ALL/EARNED/UNEARNED/REDEEMED FILTER ===== */}
                 <Tabs value={filter} onValueChange={(value) => setFilter(value)}>
-                  <TabsList className="grid w-full grid-cols-3 h-auto gap-1 p-1">
+                  <TabsList className="grid w-full grid-cols-4 h-auto gap-1 p-1">
                     <TabsTrigger
                       value="all"
                       className="text-xs sm:text-sm h-full py-2 px-2 whitespace-normal text-center leading-tight"
@@ -678,6 +718,14 @@ const Badges = () => {
                     >
                       <span className="inline-flex items-center gap-1 justify-center">
                         <CheckMark className="h-3 w-3 me-1" /> Earned
+                      </span>
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="redeemed"
+                      className="text-xs sm:text-sm h-full py-2 px-2 whitespace-normal text-center leading-tight"
+                    >
+                      <span className="inline-flex items-center gap-1 justify-center">
+                        <Gift className="h-3 w-3 me-1" /> Redeemed
                       </span>
                     </TabsTrigger>
                     <TabsTrigger
@@ -734,7 +782,6 @@ const Badges = () => {
                             );
                           })()}
                         </div>
-                        <p className="text-muted-foreground text-sm sm:text-base">{boss.description}</p>
                       </div>
 
                       {/* Boss Badges */}
@@ -810,7 +857,9 @@ const Badges = () => {
                         ? "Play more sessions and keep an eye on boss fights to earn achievements."
                         : filter === "unearned"
                           ? "Nice! You've collected all available achievements here. Check other events for more."
-                          : "This event currently has no badges available. Check back later or pick another event."
+                          : filter === "redeemed"
+                            ? "No badges have been redeemed yet. Visit the badge redemption center to redeem your earned badges."
+                            : "This event currently has no badges available. Check back later or pick another event."
                       }
                     </p>
                   </div>
