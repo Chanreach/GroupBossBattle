@@ -76,8 +76,9 @@ const BossBattle = () => {
     podiumTimer,
     currentPlayerBadge,
     isBadgeDisplaying,
-    isPlayerNotFound,
-    loading,
+    isDataNotFound,
+    hasSubmittedAnswerRef,
+    isLoading,
     leaveSession,
     submitAnswer,
     submitRevivalCode,
@@ -99,11 +100,9 @@ const BossBattle = () => {
       navigator.vibrate(250);
     }
 
-    console.log(questionTimeLimit, questionTimeRemaining);
     const responseTime = questionTimeLimit - questionTimeRemaining;
     const userInfo = getUserInfo(user);
 
-    console.log("Response Time:", responseTime);
     if (!userInfo.id) {
       toast.error("User not found, please refresh");
       return;
@@ -159,12 +158,10 @@ const BossBattle = () => {
   };
 
   useEffect(() => {
-    if (isPlayerNotFound) {
-      setTimeout(() => {
-        navigate(`/boss-preview/${eventBossId}/${joinCode}`);
-      }, 500);
+    if (isDataNotFound) {
+      navigate(`/boss-preview/${eventBossId}/${joinCode}`);
     }
-  }, [isPlayerNotFound, navigate, eventBossId, joinCode]);
+  }, [isDataNotFound, navigate, eventBossId, joinCode]);
 
   useEffect(() => {
     if (podiumTimer === 0 && isPodiumCountdownVisible) {
@@ -205,12 +202,11 @@ const BossBattle = () => {
                 onClick={handleLeave}
                 variant="outline"
                 size="sm"
-                disabled={isPlayerKnockedOut}
                 className={`flex items-center justify-center ${
                   isPlayerKnockedOut || isPlayerDead || isRevivalDialogVisible
                     ? "bg-[#464646] text-white border-[#464646] hover:bg-[#494949] dark:bg-background dark:text-foreground dark:border-border dark:hover:bg-accent"
                     : ""
-                } ${isPlayerKnockedOut ? "opacity-50 cursor-not-allowed" : ""}`}
+                }`}
               >
                 <LogOut
                   className={`w-4 h-4 rotate-180 ${
@@ -513,17 +509,17 @@ const BossBattle = () => {
             {/* Question Text */}
             <div className="mb-3 flex-shrink-0">
               <p className="text-sm font-medium">
-                {loading.question
-                  ? loading.result
+                {isLoading.question
+                  ? isLoading.result
                     ? "Processing your answer..."
-                    : "Loading question..."
+                    : "isLoading question..."
                   : currentQuestion?.questionText}
               </p>
             </div>
 
             {/* Answer Options */}
             <div className="grid grid-cols-2 gap-2 flex-1 min-h-0 -mb-3">
-              {loading.question
+              {isLoading.question
                 ? [...Array(4)].map((_, index) => (
                     <Button
                       key={index}
@@ -531,7 +527,7 @@ const BossBattle = () => {
                       className="w-full p-2 h-full text-center whitespace-normal font-medium text-sm bg-muted animate-pulse"
                       disabled
                     >
-                      Loading...
+                      isLoading...
                     </Button>
                   ))
                 : currentQuestion?.answerChoices.map((choice, index) => {
@@ -549,13 +545,13 @@ const BossBattle = () => {
                       "!bg-blue-700 !text-white !border-blue-700", // Selected Blue
                     ];
 
-                    // Use the dedicated areButtonsDisabled state for cleaner logic
                     const isDisabled =
-                      isPlayerKnockedOut ||
-                      isPlayerDead ||
                       isEventBossDefeated ||
-                      loading.result ||
-                      loading.question;
+                      isPlayerDead ||
+                      isPlayerKnockedOut ||
+                      isLoading.question ||
+                      isLoading.result ||
+                      hasSubmittedAnswerRef.current;
 
                     return (
                       <Button

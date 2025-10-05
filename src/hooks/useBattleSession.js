@@ -6,9 +6,6 @@ import { toast } from "sonner";
 import useBossBattle from "./useBossBattle";
 import { useAuth } from "@/context/useAuth";
 
-// ===== SERVICES ===== //
-import { fetchEventBossById } from "@/services/eventBossService";
-
 // ===== UTILITIES ===== //
 import { SOCKET_EVENTS } from "@/utils/socketConstants";
 import { getUserInfo } from "@/utils/userUtils";
@@ -56,15 +53,15 @@ const useBattleSession = (eventBossId, joinCode) => {
   const [currentPlayerBadge, setCurrentPlayerBadge] = useState(null);
   const [isBadgeDisplaying, setIsBadgeDisplaying] = useState(false);
 
-  const [loading, setLoading] = useState({
+  const [hasJoinedSession, setHasJoinedSession] = useState(false);
+  const [isDataNotFound, setIsDataNotFound] = useState(false);
+  const hasSubmittedAnswerRef = useRef(false);
+
+  const [isLoading, setIsLoading] = useState({
     eventBoss: false,
     question: false,
     result: false,
   });
-  const [hasJoinedSession, setHasJoinedSession] = useState(false);
-  const [isReconnected, setIsReconnected] = useState(false);
-  const [isPlayerNotFound, setIsPlayerNotFound] = useState(false);
-  const hasSubmittedAnswerRef = useRef(false);
 
   // Audio refs to persist across renders
   const punchAudioRef = useRef(null);
@@ -129,7 +126,7 @@ const useBattleSession = (eventBossId, joinCode) => {
     (playerId) => {
       if (!socket || !eventBossId || !joinCode || !playerId) return;
 
-      setLoading((prev) => ({ ...prev, eventBoss: true }));
+      setIsLoading((prev) => ({ ...prev, eventBoss: true }));
       socket.emit(SOCKET_EVENTS.BATTLE_SESSION.JOIN, {
         eventBossId,
         joinCode,
@@ -144,20 +141,8 @@ const useBattleSession = (eventBossId, joinCode) => {
     (playerId) => {
       if (!socket || eventBossId || !playerId) return;
 
-      setLoading((prev) => ({ ...prev, eventBoss: true }));
+      setIsLoading((prev) => ({ ...prev, eventBoss: true }));
       socket.emit(SOCKET_EVENTS.BATTLE_SESSION.LEAVE, {
-        eventBossId,
-        playerId,
-      });
-    },
-    [socket, eventBossId]
-  );
-
-  // Reconnect to the battle session
-  const reconnectSession = useCallback(
-    (playerId) => {
-      if (!socket || !eventBossId || !playerId) return;
-      socket.emit(SOCKET_EVENTS.BATTLE_SESSION.PLAYER.RECONNECT, {
         eventBossId,
         playerId,
       });
@@ -170,7 +155,7 @@ const useBattleSession = (eventBossId, joinCode) => {
     (playerId) => {
       if (!socket || !eventBossId || !playerId) return;
 
-      setLoading((prev) => ({ ...prev, question: true }));
+      setIsLoading((prev) => ({ ...prev, question: true }));
       socket.emit(SOCKET_EVENTS.BATTLE_SESSION.QUESTION.REQUEST, {
         eventBossId,
         playerId,
@@ -182,6 +167,8 @@ const useBattleSession = (eventBossId, joinCode) => {
   // Submit an answer to the current question
   const submitAnswer = useCallback(
     (playerId, choiceIndex, responseTime) => {
+      console.log("submitAnswer called");
+      console.log({ playerId, choiceIndex, responseTime });
       if (
         !socket ||
         !eventBossId ||
@@ -191,8 +178,8 @@ const useBattleSession = (eventBossId, joinCode) => {
       )
         return;
 
+      setIsLoading((prev) => ({ ...prev, result: true }));
       setChoiceIndexSelected(choiceIndex);
-      setLoading((prev) => ({ ...prev, result: true }));
       hasSubmittedAnswerRef.current = true;
       socket.emit(SOCKET_EVENTS.BATTLE_SESSION.ANSWER.SUBMIT, {
         eventBossId,
@@ -271,12 +258,6 @@ const useBattleSession = (eventBossId, joinCode) => {
   }, [socket, eventBossId, joinCode, hasJoinedSession, user, joinSession]);
 
   useEffect(() => {
-    if (!socket || !eventBossId || !joinCode || isReconnected) return;
-    const userInfo = getUserInfo(user);
-    reconnectSession(userInfo.id || null);
-  }, [socket, eventBossId, joinCode, isReconnected, user, reconnectSession]);
-
-  useEffect(() => {
     if (playerBadges.length === 0 || isBadgeDisplaying) return;
 
     setCurrentPlayerBadge(playerBadges[0]);
@@ -295,8 +276,8 @@ const useBattleSession = (eventBossId, joinCode) => {
       isEventBossDefeated ||
       !currentQuestion ||
       !questionEndTime ||
-      loading.question ||
-      loading.result
+      isLoading.question ||
+      isLoading.result
     )
       return;
 
@@ -317,33 +298,10 @@ const useBattleSession = (eventBossId, joinCode) => {
     isEventBossDefeated,
     currentQuestion,
     questionEndTime,
-    loading.question,
-    loading.result,
+    isLoading,
     user,
     submitAnswer,
   ]);
-
-  useEffect(() => {
-    if (!revivalEndTime) return;
-
-    const interval = setInterval(() => {
-      const timeLeft = Math.max(
-        0,
-        Math.ceil((revivalEndTime - Date.now()) / 1000)
-      );
-      setRevivalTimer(timeLeft);
-    }, 1000);
-
-    if (revivalTimer === 0) {
-      const userInfo = getUserInfo(user);
-      socket.emit(SOCKET_EVENTS.BATTLE_SESSION.REVIVAL_CODE.EXPIRED, {
-        eventBossId,
-        playerId: userInfo.id || null,
-      });
-    }
-
-    return () => clearInterval(interval);
-  }, [revivalEndTime, socket, eventBossId, user, revivalTimer]);
 
   useEffect(() => {
     if (!podiumEndTime) return;
@@ -364,45 +322,42 @@ const useBattleSession = (eventBossId, joinCode) => {
     if (!socket || !eventBossId || !joinCode) return;
 
     const handleJoinedSession = (payload) => {
-      setLoading((prev) => ({ ...prev, eventBoss: false }));
+      setIsLoading({ eventBoss: false, question: false, result: false });
+      setHasJoinedSession(true);
       setEventBoss(payload.data.eventBoss);
       setEventBossCurrentHP(payload.data.eventBoss.currentHP);
       setEventBossMaxHP(payload.data.eventBoss.maxHP);
       setPlayerLivesRemaining(payload.data.player.hearts);
       setPlayerTeam(payload.data.player.teamName);
-      toast.success(payload.message);
-    };
-
-    const handleReconnected = (payload) => {
-      setIsReconnected(true);
-      setCurrentQuestion(payload.data.currentQuestion);
-      setCurrentQuestionNumber(payload.data.currentQuestionNumber);
-      setQuestionEndTime(payload.data.questionEndTime);
+      setCurrentQuestion(payload.data.question.currentQuestion);
+      setCurrentQuestionNumber(payload.data.question.currentQuestionNumber);
+      setQuestionEndTime(payload.data.question.questionEndTime);
       setQuestionTimeRemaining(
-        Math.max(0, payload.data.questionEndTime - Date.now())
+        Math.max(0, payload.data.question.questionEndTime - Date.now())
       );
-      setLoading((prev) => ({ ...prev, question: false, result: false }));
+      toast.success(payload.message);
 
-      if (!payload.data.currentQuestion) {
+      if (!payload.data.question.currentQuestion) {
         const userInfo = getUserInfo(user);
         requestNextQuestion(userInfo.id || null);
       }
     };
 
-    const handleReconnectFailed = (payload) => {
-      toast.error(payload.message || "Reconnection to battle session failed.");
-      setIsReconnected(false);
-      setIsPlayerNotFound(true);
-      console.log(payload.message);
+    const handleDataNotFound = (payload) => {
+      setIsDataNotFound(true);
+      toast.error(payload.message || "Data not found.");
+      console.log(payload.message || "Data not found.");
     };
 
     const handleNextQuestion = (payload) => {
-      setLoading((prev) => ({ ...prev, question: false, result: false }));
-      setCurrentQuestion(payload.data);
+      setIsLoading((prev) => ({ ...prev, question: false, result: false }));
+      setCurrentQuestion(payload.data.currentQuestion);
       setCurrentQuestionNumber((prev) => prev + 1);
       setChoiceIndexSelected(null);
-      setQuestionEndTime(payload.data.endTime);
-      setQuestionTimeRemaining(Math.max(0, payload.data.endTime - Date.now()));
+      setQuestionEndTime(payload.data.currentQuestion.endTime);
+      setQuestionTimeRemaining(
+        Math.max(0, payload.data.currentQuestion.endTime - Date.now())
+      );
     };
 
     const handleAnswerResult = (payload) => {
@@ -412,8 +367,8 @@ const useBattleSession = (eventBossId, joinCode) => {
         responseCategory,
         playerHearts,
         eventBossCurrentHP,
-      } = payload.data;
-      setLoading((prev) => ({ ...prev, result: false }));
+      } = payload.data.answerResult;
+      setIsLoading((prev) => ({ ...prev, result: false }));
       setEventBossCurrentHP(eventBossCurrentHP);
       setPlayerLivesRemaining(playerHearts);
       if (damage > 0) {
@@ -440,7 +395,7 @@ const useBattleSession = (eventBossId, joinCode) => {
     };
 
     const handleBossDamaged = (payload) => {
-      const { damage, eventBossCurrentHP } = payload.data;
+      const { damage, eventBossCurrentHP } = payload.data.answerResult;
       setEventBossCurrentHP(eventBossCurrentHP);
       setIsBossTakingDamage(true);
       generateDamageNumber(damage, null);
@@ -462,11 +417,14 @@ const useBattleSession = (eventBossId, joinCode) => {
     };
 
     const handlePlayerKnockedOut = (payload) => {
-      const { revivalCode, revivalEndTime } = payload.data;
       setIsPlayerKnockedOut(true);
-      setPlayerRevivalCode(revivalCode);
-      setRevivalEndTime(revivalEndTime);
-      setRevivalTimer(Math.ceil((revivalEndTime - Date.now()) / 1000));
+      setPlayerRevivalCode(payload.data.knockoutInfo.revivalCode);
+      setRevivalEndTime(payload.data.knockoutInfo.revivalEndTime);
+      setRevivalTimer(
+        Math.ceil(
+          (payload.data.knockoutInfo.revivalEndTime - Date.now()) / 1000
+        )
+      );
       updatePlayerState(eventBossId, { battleState: "knocked-out" });
       toast.info(
         payload.message ||
@@ -547,10 +505,15 @@ const useBattleSession = (eventBossId, joinCode) => {
       setIsEventBossDefeated(true);
       setTimeout(() => setIsDefeatMessageVisible(true), 1000);
       setIsPodiumCountdownVisible(true);
-      setPodiumEndTime(payload.data.podiumEndTime);
-      setPodiumTimer(
-        Math.ceil((payload.data.podiumEndTime - Date.now()) / 1000)
-      );
+      if (payload.data.podiumEndTime > Date.now()) {
+        setPodiumEndTime(payload.data.podiumEndTime);
+        setPodiumTimer(
+          Math.ceil((payload.data.podiumEndTime - Date.now()) / 1000)
+        );
+      } else {
+        setPodiumEndTime(Date.now() + 3000);
+        setPodiumTimer(3);
+      }
       removePlayerState(eventBossId);
       toast.info(payload.message || "The battle has ended.");
 
@@ -567,28 +530,21 @@ const useBattleSession = (eventBossId, joinCode) => {
       addPlayerBadgeToQueue(payload.data.playerBadge.badge, payload.message);
     };
 
-    const handlePlayerNotFound = (payload) => {
-      toast.error(payload.message || "Player not found in this session.");
-      setIsPlayerNotFound(true);
-    };
-
     const handleLeftSession = (payload) => {
       console.log("Left session:", payload.message);
     };
 
     const handleSocketError = (error) => {
-      toast.error(`Socket error: ${error.message}`);
+      setIsLoading({ eventBoss: false, question: false, result: false });
       console.error("Socket error:", error);
     };
 
     socket.on(SOCKET_EVENTS.BATTLE_SESSION.JOINED, handleJoinedSession);
+    socket.on(SOCKET_EVENTS.BATTLE_SESSION.NOT_FOUND, handleDataNotFound);
+    socket.on(SOCKET_EVENTS.BOSS.NOT_FOUND, handleDataNotFound);
     socket.on(
-      SOCKET_EVENTS.BATTLE_SESSION.PLAYER.RECONNECTED,
-      handleReconnected
-    );
-    socket.on(
-      SOCKET_EVENTS.BATTLE_SESSION.PLAYER.RECONNECT_FAILED,
-      handleReconnectFailed
+      SOCKET_EVENTS.BATTLE_SESSION.PLAYER.NOT_FOUND,
+      handleDataNotFound
     );
     socket.on(SOCKET_EVENTS.BATTLE_SESSION.QUESTION.NEXT, handleNextQuestion);
     socket.on(SOCKET_EVENTS.BATTLE_SESSION.ANSWER.RESULT, handleAnswerResult);
@@ -627,22 +583,16 @@ const useBattleSession = (eventBossId, joinCode) => {
     socket.on(SOCKET_EVENTS.BATTLE_SESSION.PLAYER.REVIVED, handleRevived);
     socket.on(SOCKET_EVENTS.BATTLE_SESSION.ENDED, handleSessionEnded);
     socket.on(SOCKET_EVENTS.BADGE.EARNED, handleBadgeEarned);
-    socket.on(
-      SOCKET_EVENTS.BATTLE_SESSION.PLAYER.NOT_FOUND,
-      handlePlayerNotFound
-    );
     socket.on(SOCKET_EVENTS.BATTLE_SESSION.LEFT, handleLeftSession);
     socket.on(SOCKET_EVENTS.ERROR, handleSocketError);
 
     return () => {
       socket.off(SOCKET_EVENTS.BATTLE_SESSION.JOINED, handleJoinedSession);
+      socket.off(SOCKET_EVENTS.BATTLE_SESSION.NOT_FOUND, handleDataNotFound);
+      socket.off(SOCKET_EVENTS.BOSS.NOT_FOUND, handleDataNotFound);
       socket.off(
-        SOCKET_EVENTS.BATTLE_SESSION.PLAYER.RECONNECTED,
-        handleReconnected
-      );
-      socket.off(
-        SOCKET_EVENTS.BATTLE_SESSION.PLAYER.RECONNECT_FAILED,
-        handleReconnectFailed
+        SOCKET_EVENTS.BATTLE_SESSION.PLAYER.NOT_FOUND,
+        handleDataNotFound
       );
       socket.off(
         SOCKET_EVENTS.BATTLE_SESSION.QUESTION.NEXT,
@@ -689,10 +639,6 @@ const useBattleSession = (eventBossId, joinCode) => {
       socket.off(SOCKET_EVENTS.BATTLE_SESSION.PLAYER.REVIVED, handleRevived);
       socket.off(SOCKET_EVENTS.BATTLE_SESSION.ENDED, handleSessionEnded);
       socket.off(SOCKET_EVENTS.BADGE.EARNED, handleBadgeEarned);
-      socket.off(
-        SOCKET_EVENTS.BATTLE_SESSION.PLAYER.NOT_FOUND,
-        handlePlayerNotFound
-      );
       socket.off(SOCKET_EVENTS.BATTLE_SESSION.LEFT, handleLeftSession);
       socket.off(SOCKET_EVENTS.ERROR, handleSocketError);
     };
@@ -706,33 +652,36 @@ const useBattleSession = (eventBossId, joinCode) => {
     isPlayerKnockedOut,
     isPlayerDead,
     isEventBossDefeated,
-    isReconnected,
     playHurtSound,
     joinSession,
     requestNextQuestion,
     generateDamageNumber,
-    reconnectSession,
     addPlayerBadgeToQueue,
   ]);
 
   useEffect(() => {
-    if (!eventBoss && !loading.eventBoss && eventBossId && hasJoinedSession) {
-      const fallbackTimer = setTimeout(() => {
-        console.warn("Using HTTP fallback event boss data");
-        fetchEventBossById(eventBossId)
-          .then((eventBoss) => {
-            if (eventBoss) {
-              setEventBoss(eventBoss);
-            }
-          })
-          .catch((error) => {
-            console.error("Error fetching fallback event boss data:", error);
-          });
-      }, 1000);
+    if (!revivalEndTime) return;
 
-      return () => clearTimeout(fallbackTimer);
-    }
-  }, [eventBoss, loading, eventBossId, hasJoinedSession]);
+    const interval = setInterval(() => {
+      const timeLeft = Math.max(
+        0,
+        Math.ceil((revivalEndTime - Date.now()) / 1000)
+      );
+      setRevivalTimer(timeLeft);
+      console.log("Revival countdown:", timeLeft);
+
+      if (timeLeft <= 0) {
+        const userInfo = getUserInfo(user);
+        socket.emit(SOCKET_EVENTS.BATTLE_SESSION.REVIVAL_CODE.EXPIRED, {
+          eventBossId,
+          playerId: userInfo.id || null,
+        });
+        clearInterval(interval);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [revivalEndTime, socket, eventBossId, user]);
 
   // Cleanup effect to stop heartbeats sound when component unmounts or player becomes dead
   useEffect(() => {
@@ -789,9 +738,10 @@ const useBattleSession = (eventBossId, joinCode) => {
     playerBadges,
     currentPlayerBadge,
     isBadgeDisplaying,
-    loading,
     hasJoinedSession,
-    isPlayerNotFound,
+    isDataNotFound,
+    hasSubmittedAnswerRef,
+    isLoading,
     joinSession,
     leaveSession,
     requestNextQuestion,

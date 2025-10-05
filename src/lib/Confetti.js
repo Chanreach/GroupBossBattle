@@ -44,6 +44,7 @@ const fireSingleBurst = (particleRatio, opts, defaults) => {
  * @param {number} options.maxBursts - Maximum number of confetti bursts (default: 3)
  * @param {number} options.burstInterval - Time between bursts in ms (default: 2000)
  * @param {Function} options.onComplete - Callback when all bursts are complete
+ * @returns {Function} Cleanup function to stop the confetti
  */
 export const startConfettiCelebration = async (options = {}) => {
   const {
@@ -54,6 +55,7 @@ export const startConfettiCelebration = async (options = {}) => {
   } = options;
 
   const defaults = { origin };
+  let isCleanedUp = false;
 
   // Load the confetti library
   await loadConfettiLibrary();
@@ -62,6 +64,9 @@ export const startConfettiCelebration = async (options = {}) => {
    * Fires a complete confetti sequence with multiple patterns
    */
   const fireConfettiSequence = () => {
+    // Don't fire if already cleaned up
+    if (isCleanedUp) return;
+
     // Burst 1: Tight spread, high velocity
     fireSingleBurst(0.25, {
       spread: 26,
@@ -96,25 +101,47 @@ export const startConfettiCelebration = async (options = {}) => {
   };
 
   let burstCount = 0;
+  let interval = null;
 
-  // Fire immediately
-  fireConfettiSequence();
-  burstCount++;
+  // Fire immediately if not cleaned up
+  if (!isCleanedUp) {
+    fireConfettiSequence();
+    burstCount++;
+  }
 
   // Set up interval for additional bursts
-  const interval = setInterval(() => {
-    if (burstCount < maxBursts) {
-      fireConfettiSequence();
-      burstCount++;
-    } else {
-      clearInterval(interval);
-      onComplete();
-    }
-  }, burstInterval);
+  if (!isCleanedUp && burstCount < maxBursts) {
+    interval = setInterval(() => {
+      if (isCleanedUp) {
+        clearInterval(interval);
+        return;
+      }
+
+      if (burstCount < maxBursts) {
+        fireConfettiSequence();
+        burstCount++;
+      } else {
+        clearInterval(interval);
+        interval = null;
+        if (!isCleanedUp) {
+          onComplete();
+        }
+      }
+    }, burstInterval);
+  }
 
   // Return cleanup function
   return () => {
-    clearInterval(interval);
+    isCleanedUp = true;
+    if (interval) {
+      clearInterval(interval);
+      interval = null;
+    }
+    
+    // Clear any ongoing confetti animations
+    if (window.confetti && window.confetti.reset) {
+      window.confetti.reset();
+    }
   };
 };
 

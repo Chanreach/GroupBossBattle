@@ -32,14 +32,17 @@ const BossPodium = () => {
   const bossPodium = useBossPodium(eventBossId, joinCode);
   const {
     eventBoss,
+    battleState,
     currentPlayerBadge,
     isBadgeDisplaying,
     leaderboard,
     podium,
-    loading,
+    isLoading,
     hasJoinedPodium,
+    hasRequestedPodium,
+    isLeaderboardEmpty,
+    isPodiumEmpty,
     removeCurrentBadge,
-    shouldNavigateAway,
   } = bossPodium;
 
   useEffect(() => {
@@ -66,15 +69,26 @@ const BossPodium = () => {
   };
 
   useEffect(() => {
-    if (!hasJoinedPodium) return;
+    if (!hasJoinedPodium || !hasRequestedPodium) return;
 
-    if (shouldNavigateAway()) {
-      // navigate(`/boss-preview/${eventBossId}/${joinCode}`);
+    const shouldNavigate =
+      !battleState ||
+      battleState !== "ended" ||
+      (isLeaderboardEmpty && !isLoading.leaderboard) ||
+      (isPodiumEmpty && !isLoading.podium);
+    console.log({ shouldNavigate });
+
+    if (shouldNavigate) {
+      navigate(`/boss-preview/${eventBossId}/${joinCode}`);
       console.log("Navigating away from podium due to battle state...");
     }
   }, [
     hasJoinedPodium,
-    shouldNavigateAway,
+    hasRequestedPodium,
+    battleState,
+    isLeaderboardEmpty,
+    isPodiumEmpty,
+    isLoading,
     navigate,
     eventBossId,
     joinCode,
@@ -88,6 +102,11 @@ const BossPodium = () => {
     victoryDrumsAudio.volume = 0.03;
     victoryThemeAudio.volume = 0.02;
 
+    // Keep track of timeouts and confetti cleanup
+    let soundTimeout = null;
+    let themeTimeout = null;
+    let confettiCleanup = null;
+
     const playVictorySounds = async () => {
       try {
         // Play victory drums first
@@ -96,7 +115,7 @@ const BossPodium = () => {
         await victoryDrumsAudio.play();
 
         // Play victory theme 3 seconds after drums start
-        setTimeout(async () => {
+        themeTimeout = setTimeout(async () => {
           console.log("Playing victory theme...");
           victoryThemeAudio.currentTime = 0;
           victoryThemeAudio.loop = false; // Ensure no loop
@@ -109,30 +128,48 @@ const BossPodium = () => {
     };
 
     const triggerVictoryConfetti = async () => {
-      // Start confetti celebration with 3 bursts
-      await startConfettiCelebration({
+      // Start confetti celebration with 3 bursts and store cleanup function
+      confettiCleanup = await startConfettiCelebration({
         origin: { y: 0.6 }, // Start from 60% down the screen (good for podium)
         maxBursts: 3, // 3 confetti bursts
         burstInterval: 1500, // 1.5 seconds between bursts
         onComplete: () => {
           console.log("Victory confetti celebration complete!");
+          confettiCleanup = null; // Clear reference when complete
         },
       });
     };
 
     // Start victory sounds immediately and confetti after a short delay
-    const effectTimer = setTimeout(() => {
+    soundTimeout = setTimeout(() => {
       playVictorySounds(); // Start sounds immediately
       triggerVictoryConfetti(); // Start confetti
     }, 100);
 
+    // Cleanup function to stop everything when component unmounts or navigates away
     return () => {
-      clearTimeout(effectTimer);
-      // Stop and cleanup audio if component unmounts
+      // Clear all timeouts
+      if (soundTimeout) clearTimeout(soundTimeout);
+      if (themeTimeout) clearTimeout(themeTimeout);
+      
+      // Stop and cleanup audio
       victoryDrumsAudio.pause();
       victoryDrumsAudio.currentTime = 0;
       victoryThemeAudio.pause();
       victoryThemeAudio.currentTime = 0;
+      
+      // Stop confetti animation
+      if (confettiCleanup) {
+        console.log("Cleaning up confetti due to component unmount/navigation");
+        confettiCleanup();
+        confettiCleanup = null;
+      }
+      
+      // Additional cleanup: clear any remaining confetti particles from DOM
+      if (window.confetti) {
+        // Stop any ongoing confetti animations
+        window.confetti.reset && window.confetti.reset();
+      }
     };
   }, []);
 
@@ -256,12 +293,12 @@ const BossPodium = () => {
                     <div className="text-center py-8">
                       <Trophy className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
                       <p className="text-muted-foreground text-lg font-medium mb-2">
-                        {loading.leaderboard
+                        {isLoading.leaderboard
                           ? "Loading battle results..."
                           : "No battle results yet"}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {loading.leaderboard
+                        {isLoading.leaderboard
                           ? "Please wait while we process the final rankings..."
                           : "Complete a boss battle to see the victory podium"}
                       </p>
@@ -274,7 +311,7 @@ const BossPodium = () => {
             {/* ===== Final Results Leaderboard ===== */}
             <LeaderboardOverview
               leaderboard={leaderboard}
-              loading={loading.leaderboard}
+              isLoading={isLoading.leaderboard}
               isPreview={false}
             />
           </div>

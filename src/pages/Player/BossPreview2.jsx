@@ -22,6 +22,7 @@ import { useAuth } from "@/context/useAuth";
 // ===== UTILITIES ===== //
 import { getBossImageUrl } from "@/utils/imageUtils";
 import { getUserInfo } from "@/utils/userUtils";
+import { getPlayerState, removePlayerState } from "@/utils/playerUtils";
 
 const BossPreview = () => {
   const { eventBossId, joinCode } = useParams();
@@ -36,9 +37,10 @@ const BossPreview = () => {
     eventBoss,
     eventBossStatus,
     cooldownTimer,
+    isEventBossNotFound,
     sessionSize,
     leaderboard,
-    loading,
+    isLoading,
   } = bossPreview;
 
   const {
@@ -52,7 +54,9 @@ const BossPreview = () => {
     leaveQueue,
     joinMidGame,
   } = battleQueue;
+
   const [nickname, setNickname] = useState("");
+  const [isPlayerDead, setIsPlayerDead] = useState(false);
 
   const goBack = () => {
     navigate(-1);
@@ -98,6 +102,12 @@ const BossPreview = () => {
       .padStart(2, "0")}s`;
   };
 
+  useEffect(() => {
+    if (isEventBossNotFound) {
+      navigate("/error");
+    }
+  }, [isEventBossNotFound, navigate]);
+
   // Auto-fill nickname with username when user is available
   useEffect(() => {
     if (!nickname) {
@@ -107,8 +117,26 @@ const BossPreview = () => {
     }
   }, [user, nickname]);
 
+  useEffect(() => {
+    const storedPlayer = getPlayerState(eventBossId);
+    if (!storedPlayer) return;
+
+    if (storedPlayer && storedPlayer.nickname) {
+      setNickname(storedPlayer.nickname);
+    }
+    if (storedPlayer.battleState === "dead") {
+      setIsPlayerDead(true);
+    }
+  }, [eventBossId]);
+
+  useEffect(() => {
+    if (eventBossStatus !== "cooldown") return;
+
+    setIsPlayerDead(false);
+    removePlayerState(eventBossId);
+  }, [eventBossStatus, eventBossId]);
+
   const handleJoin = () => {
-    console.log("Attempting to join with nickname:", nickname);
     const validationError = validateNickname(nickname);
     if (validationError) {
       toast.error(validationError);
@@ -252,6 +280,7 @@ const BossPreview = () => {
 
               {/* Join/Waiting Button */}
               {playerContextStatus === "in-battle" &&
+              !isPlayerDead &&
               countdownTimer === null ? (
                 <Button
                   className="flex-1c w-full halftone-texture"
@@ -270,6 +299,8 @@ const BossPreview = () => {
                 >
                   {eventBossStatus === "cooldown"
                     ? `Available in ${formatTime(cooldownTimer)}`
+                    : isPlayerDead
+                    ? "Rejoin"
                     : "Join"}
                 </Button>
               ) : (
@@ -319,7 +350,11 @@ const BossPreview = () => {
                   onChange={handleNicknameChange}
                   placeholder="Enter your nickname"
                   maxLength={20}
-                  disabled={hasJoinedQueue}
+                  disabled={
+                    hasJoinedQueue ||
+                    hasJoinedMidGame ||
+                    (playerContextStatus === "in-battle" && !isPlayerDead)
+                  }
                 />
               </div>
             </CardContent>
@@ -329,7 +364,7 @@ const BossPreview = () => {
         {/* Leaderboard Card */}
         <LeaderboardOverview
           leaderboard={leaderboard}
-          loading={loading.leaderboard}
+          isLoading={isLoading.leaderboard}
           isPreview={true}
         />
       </div>

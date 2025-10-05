@@ -25,11 +25,12 @@ const useBossPodium = (eventBossId, joinCode) => {
 
   const [leaderboard, setLeaderboard] = useState([]);
   const [podium, setPodium] = useState([]);
-  const [loading, setLoading] = useState({ leaderboard: false, podium: false });
   const [hasJoinedPodium, setHasJoinedPodium] = useState(false);
   const [hasRequestedPodium, setHasRequestedPodium] = useState(false);
   const [isLeaderboardEmpty, setIsLeaderboardEmpty] = useState(true);
   const [isPodiumEmpty, setIsPodiumEmpty] = useState(true);
+  
+  const [isLoading, setIsLoading] = useState({ leaderboard: false, podium: false });
 
   const joinPodium = useCallback(
     (playerId) => {
@@ -52,7 +53,7 @@ const useBossPodium = (eventBossId, joinCode) => {
   const requestPodium = useCallback(() => {
     if (!socket || !eventBossId) return;
 
-    setLoading((prev) => ({ ...prev, leaderboard: true, podium: true }));
+    setIsLoading((prev) => ({ ...prev, leaderboard: true, podium: true }));
     socket.emit(SOCKET_EVENTS.PODIUM.REQUEST, { eventBossId });
   }, [socket, eventBossId]);
 
@@ -73,13 +74,6 @@ const useBossPodium = (eventBossId, joinCode) => {
     setCurrentPlayerBadge(null);
     setIsBadgeDisplaying(false);
   }, []);
-
-  const shouldNavigateAway = useCallback(() => {
-    if (battleState && battleState !== "ended") return true;
-    if (isLeaderboardEmpty && !loading.leaderboard) return true;
-    if (isPodiumEmpty && !loading.podium) return true;
-    return false;
-  }, [battleState, isLeaderboardEmpty, isPodiumEmpty, loading]);
 
   useEffect(() => {
     if (!socket || !eventBossId || !joinCode || hasJoinedPodium) return;
@@ -132,16 +126,17 @@ const useBossPodium = (eventBossId, joinCode) => {
     };
 
     const handleBadgeEarned = (payload) => {
+      console.log("Badge earned:", payload.data.playerBadge.badge);
       addPlayerBadgeToQueue(payload.data.playerBadge.badge, payload.message);
     };
 
     const handlePodiumResponse = (payload) => {
+      setIsLoading({ podium: false, leaderboard: false });
       if (!payload.data.leaderboard || payload.data.leaderboard.length === 0) {
         setIsLeaderboardEmpty(true);
       } else {
         setIsLeaderboardEmpty(false);
         setLeaderboard(payload.data.leaderboard);
-        setLoading((prev) => ({ ...prev, leaderboard: false }));
       }
 
       if (!payload.data.podium || payload.data.podium.length === 0) {
@@ -149,7 +144,6 @@ const useBossPodium = (eventBossId, joinCode) => {
       } else {
         setIsPodiumEmpty(false);
         setPodium(payload.data.podium);
-        setLoading((prev) => ({ ...prev, podium: false }));
       }
     };
 
@@ -181,14 +175,14 @@ const useBossPodium = (eventBossId, joinCode) => {
     isBadgeDisplaying,
     leaderboard,
     podium,
-    loading,
+    isLoading,
     hasJoinedPodium,
+    hasRequestedPodium,
     isLeaderboardEmpty,
     isPodiumEmpty,
     joinPodium,
     leavePodium,
     removeCurrentBadge,
-    shouldNavigateAway,
   };
 };
 

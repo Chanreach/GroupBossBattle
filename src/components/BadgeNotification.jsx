@@ -7,13 +7,13 @@ const BadgeNotification = ({ badge, onClose, duration = 3000 }) => {
       MVP: "mvp",
       LAST_HIT: "last-hit",
       BOSS_DEFEATED: "boss-defeated",
-      TEAM_VICTORY: "team-victory",
     },
     MILESTONE: {
       QUESTIONS_10: "questions_10",
       QUESTIONS_25: "questions_25",
       QUESTIONS_50: "questions_50",
       QUESTIONS_100: "questions_100",
+      HERO: "hero",
     },
   };
 
@@ -43,7 +43,7 @@ const BadgeNotification = ({ badge, onClose, duration = 3000 }) => {
         return "👑";
       case BADGE_CODES.ACHIEVEMENT.LAST_HIT:
         return "🎯";
-      case BADGE_CODES.ACHIEVEMENT.TEAM_VICTORY:
+      case BADGE_CODES.ACHIEVEMENT.BOSS_DEFEATED:
         return "⚔️";
       case BADGE_CODES.MILESTONE.QUESTIONS_10:
         return "🏅";
@@ -53,6 +53,8 @@ const BadgeNotification = ({ badge, onClose, duration = 3000 }) => {
         return "🥈";
       case BADGE_CODES.MILESTONE.QUESTIONS_100:
         return "🥇";
+      case BADGE_CODES.MILESTONE.HERO:
+        return "🦸";
       default:
         return "🏆";
     }
@@ -64,7 +66,7 @@ const BadgeNotification = ({ badge, onClose, duration = 3000 }) => {
         return "from-yellow-400 to-yellow-600";
       case BADGE_CODES.ACHIEVEMENT.LAST_HIT:
         return "from-red-400 to-red-600";
-      case BADGE_CODES.ACHIEVEMENT.TEAM_VICTORY:
+      case BADGE_CODES.ACHIEVEMENT.BOSS_DEFEATED:
         return "from-purple-400 to-purple-600";
       case BADGE_CODES.MILESTONE.QUESTIONS_10:
         return "from-blue-400 to-blue-600";
@@ -74,6 +76,8 @@ const BadgeNotification = ({ badge, onClose, duration = 3000 }) => {
         return "from-green-400 to-green-600";
       case BADGE_CODES.MILESTONE.QUESTIONS_100:
         return "from-pink-400 to-pink-600";
+      case BADGE_CODES.MILESTONE.HERO:
+        return "from-indigo-400 to-indigo-600";
       default:
         return "from-gray-400 to-gray-600";
     }
@@ -123,11 +127,6 @@ const BadgeNotification = ({ badge, onClose, duration = 3000 }) => {
           <p className="text-sm text-white/90 drop-shadow-sm">
             {badge.message || "Congratulations on earning this badge!"}
           </p>
-          {badge.value && (
-            <p className="text-xs text-white/80 mt-1 font-semibold">
-              {badge.value}
-            </p>
-          )}
         </div>
       </div>
 

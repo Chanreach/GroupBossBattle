@@ -24,7 +24,7 @@ import {
   PaginationNext,
 } from "@/components/ui/pagination";
 
-const LeaderboardOverview = ({ leaderboard, loading, isPreview, isFullWidth = false }) => {
+const LeaderboardOverview = ({ leaderboard, isLoading, isPreview, isFullWidth = false }) => {
   const [currentPage, setCurrentPage] = useState({
     teams: 1,
     individual: 1,
@@ -321,7 +321,7 @@ const LeaderboardOverview = ({ leaderboard, loading, isPreview, isFullWidth = fa
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {loading ? (
+                    {isLoading ? (
                       <TableRow>
                         <TableCell colSpan={4} className="text-center py-8">
                           <div className="flex items-center justify-center gap-2">

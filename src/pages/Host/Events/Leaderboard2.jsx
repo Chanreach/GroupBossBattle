@@ -424,7 +424,7 @@ const Leaderboard = () => {
         {/* Leaderboard */}
         <LeaderboardOverview
           leaderboard={leaderboard}
-          loading={loading.leaderboard}
+          isLoading={loading.leaderboard}
           isPreview={true}
           isFullWidth={true}
         />
