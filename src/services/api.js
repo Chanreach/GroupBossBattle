@@ -33,31 +33,12 @@ apiClient.interceptors.response.use(
     // Handle specific error cases
     if (error.response?.status === 401) {
       // Unauthorized - redirect to login
-      window.location.href = "/authentication";
+      // window.location.href = "/auth";
     }
 
     return Promise.reject(error);
   }
 );
-
-export const bossPreviewAPI = {
-  getBossPreview: async (eventId, bossId) => {
-    const response = await apiClient.get(`/boss-preview/${eventId}/${bossId}`);
-    return response.data;
-  }, 
-
-  getBossPreviewLeaderboard: async (eventId, bossId) => {
-    const response = await apiClient.get(
-      `/boss-preview/${eventId}/${bossId}/leaderboard`
-    );
-    return response.data;
-  },
-
-  getEventBossByJoinCode: async (joinCode) => {
-    const response = await apiClient.get(`/event-bosses/join/${joinCode}`);
-    return response.data;
-  },
-};
 
 export const eventBossAPI = {
   getEventBosses: async (eventId) => {
@@ -68,104 +49,6 @@ export const eventBossAPI = {
   getEventBossByJoinCode: async (joinCode) => {
     const response = await apiClient.get(`/event-bosses/join/${joinCode}`);
     return response.data;
-  },
-};
-
-export const joinAPI = {
-  joinBossFight: async (joinCode, nickname) => {
-    const response = await apiClient.post("/join/boss-fight", {
-      joinCode,
-      nickname,
-    });
-    return response.data;
-  },
-};
-
-export const leaderboardAPI = {
-  getAllTimeLeaderboard: async (limit = 50, bossId = null) => {
-    try {
-      const params = { limit };
-      if (bossId) params.bossId = bossId;
-
-      const response = await apiClient.get("/leaderboards/all-time", {
-        params,
-      });
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching all-time leaderboard:", error);
-      throw error;
-    }
-  },
-
-  getEventLeaderboard: async (eventId, limit = 50) => {
-    try {
-      const response = await apiClient.get(`/leaderboards/event/${eventId}`, {
-        params: { limit },
-      });
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching event leaderboard:", error);
-      throw error;
-    }
-  },
-
-  getBossLeaderboard: async (eventId, eventBossId, limit = 50) => {
-    try {
-      const response = await apiClient.get(
-        `/leaderboards/boss/${eventId}/${eventBossId}`,
-        {
-          params: { limit },
-        }
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching boss-specific leaderboard:", error);
-      throw error;
-    }
-  },
-
-  getBossAllTimeLeaderboard: async (bossId, limit = 50) => {
-    try {
-      const response = await apiClient.get("/leaderboards/all-time", {
-        params: { bossId, limit },
-      });
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching boss all-time leaderboard:", error);
-      throw error;
-    }
-  },
-
-  getPlayerStats: async (playerId) => {
-    try {
-      const response = await apiClient.get(`/leaderboards/player/${playerId}`);
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching player stats:", error);
-      throw error;
-    }
-  },
-};
-
-export const badgeAPI = {
-  getAllBadges: async () => {
-    try {
-      const response = await apiClient.get("/badges");
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching badges:", error);
-      throw error;
-    }
-  },
-
-  getPlayerBadges: async (playerId) => {
-    try {
-      const response = await apiClient.get(`/badges/player/${playerId}`);
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching player badges:", error);
-      throw error;
-    }
   },
 };
 

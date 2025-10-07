@@ -246,7 +246,7 @@ const AssignBoss = () => {
   };
 
   const handlePlayerBadges = () => {
-    navigate(`/host/events/player_badges?eventId=${eventId}`);
+    navigate(`/host/events/${eventId}/player_badges2`);
   };
 
   const handleEditEvent = () => {

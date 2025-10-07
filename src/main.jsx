@@ -34,14 +34,13 @@ import Error from "./pages/Error";
 import Loading from "./pages/Loading";
 import PlayerHome from "./pages/Player/Home";
 import PlayerEventBosses from "./pages/Player/EventBosses";
-import PlayerBadges from "./pages/Player/Badges";
+import PlayerBadges from "./pages/Player/Badges2";
 import PlayerLeaderboard from "./pages/AllTimeLeaderboard";
 import PlayerProfile from "./pages/Player/Profile";
 import PlayerQR from "./pages/Player/QR";
 import PlayerQRTest from "./pages/Player/QRTest";
 import PlayerJoin from "./pages/Player/Join";
 import PlayerJoinTest from "./pages/Player/JoinTest";
-import PlayerApiTest from "./pages/Player/ApiTest";
 import PlayerBossPreview from "./pages/Player/BossPreview2";
 import PlayerBossBattle from "./pages/Player/BossBattle2";
 import PlayerBossPodium from "./pages/Player/BossPodium2";
@@ -58,6 +57,7 @@ import HostEventsBossTemplate from "./pages/Host/Events/BossTemplate";
 import HostEventsCreate from "./pages/Host/Events/Create";
 import HostEventsEdit from "./pages/Host/Events/Edit";
 import HostEventsPlayerbadges from "./pages/Host/Events/Playerbadges";
+import HostEventsPlayerBadges from "./pages/Host/Events/PlayerBadges2";
 import HostEventsPlayerBadgesEdit from "./pages/Host/Events/Playerbadgesedit";
 import HostEventsLeaderboard from "./pages/Host/Events/Leaderboard2";
 import HostEventsAllLeaderboard from "./pages/AllTimeLeaderboard";
@@ -168,8 +168,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               <Route path="/boss-preview/join" element={<PlayerJoin />} />
 
               <Route path="/join-test" element={<PlayerJoinTest />} />
-
-              <Route path="/api-test" element={<PlayerApiTest />} />
 
               <Route path="/qr-test" element={<App />}>
                 <Route
@@ -289,11 +287,15 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   <Route index element={<HostEventsBossTemplate />} />
                 </Route>
 
-                <Route path="events/player_badges" element={<AppOP />}>
+                <Route path="events/:eventId/player_badges" element={<AppOP />}>
                   <Route index element={<HostEventsPlayerbadges />} />
                 </Route>
 
-                <Route path="events/player_badges_edit" element={<AppOP />}>
+                <Route path="events/:eventId/player_badges2" element={<AppOP />}>
+                  <Route index element={<HostEventsPlayerBadges />} />
+                </Route>
+
+                <Route path="events/:eventId/player_badges_edit" element={<AppOP />}>
                   <Route index element={<HostEventsPlayerBadgesEdit />} />
                 </Route>
 

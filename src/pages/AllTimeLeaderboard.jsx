@@ -37,7 +37,7 @@ const AllTimeLeaderboard = () => {
   const PAGE_SIZE = 10;
 
   useEffect(() => {
-    if (!leaderboards || leaderboards.length === 0) {
+    if (isLoading && (!leaderboards || leaderboards.length === 0)) {
       fetchAllEventAllTimeLeaderboards()
         .then((data) => {
           if (data) {
@@ -55,7 +55,7 @@ const AllTimeLeaderboard = () => {
           console.error("Error fetching leaderboard data:", error);
         });
     }
-  }, [leaderboards]);
+  }, [leaderboards, isLoading]);
 
   useEffect(() => {
     if (events.length > 0 && !eventFilter) {
