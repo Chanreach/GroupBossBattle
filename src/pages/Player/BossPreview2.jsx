@@ -29,6 +29,7 @@ const BossPreview = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  // HOOKS
   const bossPreview = useBossPreview(eventBossId, joinCode);
   const battleQueue = useBattleQueue(eventBossId, joinCode);
   const MINIMUM_PLAYERS_REQUIRED = 2;
