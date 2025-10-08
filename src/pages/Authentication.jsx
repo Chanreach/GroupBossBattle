@@ -56,10 +56,10 @@ const Authentication = () => {
     setTimeout(() => {
       setIsSignIn(newSignInState);
       setIsClosing(false);
-      
+
       // Preserve ALL current search parameters when switching forms
       const currentParams = new URLSearchParams(location.search);
-      
+
       // Update URL while preserving all parameters
       if (newSignInState) {
         // Switching to login - remove mode parameter but keep others
@@ -138,7 +138,7 @@ const Authentication = () => {
       // Check for returnUrl parameter
       const params = new URLSearchParams(location.search);
       const returnUrl = params.get("returnUrl");
-      
+
       if (returnUrl) {
         const decodedUrl = decodeURIComponent(returnUrl);
         // Use setTimeout to ensure login state is properly set before navigation
@@ -167,6 +167,16 @@ const Authentication = () => {
       // Call backend to create a guest session
       const response = await apiClient.post("/auth/guest-login");
       const { token, user } = response.data;
+      console.log("Guest login response:", response.data);
+
+      if (!token || !user) {
+        console.error(
+          "Guest login failed, token or user missing",
+          response.data
+        );
+        toast.error("Guest login failed: token or user missing");
+        return;
+      }
 
       // Store guest token and user data in localStorage
       localStorage.setItem("guestToken", token);
@@ -176,16 +186,16 @@ const Authentication = () => {
 
       // Set the user in auth context immediately
       setUser(user);
-      
+
       // Set authorization header for future requests
       apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
       toast.success("Logged in as guest!");
-      
+
       // Check for returnUrl parameter
       const params = new URLSearchParams(location.search);
       const returnUrl = params.get("returnUrl");
-      
+
       if (returnUrl) {
         const decodedUrl = decodeURIComponent(returnUrl);
         setTimeout(() => navigate(decodedUrl), 500);
@@ -379,7 +389,6 @@ const Authentication = () => {
                     >
                       Login instead
                     </span>
-                    
                   </div>
                 </CardContent>
               </div>
