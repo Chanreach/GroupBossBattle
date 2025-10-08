@@ -1,5 +1,12 @@
 export const getPlayerState = (eventBossId) => {
-  return JSON.parse(localStorage.getItem(`player_${eventBossId}`));
+  try {
+    const data = localStorage.getItem(`player_${eventBossId}`);
+    if (!data) return null;
+    return JSON.parse(data);
+  } catch (err) {
+    console.error("Failed to parse player state:", err);
+    return null;
+  }
 };
 
 export const savePlayerState = (eventBossId, player) => {
