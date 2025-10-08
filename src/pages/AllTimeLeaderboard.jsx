@@ -24,8 +24,8 @@ import {
   PaginationNext,
 } from "@/components/ui/pagination";
 
-// ===== SERVICES ===== //
-import { fetchAllEventAllTimeLeaderboards } from "@/services/leaderboardService";
+// ===== API ===== //
+import { apiClient } from "@/api";
 
 const AllTimeLeaderboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -38,22 +38,39 @@ const AllTimeLeaderboard = () => {
 
   useEffect(() => {
     if (isLoading && (!leaderboards || leaderboards.length === 0)) {
-      fetchAllEventAllTimeLeaderboards()
-        .then((data) => {
-          if (data) {
-            setEvents(data.events || []);
-            setLeaderboards(data.leaderboards || []);
-          } else {
-            setError("Failed to load leaderboard data");
-            console.error("Failed to load leaderboard data");
+      const fetchAllTimeLeaderboards = async () => {
+        try {
+          setIsLoading(true);
+          const response = await apiClient.get("/leaderboards");
+          if (response.data) {
+            setEvents(response.data.events || []);
+            setLeaderboards(response.data.leaderboards || []);
           }
-          setIsLoading(false);
-        })
-        .catch((error) => {
+        } catch (error) {
           setError("Error fetching leaderboard data");
-          setIsLoading(false);
           console.error("Error fetching leaderboard data:", error);
-        });
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchAllTimeLeaderboards();
+
+        // .then((data) => {
+        //   if (data) {
+        //     setEvents(data.events || []);
+        //     setLeaderboards(data.leaderboards || []);
+        //   } else {
+        //     setError("Failed to load leaderboard data");
+        //     console.error("Failed to load leaderboard data");
+        //   }
+        //   setIsLoading(false);
+        // })
+        // .catch((error) => {
+        //   setError("Error fetching leaderboard data");
+        //   setIsLoading(false);
+        //   console.error("Error fetching leaderboard data:", error);
+        // });
     }
   }, [leaderboards, isLoading]);
 
