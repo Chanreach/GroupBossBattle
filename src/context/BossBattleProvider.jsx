@@ -6,10 +6,13 @@ const BossBattleProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    const newSocket = io("http://localhost:3000", {
-      withCredentials: true,
-      transports: ["websocket"],
-    });
+    const newSocket = io(
+      import.meta.env.VITE_API_URL || "http://localhost:3000",
+      {
+        withCredentials: true,
+        transports: ["websocket"],
+      }
+    );
 
     newSocket.on("connect", () => {
       console.log("Socket connected:", newSocket.id);
