@@ -190,11 +190,11 @@ const AllTimeLeaderboard = () => {
                       <Avatar className="w-20 h-20 md:w-24 md:h-24 border-4 border-gray-200 dark:border-gray-700 shadow-lg">
                         <AvatarImage
                           src={
-                            (player.profileImage &&
-                              `https://api-uniraid.paragoniu.app/api/uploads/profiles/${player.profileImage}`) ||
-                            `/src/assets/Placeholder/Profile${
-                              player.rank % 5
-                            }.jpg`
+                            player.profileImage
+                              ? `https://api-uniraid.paragoniu.app/api/uploads/profiles/${player.profileImage}`
+                              : `/src/assets/Placeholder/Profile${
+                                  player.rank % 5
+                                }.jpg`
                           }
                           alt={player.username}
                         />
