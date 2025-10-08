@@ -5,11 +5,27 @@ export const getGuestId = () => {
 
 export const getGuestUser = () => {
   const guestUserData = localStorage.getItem("guestUser");
-  return guestUserData ? JSON.parse(guestUserData) : null;
+  if (
+    !guestUserData ||
+    guestUserData === "undefined" ||
+    guestUserData === "null"
+  ) {
+    return null;
+  }
+  try {
+    return JSON.parse(guestUserData);
+  } catch (error) {
+    console.error("Error parsing guest user data:", error);
+    return null;
+  }
 };
 
 export const getGuestToken = () => {
-  return localStorage.getItem("guestToken");
+  const token = localStorage.getItem("guestToken");
+  if (token === "undefined" || token === "null") {
+    return null;
+  }
+  return token;
 };
 
 export const isGuestUser = () => {
