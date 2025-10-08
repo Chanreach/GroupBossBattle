@@ -7,7 +7,7 @@ const BossBattleProvider = ({ children }) => {
 
   useEffect(() => {
     const newSocket = io(
-      import.meta.env.VITE_API_URL || "http://localhost:3000",
+      import.meta.env.VITE_SOCKET_URL || "http://localhost:3000",
       {
         withCredentials: true,
         transports: ["websocket"],

@@ -13,7 +13,7 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': 'http://localhost:3000', // or whatever port your backend runs on
+      '/api': 'https://api-uniraid.paragoniu.app', // or whatever port your backend runs on
     },
     allowedHosts: [
       "klaude.proficientia.me",
