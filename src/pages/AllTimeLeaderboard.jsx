@@ -174,6 +174,7 @@ const AllTimeLeaderboard = () => {
                 // Height for podium effect
                 let height =
                   player.rank === 1 ? 120 : player.rank === 2 ? 80 : 60;
+                console.log(`https://api-uniraid.paragoniu.app/api/${player.profileImage}`);
 
                 return (
                   <div
