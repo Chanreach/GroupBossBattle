@@ -192,7 +192,7 @@ const AllTimeLeaderboard = () => {
                         <AvatarImage
                           src={
                             player.profileImage
-                              ? `https://api-uniraid.paragoniu.app/api/${player.profileImage}`
+                              ? `https://api-uniraid.paragoniu.app/api${player.profileImage}`
                               : `/src/assets/Placeholder/Profile${
                                   player.rank % 5
                                 }.jpg`
