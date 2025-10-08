@@ -64,9 +64,15 @@ const EditEvent = () => {
 
         // Format datetime for input fields (convert from API format to datetime-local format)
         const formatForInput = (dateTime) => {
+          console.log(dateTime);
           if (!dateTime) return "";
           const date = new Date(dateTime);
-          return date.toISOString().slice(0, 16);
+          console.log(date.toLocaleDateString());
+          return (
+            date.toLocaleDateString() +
+            " " +
+            date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+          );
         };
 
         const formattedData = {

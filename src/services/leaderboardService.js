@@ -4,7 +4,11 @@ export const fetchAllEventAllTimeLeaderboards = async () => {
     if (!response.ok) {
       throw new Error("Failed to fetch leaderboard");
     }
-    const data = await response.json();
+    const text = await response.text();
+    console.log("Response text:", text); // See what server actually returns
+    const data = JSON.parse(text); // only parse if valid JSON
+
+    // const data = await response.json();
     console.log("Fetched all-time leaderboards:", data);
     return data;
   } catch (error) {
