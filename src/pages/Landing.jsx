@@ -73,6 +73,7 @@ const LandingContent = () => {
       // Call backend to create a guest session
       const response = await apiClient.post("/auth/guest-login");
       const { token, user } = response.data;
+      console.log("Guest login response:", response.data);
 
       // Store guest token and user data in localStorage
       localStorage.setItem("guestToken", token);
