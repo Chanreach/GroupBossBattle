@@ -79,8 +79,6 @@ import HostProfile from "./pages/Host/Profile/Profile";
 import BossBattleProvider from "./context/BossBattleProvider";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  console.log("🔧 VITE_SOCKET_URL =", import.meta.env.VITE_SOCKET_URL),
-
   // <React.StrictMode>
   <ThemeProvider>
     <AuthProvider>
