@@ -56,21 +56,21 @@ const AllTimeLeaderboard = () => {
 
       fetchAllTimeLeaderboards();
 
-        // .then((data) => {
-        //   if (data) {
-        //     setEvents(data.events || []);
-        //     setLeaderboards(data.leaderboards || []);
-        //   } else {
-        //     setError("Failed to load leaderboard data");
-        //     console.error("Failed to load leaderboard data");
-        //   }
-        //   setIsLoading(false);
-        // })
-        // .catch((error) => {
-        //   setError("Error fetching leaderboard data");
-        //   setIsLoading(false);
-        //   console.error("Error fetching leaderboard data:", error);
-        // });
+      // .then((data) => {
+      //   if (data) {
+      //     setEvents(data.events || []);
+      //     setLeaderboards(data.leaderboards || []);
+      //   } else {
+      //     setError("Failed to load leaderboard data");
+      //     console.error("Failed to load leaderboard data");
+      //   }
+      //   setIsLoading(false);
+      // })
+      // .catch((error) => {
+      //   setError("Error fetching leaderboard data");
+      //   setIsLoading(false);
+      //   console.error("Error fetching leaderboard data:", error);
+      // });
     }
   }, [leaderboards, isLoading]);
 
@@ -190,7 +190,8 @@ const AllTimeLeaderboard = () => {
                       <Avatar className="w-20 h-20 md:w-24 md:h-24 border-4 border-gray-200 dark:border-gray-700 shadow-lg">
                         <AvatarImage
                           src={
-                            player.profileImage ||
+                            (player.profileImage &&
+                              `https://api-uniraid.paragoniu.app/api/uploads/profiles/${player.profileImage}`) ||
                             `/src/assets/Placeholder/Profile${
                               player.rank % 5
                             }.jpg`
@@ -259,7 +260,10 @@ const AllTimeLeaderboard = () => {
           {/* Event Filter Tabs */}
           <div className="mb-2">
             {events.length > 0 && (
-              <Tabs value={eventFilter || ""} onValueChange={handleEventFilterChange}>
+              <Tabs
+                value={eventFilter || ""}
+                onValueChange={handleEventFilterChange}
+              >
                 <TabsList className="grid w-full grid-cols-4 h-auto gap-1 p-1">
                   {events.map((event) => (
                     <TabsTrigger
