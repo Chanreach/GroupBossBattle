@@ -171,6 +171,8 @@ const Authentication = () => {
       // Store guest token and user data in localStorage
       localStorage.setItem("guestToken", token);
       localStorage.setItem("guestUser", JSON.stringify(user));
+      console.log("Stored guestToken in localStorage:", token);
+      console.log("Stored guestUser in localStorage:", JSON.stringify(user));
 
       // Set the user in auth context immediately
       setUser(user);
