@@ -1,12 +1,6 @@
 // ===== LIBRARIES ===== //
 import { useEffect, useState } from "react";
-import {
-  Award,
-  Trophy,
-  Shield,
-  Lock,
-  Gift,
-} from "lucide-react";
+import { Award, Trophy, Shield, Lock, Gift } from "lucide-react";
 
 // ===== COMPONENTS (Shadcn.ui) ===== //
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -199,9 +193,11 @@ const Badges = () => {
 
                 {/* ===== Boss Navigation Tabs ===== */}
                 <Tabs
-                  value={selectedBoss === null ? "all" : selectedBoss}
+                  value={
+                    selectedBoss === null ? "all" : selectedBoss.toString()
+                  }
                   onValueChange={(value) =>
-                    setSelectedBoss(value === "all" ? null : value)
+                    setSelectedBoss(value === "all" ? null : parseInt(value))
                   }
                 >
                   <TabsList className="grid w-full grid-cols-3 h-auto gap-1 p-1">
