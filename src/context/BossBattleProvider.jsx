@@ -6,6 +6,8 @@ const BossBattleProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
+    console.log("Connecting socket to:", import.meta.env.VITE_SOCKET_URL);
+
     const newSocket = io(
       import.meta.env.VITE_SOCKET_URL || "http://localhost:3000",
       {
