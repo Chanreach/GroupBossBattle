@@ -13,10 +13,11 @@ import CheckMark from "@/components/CheckMark";
 import { apiClient } from "@/api";
 
 const Badges = () => {
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [selectedBoss, setSelectedBoss] = useState(null);
-  const [filter, setFilter] = useState("all");
   const [events, setEvents] = useState([]);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedBossId, setSelectedBossId] = useState(null);
+  const [badgeFilter, setBadgeFilter] = useState("all");
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -48,9 +49,11 @@ const Badges = () => {
   // Filter badges based on current selection
   const getFilteredBadges = (badges) => {
     if (!badges) return [];
-    if (filter === "earned") return badges.filter((badge) => badge.isEarned);
-    if (filter === "unearned") return badges.filter((badge) => !badge.isEarned);
-    if (filter === "redeemed")
+    if (badgeFilter === "earned")
+      return badges.filter((badge) => badge.isEarned);
+    if (badgeFilter === "unearned")
+      return badges.filter((badge) => !badge.isEarned);
+    if (badgeFilter === "redeemed")
       return badges.filter((badge) => badge.isRedeemed);
     return badges;
   };
@@ -58,7 +61,7 @@ const Badges = () => {
   // Reset boss selection when event changes
   const handleEventChange = (event) => {
     setSelectedEvent(event);
-    setSelectedBoss(null);
+    setSelectedBossId(null);
   };
 
   return (
@@ -155,7 +158,6 @@ const Badges = () => {
                   {/* Event Progress Summary */}
                   <div className="mt-2">
                     {(() => {
-                      // const progress = getEventProgress(selectedEvent);
                       const progressPercentage =
                         selectedEvent?.maxBadges > 0
                           ? Math.round(
@@ -193,11 +195,9 @@ const Badges = () => {
 
                 {/* ===== Boss Navigation Tabs ===== */}
                 <Tabs
-                  value={
-                    selectedBoss === null ? "all" : selectedBoss.toString()
-                  }
+                  value={selectedBossId === null ? "all" : selectedBossId}
                   onValueChange={(value) =>
-                    setSelectedBoss(value === "all" ? null : parseInt(value))
+                    setSelectedBossId(value === "all" ? null : value)
                   }
                 >
                   <TabsList className="grid w-full grid-cols-3 h-auto gap-1 p-1">
@@ -210,10 +210,8 @@ const Badges = () => {
                           All Bosses
                         </span>
                         {(() => {
-                          // const progress = getEventProgress(selectedEvent);
                           return (
                             <span className="text-[10px] text-muted-foreground">
-                              {/* {progress.earned}/{progress.total} */}
                               {selectedEvent?.totalUserBadges || 0}/
                               {selectedEvent?.maxBadges || 0}
                             </span>
@@ -222,7 +220,6 @@ const Badges = () => {
                       </div>
                     </TabsTrigger>
                     {selectedEvent?.eventBosses?.map((eventBoss) => {
-                      // const bp = getBossProgress(boss);
                       return (
                         <TabsTrigger
                           key={eventBoss.id}
@@ -245,8 +242,8 @@ const Badges = () => {
 
                 {/* ===== ALL/EARNED/UNEARNED/REDEEMED FILTER ===== */}
                 <Tabs
-                  value={filter}
-                  onValueChange={(value) => setFilter(value)}
+                  value={badgeFilter}
+                  onValueChange={(value) => setBadgeFilter(value)}
                 >
                   <TabsList className="grid w-full grid-cols-4 h-auto gap-1 p-1">
                     <TabsTrigger
@@ -292,7 +289,7 @@ const Badges = () => {
               {selectedEvent?.eventBosses
                 ?.filter(
                   (boss) =>
-                    selectedBoss === null || boss.id === parseInt(selectedBoss)
+                    selectedBossId === null || boss.id === selectedBossId
                 )
                 .map((boss, bossIndex) => {
                   const filteredBadges = getFilteredBadges(boss.badges);
@@ -311,7 +308,6 @@ const Badges = () => {
                             {boss.name}
                           </h3>
                           {(() => {
-                            // const bp = getBossProgress(boss);
                             const complete =
                               boss.totalUserBadges > 0 &&
                               boss.totalUserBadges === boss.maxBadges;
@@ -345,7 +341,7 @@ const Badges = () => {
                 }) || []}
 
               {/* ===== Event Milestone Badges ===== */}
-              {selectedBoss === null &&
+              {selectedBossId === null &&
                 (() => {
                   // const milestones = getEnhancedMilestones(selectedEvent);
                   const milestones = selectedEvent?.milestoneBadges || [];
@@ -403,12 +399,12 @@ const Badges = () => {
               {(selectedEvent?.eventBosses || [])
                 .filter(
                   (boss) =>
-                    selectedBoss === null || boss.id === parseInt(selectedBoss)
+                    selectedBossId === null || boss.id === selectedBossId
                 )
                 .every(
                   (boss) => getFilteredBadges(boss.userBadges).length === 0
                 ) &&
-                (selectedBoss !== null ||
+                (selectedBossId !== null ||
                   getFilteredBadges(selectedEvent?.milestoneBadges || [])
                     .length === 0) && (
                   <div className="text-center py-10 sm:py-14">
@@ -417,11 +413,11 @@ const Badges = () => {
                       No badges to show
                     </h3>
                     <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 px-4 max-w-xl mx-auto">
-                      {filter === "earned"
+                      {badgeFilter === "earned"
                         ? "Play more sessions and keep an eye on boss fights to earn achievements."
-                        : filter === "unearned"
+                        : badgeFilter === "unearned"
                         ? "Nice! You've collected all available achievements here. Check other events for more."
-                        : filter === "redeemed"
+                        : badgeFilter === "redeemed"
                         ? "No badges have been redeemed yet. Visit the badge redemption center to redeem your earned badges."
                         : "This event currently has no badges available. Check back later or pick another event."}
                     </p>
