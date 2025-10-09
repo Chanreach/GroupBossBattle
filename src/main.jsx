@@ -291,11 +291,17 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   <Route index element={<HostEventsPlayerbadges />} />
                 </Route>
 
-                <Route path="events/:eventId/player_badges2" element={<AppOP />}>
+                <Route
+                  path="events/:eventId/player_badges2"
+                  element={<AppOP />}
+                >
                   <Route index element={<HostEventsPlayerBadges />} />
                 </Route>
 
-                <Route path="events/:eventId/player_badges_edit" element={<AppOP />}>
+                <Route
+                  path="events/:eventId/player_badges_edit"
+                  element={<AppOP />}
+                >
                   <Route index element={<HostEventsPlayerBadgesEdit />} />
                 </Route>
 
