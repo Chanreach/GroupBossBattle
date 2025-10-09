@@ -43,7 +43,6 @@ import { Separator } from "@/components/ui/separator";
 // ===== CONTEXTS ===== //
 import { useThemeColor } from "@/theme/theme-provider";
 import { useAuth } from "@/context/useAuth";
-import { getProfileImageUrl } from "@/utils/imageUtils";
 
 // ===== NAVIGATION DATA ===== //
 const mainNavItems = [
