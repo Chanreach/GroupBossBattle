@@ -26,6 +26,7 @@ const Badges = () => {
       setIsLoading(true);
       try {
         const response = await apiClient.get("/user-badges/");
+        console.log("Fetched user badges:", response.data.events);
         if (response.data) {
           setEvents(response.data.events);
         }
