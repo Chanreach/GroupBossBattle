@@ -58,8 +58,8 @@ const Badges = () => {
     return badges;
   };
 
-  // Reset boss selection when event changes
-  const handleEventChange = (event) => {
+  const handleEventChange = (eventId) => {
+    const event = events.find((e) => e.id === eventId);
     setSelectedEvent(event);
     setSelectedBossId(null);
   };
@@ -72,10 +72,7 @@ const Badges = () => {
         <div className="lg:hidden">
           <Tabs
             value={selectedEvent?.id || ""}
-            onValueChange={(value) => {
-              const newEvent = events.find((e) => e.id === value);
-              if (newEvent) handleEventChange(newEvent);
-            }}
+            onValueChange={(value) => handleEventChange(value)}
           >
             <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 h-auto gap-1 p-1">
               {events.map((event) => (
@@ -104,10 +101,7 @@ const Badges = () => {
             <CardContent className="space-y-1 sm:space-y-2">
               <Tabs
                 value={selectedEvent?.id || ""}
-                onValueChange={(value) => {
-                  const newEvent = events.find((e) => e.id === value);
-                  if (newEvent) handleEventChange(newEvent);
-                }}
+                onValueChange={(value) => handleEventChange(value)}
                 orientation="vertical"
                 className="w-full"
               >
@@ -401,9 +395,7 @@ const Badges = () => {
                   (boss) =>
                     selectedBossId === null || boss.id === selectedBossId
                 )
-                .every(
-                  (boss) => getFilteredBadges(boss.userBadges).length === 0
-                ) &&
+                .every((boss) => getFilteredBadges(boss.badges).length === 0) &&
                 (selectedBossId !== null ||
                   getFilteredBadges(selectedEvent?.milestoneBadges || [])
                     .length === 0) && (
