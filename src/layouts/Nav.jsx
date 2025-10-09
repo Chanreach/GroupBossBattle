@@ -50,7 +50,6 @@ import AlertLogout from "./AlertLogout";
 // ===== CONTEXTS ===== //
 import { useThemeColor } from "@/theme/theme-provider";
 import { useAuth } from "@/context/useAuth";
-import { getProfileImageUrl } from "@/utils/imageUtils";
 import { isGuestUser } from "@/utils/guestUtils";
 
 export function NavSidebar({ ...props }) {
@@ -254,7 +253,7 @@ export function NavSidebar({ ...props }) {
                   >
                     <Avatar className="h-8 w-8 rounded-lg">
                       <AvatarImage
-                        src={getProfileImageUrl(user?.profileImage)}
+                        src={user?.profileImage}
                         alt={user?.username || user?.name || "User"}
                         onError={(e) => {
                           console.log(
@@ -290,7 +289,7 @@ export function NavSidebar({ ...props }) {
                     <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                       <Avatar className="h-8 w-8 rounded-lg">
                         <AvatarImage
-                          src={getProfileImageUrl(user?.profileImage)}
+                          src={user?.profileImage}
                           alt={user?.username || user?.name || "User"}
                           onError={(e) => {
                             console.log(

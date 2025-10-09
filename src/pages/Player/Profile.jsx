@@ -281,10 +281,7 @@ const Profile = () => {
                       editData.profileImage
                         ? URL.createObjectURL(editData.profileImage)
                         : profileData.profileImage
-                        ? `${
-                            import.meta.env.VITE_API_URL ||
-                            "http://localhost:3000"
-                          }${profileData.profileImage}`
+                        ? `${profileData.profileImage}`
                         : "/src/assets/Placeholder/Profile1.jpg"
                     }
                     alt="Profile"

@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { apiClient } from "@/api";
 import { useAuth } from "@/context/useAuth";
 import { toast } from "sonner";
-import { getBossImageUrl } from "@/utils/imageUtils";
 
 const ViewBosses = () => {
   const navigate = useNavigate();
@@ -106,7 +105,7 @@ const ViewBosses = () => {
                 <div className="relative overflow-hidden aspect-square">
                   {boss.image ? (
                     <img
-                      src={getBossImageUrl(boss.image)}
+                      src={boss.image}
                       alt={boss.name}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                     />

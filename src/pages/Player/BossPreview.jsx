@@ -36,7 +36,6 @@ import useBossBattle from "@/hooks/useBossBattle";
 import { toast } from "sonner";
 import { useAuth } from "@/context/useAuth";
 import { getGuestUser } from "@/utils/guestUtils";
-import { getBossImageUrl } from "@/utils/imageUtils";
 
 const BossPreview = () => {
   const { eventBossId, joinCode } = useParams();
@@ -727,7 +726,7 @@ const BossPreview = () => {
                 <div className="w-full aspect-square bg-muted rounded-lg overflow-hidden">
                   {eventBoss?.boss?.image ? (
                     <img
-                      src={getBossImageUrl(eventBoss.boss.image)}
+                      src={eventBoss.boss.image}
                       alt={eventBoss?.boss?.name || "Boss Image"}
                       className={`w-full h-full object-cover ${
                         bossStatus === "cooldown" ? "boss-image-paused" : ""

@@ -45,7 +45,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { getBossImageUrl } from "@/utils/imageUtils";
 import { apiClient } from "@/api";
 import { useAuth } from "@/context/useAuth";
 import { toast } from "sonner";
@@ -478,7 +477,7 @@ const AssignBoss = () => {
                         <img
                           src={
                             boss.image
-                              ? getBossImageUrl(boss.image)
+                              ? boss.image
                               : "/src/assets/Placeholder/Falcon.png"
                           }
                           alt={boss.name}

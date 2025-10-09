@@ -26,7 +26,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { apiClient } from "@/api";
 import { toast } from "sonner";
-import { getBossImageUrl } from "@/utils/imageUtils";
 
 const EditBoss = () => {
   const navigate = useNavigate();
@@ -91,11 +90,11 @@ const EditBoss = () => {
       // Set image preview if boss has an image
       const imageState = {
         hasImage: !!boss.image,
-        imageUrl: boss.image ? getBossImageUrl(boss.image) : null,
+        imageUrl: boss.image,
       };
       setOriginalImageState(imageState);
       if (boss.image) {
-        setImagePreview(getBossImageUrl(boss.image));
+        setImagePreview(boss.image);
         setHasOriginalImage(true);
       }
     } catch (error) {

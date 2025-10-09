@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { getBossImageUrl } from "@/utils/imageUtils";
 import { apiClient } from "@/api";
 import { useAuth } from "@/context/useAuth";
 import { toast } from "sonner";
@@ -21,7 +20,6 @@ const BossTemplate = () => {
   const [availableBosses, setAvailableBosses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
-
 
   // Fetch event details and available bosses
   useEffect(() => {
@@ -41,7 +39,6 @@ const BossTemplate = () => {
       toast.error("Failed to fetch event details");
     }
   };
-
 
   const fetchAvailableBosses = async () => {
     try {
@@ -204,7 +201,7 @@ const BossTemplate = () => {
                     <img
                       src={
                         boss.image
-                          ? getBossImageUrl(boss.image)
+                          ? boss.image
                           : "/src/assets/Placeholder/Falcon.png"
                       }
                       alt={boss.name}

@@ -20,7 +20,6 @@ import useBattleQueue from "@/hooks/useBattleQueue";
 import { useAuth } from "@/context/useAuth";
 
 // ===== UTILITIES ===== //
-import { getBossImageUrl } from "@/utils/imageUtils";
 import { getUserInfo } from "@/utils/userUtils";
 import { getPlayerState, removePlayerState } from "@/utils/playerUtils";
 
@@ -203,7 +202,7 @@ const BossPreview = () => {
                 <div className="w-full aspect-square bg-muted rounded-lg overflow-hidden">
                   {eventBoss?.image ? (
                     <img
-                      src={getBossImageUrl(eventBoss.image)}
+                      src={eventBoss.image}
                       alt={eventBoss?.name || "Boss Image"}
                       className={`w-full h-full object-cover ${
                         eventBossStatus === "cooldown"

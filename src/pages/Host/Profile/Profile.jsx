@@ -59,6 +59,7 @@ const HostProfile = () => {
       setLoading(true);
       const response = await apiClient.get("/users/profile");
       setProfileData(response.data);
+      console.log(response.data);
       setEditData({
         username: response.data.username,
         email: response.data.email,
@@ -272,10 +273,7 @@ const HostProfile = () => {
                       editData.profileImage
                         ? URL.createObjectURL(editData.profileImage)
                         : profileData.profileImage
-                        ? `${
-                            import.meta.env.VITE_API_URL ||
-                            "http://localhost:3000"
-                          }${profileData.profileImage}`
+                        ? `${profileData.profileImage}`
                         : "/src/assets/Placeholder/host-profile.jpg"
                     }
                     alt="Profile"

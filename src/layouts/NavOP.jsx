@@ -245,7 +245,7 @@ const NavOP = (props) => {
                 >
                   <Avatar className="h-8 w-8 rounded-lg">
                     <AvatarImage
-                      src={getProfileImageUrl(user?.profileImage)}
+                      src={user?.profileImage}
                       alt={user?.username || user?.name || "User"}
                       onError={(e) => {
                         console.log(
@@ -281,7 +281,7 @@ const NavOP = (props) => {
                   <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                     <Avatar className="h-8 w-8 rounded-lg">
                       <AvatarImage
-                        src={getProfileImageUrl(user?.profileImage)}
+                        src={user?.profileImage}
                         alt={user?.username || user?.name || "User"}
                         onError={(e) => {
                           console.log(

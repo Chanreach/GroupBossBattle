@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { getBossImageUrl } from "@/utils/imageUtils";
 import { apiClient } from "@/api";
 import { useAuth } from "@/context/useAuth";
 import { toast } from "sonner";
@@ -273,7 +272,7 @@ const EventBosses = () => {
                       <img
                         src={
                           boss.image
-                            ? getBossImageUrl(boss.image)
+                            ? boss.image
                             : "/src/assets/Placeholder/Falcon.png"
                         }
                         alt={boss.name}

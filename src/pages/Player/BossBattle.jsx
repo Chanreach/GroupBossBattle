@@ -60,7 +60,6 @@ import useBossBattle from "@/hooks/useBossBattle";
 import { toast } from "sonner";
 import { useAuth } from "@/context/useAuth";
 import { getGuestUser } from "@/utils/guestUtils";
-import { getBossImageUrl } from "@/utils/imageUtils";
 
 // ===== STYLES ===== //
 import "@/index.css";
@@ -1619,7 +1618,7 @@ const BossBattle = () => {
             >
               {bossData?.boss?.image ? (
                 <img
-                  src={getBossImageUrl(bossData.boss.image)}
+                  src={bossData.boss.image}
                   alt={BOSS_NAME}
                   className={`w-full h-full object-cover transition-all duration-500 ${
                     isBossTakingDamage ? "opacity-70" : ""

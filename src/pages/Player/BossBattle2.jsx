@@ -43,7 +43,6 @@ import { useAuth } from "@/context/useAuth";
 import { useThemeColor } from "@/theme/theme-provider";
 
 // ===== UTILITIES ===== //
-import { getBossImageUrl } from "@/utils/imageUtils";
 import { getUserInfo } from "@/utils/userUtils";
 
 const BossBattle = () => {
@@ -299,7 +298,7 @@ const BossBattle = () => {
             >
               {eventBoss?.image ? (
                 <img
-                  src={getBossImageUrl(eventBoss.image)}
+                  src={eventBoss.image}
                   alt={eventBoss.name}
                   className={`w-full h-full object-cover transition-all duration-500 ${
                     isBossTakingDamage ? "opacity-70" : ""
