@@ -22,6 +22,7 @@ const Badges = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    console.log("Fetching all user badges...");
     const fetchAllUserBadges = async () => {
       setIsLoading(true);
       try {
