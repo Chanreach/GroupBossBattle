@@ -10,7 +10,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BadgeCard from "@/components/BadgeCard";
 import CheckMark from "@/components/CheckMark";
 
-import { apiClient } from "@/api";
+import { apiClient } from "@/api/apiClient";
 
 const Badges = () => {
   const [events, setEvents] = useState([]);

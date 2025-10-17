@@ -1,7 +1,15 @@
 // ===== LIBRARIES ===== //
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Users, X, Trophy, User, TrendingUp, Sword } from "lucide-react";
+import {
+  ArrowLeft,
+  Users,
+  X,
+  Trophy,
+  User,
+  TrendingUp,
+  Sword,
+} from "lucide-react";
 
 // ===== COMPONENTS ===== //
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -31,7 +39,7 @@ import {
 // ===== STYLES ===== //
 import "@/index.css";
 
-import { apiClient } from "@/api";
+import { apiClient } from "@/api/apiClient";
 import useBossBattle from "@/hooks/useBossBattle";
 import { toast } from "sonner";
 import { useAuth } from "@/context/useAuth";
@@ -743,13 +751,23 @@ const BossPreview = () => {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Sleeping Z Animation - Only show when boss is on cooldown */}
                 {bossStatus === "cooldown" && cooldownTimer > 0 && (
                   <div className="absolute top-10 right-20 pointer-events-none">
                     <div className="sleeping-z">Z</div>
-                    <div className="sleeping-z" style={{ left: '8px', top: '4px' }}>Z</div>
-                    <div className="sleeping-z" style={{ left: '16px', top: '8px' }}>Z</div>
+                    <div
+                      className="sleeping-z"
+                      style={{ left: "8px", top: "4px" }}
+                    >
+                      Z
+                    </div>
+                    <div
+                      className="sleeping-z"
+                      style={{ left: "16px", top: "8px" }}
+                    >
+                      Z
+                    </div>
                   </div>
                 )}
               </div>
@@ -757,9 +775,7 @@ const BossPreview = () => {
               {/* Boss Status Display */}
               <div className="text-center pt-2 mb-0">
                 {bossStatus === "cooldown" && cooldownTimer > 0 && (
-                  <div className="font-semibold">
-                    Boss on Cooldown
-                  </div>
+                  <div className="font-semibold">Boss on Cooldown</div>
                 )}
                 {bossStatus === "in-battle" && (
                   <div className="text-purple-600 font-semibold flex items-center justify-center gap-2">
@@ -778,7 +794,9 @@ const BossPreview = () => {
               <div className="text-center">
                 <div className="flex items-center justify-center text-muted-foreground text-sm">
                   <Users className="w-4 h-4 mr-2 text-purple-600" />
-                  <span className="text-purple-600">Players joined: {playersOnline}</span>
+                  <span className="text-purple-600">
+                    Players joined: {playersOnline}
+                  </span>
                 </div>
               </div>
 
@@ -789,8 +807,10 @@ const BossPreview = () => {
                   className="w-full !bg-purple-500 hover:!bg-purple-600 !text-white !border-purple-500 halftone-texture"
                   disabled={!nickname.trim() || bossStatus === "cooldown"}
                 >
-                  {bossStatus === "cooldown" 
-                    ? `Available in: ${Math.floor(cooldownTimer / 60)}m ${String(cooldownTimer % 60).padStart(2, '0')}s`
+                  {bossStatus === "cooldown"
+                    ? `Available in: ${Math.floor(
+                        cooldownTimer / 60
+                      )}m ${String(cooldownTimer % 60).padStart(2, "0")}s`
                     : "Join"}
                 </Button>
               ) : (
@@ -803,16 +823,24 @@ const BossPreview = () => {
                       </Button>
                     )}
                     {isBattleStarted && countdown !== null && (
-                      <Button className="flex-1c w-full halftone-texture" disabled variant="destructive">
+                      <Button
+                        className="flex-1c w-full halftone-texture"
+                        disabled
+                        variant="destructive"
+                      >
                         {countdown > 0
                           ? `Starting in ${countdown}...`
                           : "Battle Starting!"}
                       </Button>
                     )}
                     {isBattleStarted && countdown === null && (
-                      <Button 
-                        className="flex-1c w-full halftone-texture" 
-                        onClick={() => navigate(`/boss-battle/${eventBossId}/${joinCode}`, { state: { session } })}
+                      <Button
+                        className="flex-1c w-full halftone-texture"
+                        onClick={() =>
+                          navigate(`/boss-battle/${eventBossId}/${joinCode}`, {
+                            state: { session },
+                          })
+                        }
                         variant="default"
                       >
                         Return to Battle

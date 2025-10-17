@@ -53,7 +53,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { apiClient } from "@/api";
+import { apiClient } from "@/api/apiClient";
 import BattleLeaderboard from "@/layouts/BossBattleLeaderboard";
 import BadgeNotification from "@/components/BadgeNotification";
 import useBossBattle from "@/hooks/useBossBattle";
@@ -688,9 +688,10 @@ const BossBattle = () => {
 
       // Get current user info to avoid double damage indicators
       const currentUser = getUserInfo();
-      const isCurrentPlayerAttack = currentUser && 
-        (data.playerNickname === currentUser.username || 
-         data.playerId === currentUser.id);
+      const isCurrentPlayerAttack =
+        currentUser &&
+        (data.playerNickname === currentUser.username ||
+          data.playerId === currentUser.id);
 
       // Generate floating damage number only for OTHER players' attacks
       // (Current player's attacks are handled by answer-result event)
@@ -1533,24 +1534,34 @@ const BossBattle = () => {
                 size="sm"
                 disabled={isCurrentPlayerKnockedOut}
                 className={`flex items-center justify-center ${
-                  (isCurrentPlayerKnockedOut || isCurrentPlayerDead || isRevivalDialogVisible) 
-                    ? "bg-[#464646] text-white border-[#464646] hover:bg-[#494949] dark:bg-background dark:text-foreground dark:border-border dark:hover:bg-accent" 
+                  isCurrentPlayerKnockedOut ||
+                  isCurrentPlayerDead ||
+                  isRevivalDialogVisible
+                    ? "bg-[#464646] text-white border-[#464646] hover:bg-[#494949] dark:bg-background dark:text-foreground dark:border-border dark:hover:bg-accent"
                     : ""
                 } ${
-                  isCurrentPlayerKnockedOut ? "opacity-50 cursor-not-allowed" : ""
+                  isCurrentPlayerKnockedOut
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
                 }`}
               >
-                <LogOut className={`w-4 h-4 rotate-180 ${
-                  (isCurrentPlayerKnockedOut || isCurrentPlayerDead || isRevivalDialogVisible) 
-                    ? "text-white dark:text-foreground" 
-                    : ""
-                }`} />
+                <LogOut
+                  className={`w-4 h-4 rotate-180 ${
+                    isCurrentPlayerKnockedOut ||
+                    isCurrentPlayerDead ||
+                    isRevivalDialogVisible
+                      ? "text-white dark:text-foreground"
+                      : ""
+                  }`}
+                />
               </Button>
             </div>
 
             {/* Boss Name - Centered */}
             <div className="absolute left-1/2 transform -translate-x-1/2 text-center">
-              <h2 className="text-lg font-bold text-center">{bossData?.boss?.name}</h2>
+              <h2 className="text-lg font-bold text-center">
+                {bossData?.boss?.name}
+              </h2>
               {/* Team Information */}
               {currentPlayerTeam && (
                 <div className="text-xs text-center text-muted-foreground">
@@ -1565,23 +1576,33 @@ const BossBattle = () => {
                 variant="outline"
                 size="sm"
                 className={`flex items-center justify-center ${
-                  (isCurrentPlayerKnockedOut || isCurrentPlayerDead || isRevivalDialogVisible) 
-                    ? "bg-[#464646] text-white border-[#464646] hover:bg-[#494949] dark:bg-background dark:text-foreground dark:border-border dark:hover:bg-accent" 
+                  isCurrentPlayerKnockedOut ||
+                  isCurrentPlayerDead ||
+                  isRevivalDialogVisible
+                    ? "bg-[#464646] text-white border-[#464646] hover:bg-[#494949] dark:bg-background dark:text-foreground dark:border-border dark:hover:bg-accent"
                     : ""
                 }`}
               >
                 {isDarkModeEnabled ? (
-                  <Sun className={`w-4 h-4 ${
-                    (isCurrentPlayerKnockedOut || isCurrentPlayerDead || isRevivalDialogVisible) 
-                      ? "text-white dark:text-foreground" 
-                      : ""
-                  }`} />
+                  <Sun
+                    className={`w-4 h-4 ${
+                      isCurrentPlayerKnockedOut ||
+                      isCurrentPlayerDead ||
+                      isRevivalDialogVisible
+                        ? "text-white dark:text-foreground"
+                        : ""
+                    }`}
+                  />
                 ) : (
-                  <Moon className={`w-4 h-4 ${
-                    (isCurrentPlayerKnockedOut || isCurrentPlayerDead || isRevivalDialogVisible) 
-                      ? "text-white dark:text-foreground" 
-                      : ""
-                  }`} />
+                  <Moon
+                    className={`w-4 h-4 ${
+                      isCurrentPlayerKnockedOut ||
+                      isCurrentPlayerDead ||
+                      isRevivalDialogVisible
+                        ? "text-white dark:text-foreground"
+                        : ""
+                    }`}
+                  />
                 )}
               </Button>
               <Button
@@ -1589,16 +1610,22 @@ const BossBattle = () => {
                 variant="outline"
                 size="sm"
                 className={`flex items-center justify-center ${
-                  (isCurrentPlayerKnockedOut || isCurrentPlayerDead || isRevivalDialogVisible) 
-                    ? "bg-[#464646] text-white border-[#464646] hover:bg-[#494949] dark:bg-background dark:text-foreground dark:border-border dark:hover:bg-accent" 
+                  isCurrentPlayerKnockedOut ||
+                  isCurrentPlayerDead ||
+                  isRevivalDialogVisible
+                    ? "bg-[#464646] text-white border-[#464646] hover:bg-[#494949] dark:bg-background dark:text-foreground dark:border-border dark:hover:bg-accent"
                     : ""
                 }`}
               >
-                <Trophy className={`w-4 h-4 ${
-                  (isCurrentPlayerKnockedOut || isCurrentPlayerDead || isRevivalDialogVisible) 
-                    ? "text-white dark:text-foreground" 
-                    : ""
-                }`} />
+                <Trophy
+                  className={`w-4 h-4 ${
+                    isCurrentPlayerKnockedOut ||
+                    isCurrentPlayerDead ||
+                    isRevivalDialogVisible
+                      ? "text-white dark:text-foreground"
+                      : ""
+                  }`}
+                />
               </Button>
             </div>
           </div>
@@ -1606,7 +1633,6 @@ const BossBattle = () => {
       </div>
 
       <div className="h-full flex flex-col p-3 max-w-md mx-auto relative z-10 pt-20">
-
         {/* Boss Health Section */}
         <div className="mb-3 flex-shrink-0">
           {/* Boss Image with Overlay */}
@@ -1948,7 +1974,9 @@ const BossBattle = () => {
 
                 <div className="pt-4">
                   <Button
-                    onClick={() => navigate(`/boss-preview/${eventBossId}/${joinCode}`)}
+                    onClick={() =>
+                      navigate(`/boss-preview/${eventBossId}/${joinCode}`)
+                    }
                     variant="outline"
                     className="w-full"
                   >
@@ -1975,7 +2003,10 @@ const BossBattle = () => {
                 <AlertDialogDescription className="text-center text-muted-foreground mb-4">
                   {currentPlayerTeam && (
                     <div className="mb-0">
-                      Find your team: <b className="text-foreground">{currentPlayerTeam.teamName}</b>
+                      Find your team:{" "}
+                      <b className="text-foreground">
+                        {currentPlayerTeam.teamName}
+                      </b>
                     </div>
                   )}
                   Show this code to a teammate to get revived!

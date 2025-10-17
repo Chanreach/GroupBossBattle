@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/pagination";
 
 // ===== API ===== //
-import { apiClient } from "@/api";
+import { apiClient } from "@/api/apiClient";
 
 const AllTimeLeaderboard = () => {
   const [currentPage, setCurrentPage] = useState(1);

@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 
 // ===== CONTEXTS ===== //
 import { useAuth } from "@/context/useAuth";
-import { apiClient } from "@/api";
+import { apiClient } from "@/api/apiClient";
 
 const Authentication = () => {
   const { login, setUser } = useAuth();

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { apiClient } from "@/api";
+import { apiClient } from "@/api/apiClient";
 import { useAuth } from "@/context/useAuth";
 import { toast } from "sonner";
 
@@ -58,7 +58,15 @@ const EventBosses = () => {
           })) || [];
 
         console.log("EventBosses: Extracted bosses:", bosses);
-        console.log("EventBosses: Boss statuses:", bosses.map(b => ({ name: b.name, status: b.status, eventBossId: b.eventBossId, joinCode: b.joinCode })));
+        console.log(
+          "EventBosses: Boss statuses:",
+          bosses.map((b) => ({
+            name: b.name,
+            status: b.status,
+            eventBossId: b.eventBossId,
+            joinCode: b.joinCode,
+          }))
+        );
         setAssignedBosses(bosses);
       }
     } catch (error) {
@@ -92,7 +100,7 @@ const EventBosses = () => {
       toast.error("Invalid boss configuration: Missing eventBossId");
       return;
     }
-    
+
     if (!boss.joinCode) {
       toast.error("Invalid boss configuration: Missing joinCode");
       return;
@@ -248,13 +256,17 @@ const EventBosses = () => {
               <Label className="text-lg font-semibold">Available Bosses</Label>
               <div className="text-sm text-muted-foreground">
                 {
-                  assignedBosses.filter((boss) => !boss.status || boss.status.toLowerCase() === "active")
-                    .length
+                  assignedBosses.filter(
+                    (boss) =>
+                      !boss.status || boss.status.toLowerCase() === "active"
+                  ).length
                 }{" "}
                 Ready •{" "}
                 {
-                  assignedBosses.filter((boss) => boss.status && boss.status.toLowerCase() !== "active")
-                    .length
+                  assignedBosses.filter(
+                    (boss) =>
+                      boss.status && boss.status.toLowerCase() !== "active"
+                  ).length
                 }{" "}
                 On Cooldown
               </div>
@@ -280,7 +292,9 @@ const EventBosses = () => {
                       />
                       <div className="absolute top-2 left-2">
                         {(() => {
-                          const isActive = !boss.status || boss.status.toLowerCase() === "active";
+                          const isActive =
+                            !boss.status ||
+                            boss.status.toLowerCase() === "active";
                           return isActive ? (
                             <Badge className="bg-green-500 hover:bg-green-600">
                               <Zap className="w-3 h-3 mr-1" />
@@ -343,7 +357,9 @@ const EventBosses = () => {
                       {/* Join Button */}
                       <div className="pt-3">
                         {(() => {
-                          const isActive = !boss.status || boss.status.toLowerCase() === "active";
+                          const isActive =
+                            !boss.status ||
+                            boss.status.toLowerCase() === "active";
                           return (
                             <Button
                               type="button"

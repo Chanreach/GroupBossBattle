@@ -5,7 +5,6 @@ export const getGuestId = () => {
 
 export const getGuestUser = () => {
   const guestUserData = localStorage.getItem("guestUser");
-  console.log("Retrieved guestUserData from localStorage:", guestUserData);
   if (!guestUserData || guestUserData === "undefined" || guestUserData === "null") {
     return null;
   }

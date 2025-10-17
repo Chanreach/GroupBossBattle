@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Calendar, Clock } from "lucide-react";
-import { apiClient } from '@/api';
+import { apiClient } from "@/api/apiClient";
 
 const EventCarousel = () => {
   const navigate = useNavigate();
@@ -13,12 +13,12 @@ const EventCarousel = () => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleString('en-US', {
-      month: 'short',
-      day: '2-digit',
-      year: 'numeric',
-      hour:"numeric",
-      minute: '2-digit',
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
       hour12: true, // Use 12-hour format to show AM/PM
     });
   };
@@ -28,29 +28,32 @@ const EventCarousel = () => {
     const fetchEvents = async () => {
       try {
         setLoading(true);
-        const response = await apiClient.get('/public/events');
+        const response = await apiClient.get("/public/events");
         const eventsData = response.data || [];
-        
-        console.log('EventCarousel: Fetched events data:', eventsData);
-        
+
+        console.log("EventCarousel: Fetched events data:", eventsData);
+
         // Format events for the carousel
-        const formattedEvents = eventsData.map(event => ({
+        const formattedEvents = eventsData.map((event) => ({
           id: event.id,
           name: event.name,
           title: "Interactive Boss Battle Experience",
-          description: event.description || "Join forces with other participants and put your knowledge to the test! Answer questions, deal damage, and work together to defeat powerful bosses.",
-          startTime: formatDate(event.startTime) || 'TBD',
-          endTime: formatDate(event.endTime) || 'TBD',
-          image: "https://em-content.zobj.net/source/microsoft-3D-fluent/406/crossed-swords_2694-fe0f.png",
-          isActive: event.status === 'active' || event.status === 'ongoing',
-          status: event.status || 'upcoming',
-          eventBosses: event.eventBosses || [] // Include boss data for debugging
+          description:
+            event.description ||
+            "Join forces with other participants and put your knowledge to the test! Answer questions, deal damage, and work together to defeat powerful bosses.",
+          startTime: formatDate(event.startTime) || "TBD",
+          endTime: formatDate(event.endTime) || "TBD",
+          image:
+            "https://em-content.zobj.net/source/microsoft-3D-fluent/406/crossed-swords_2694-fe0f.png",
+          isActive: event.status === "active" || event.status === "ongoing",
+          status: event.status || "upcoming",
+          eventBosses: event.eventBosses || [], // Include boss data for debugging
         }));
-        
-        console.log('EventCarousel: Formatted events:', formattedEvents);
+
+        console.log("EventCarousel: Formatted events:", formattedEvents);
         setEvents(formattedEvents);
       } catch (err) {
-        console.error('Error fetching events:', err);
+        console.error("Error fetching events:", err);
         setError(err);
         // Set placeholder events if fetch fails
         setEvents([]);
@@ -65,17 +68,19 @@ const EventCarousel = () => {
   // Placeholder event for when no events exist
   const placeholderEvents = [
     {
-      id: 'placeholder-1',
+      id: "placeholder-1",
       name: "No Events Scheduled",
       title: "Stay Tuned for Epic Battles",
-      description: "Some boss battle events are being planned! Check back soon for exciting interactive experiences where you can team up with others to defeat powerful bosses.",
+      description:
+        "Some boss battle events are being planned! Check back soon for exciting interactive experiences where you can team up with others to defeat powerful bosses.",
       startTime: "--",
       endTime: "--",
-      image: "https://em-content.zobj.net/source/microsoft-3D-fluent/406/crossed-swords_2694-fe0f.png",
+      image:
+        "https://em-content.zobj.net/source/microsoft-3D-fluent/406/crossed-swords_2694-fe0f.png",
       isActive: false,
-      status: 'coming-soon',
-      isPlaceholder: true
-    }
+      status: "coming-soon",
+      isPlaceholder: true,
+    },
   ];
 
   // Use placeholder if no events or loading failed
@@ -84,9 +89,9 @@ const EventCarousel = () => {
   // Auto-advance carousel
   useEffect(() => {
     if (displayEvents.length <= 1) return; // Don't auto-advance if only one event/placeholder
-    
+
     const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => 
+      setCurrentIndex((prevIndex) =>
         prevIndex === displayEvents.length - 1 ? 0 : prevIndex + 1
       );
     }, 15000);
@@ -99,37 +104,44 @@ const EventCarousel = () => {
   };
 
   const goToPrevious = () => {
-    setCurrentIndex(currentIndex === 0 ? displayEvents.length - 1 : currentIndex - 1);
+    setCurrentIndex(
+      currentIndex === 0 ? displayEvents.length - 1 : currentIndex - 1
+    );
   };
 
   const goToNext = () => {
-    setCurrentIndex(currentIndex === displayEvents.length - 1 ? 0 : currentIndex + 1);
+    setCurrentIndex(
+      currentIndex === displayEvents.length - 1 ? 0 : currentIndex + 1
+    );
   };
 
   const handleCardClick = (event) => {
-    console.log('EventCarousel: Card clicked for event:', event);
-    
+    console.log("EventCarousel: Card clicked for event:", event);
+
     // Don't navigate if it's a placeholder event
     if (event.isPlaceholder) {
-      console.log('EventCarousel: Ignoring placeholder event click');
+      console.log("EventCarousel: Ignoring placeholder event click");
       return;
     }
-    
+
     // Navigate to event-bosses page with the event ID
-    console.log('EventCarousel: Navigating to event-bosses with eventId:', event.id);
+    console.log(
+      "EventCarousel: Navigating to event-bosses with eventId:",
+      event.id
+    );
     navigate(`/event-bosses?eventId=${event.id}`);
   };
 
   const getCardPosition = (index) => {
     const diff = index - currentIndex;
-    
+
     if (diff === 0) {
       // Center card
       return "translate-x-[-50%] translate-y-[-50%] z-10 scale-100 brightness-100";
-    } else if (diff === -1 || (diff === displayEvents.length - 1)) {
+    } else if (diff === -1 || diff === displayEvents.length - 1) {
       // Left card - closer to center on mobile
       return "translate-x-[-66%] sm:translate-x-[-80%] translate-y-[-50%] scale-75 brightness-[.4]";
-    } else if (diff === 1 || (diff === -(displayEvents.length - 1))) {
+    } else if (diff === 1 || diff === -(displayEvents.length - 1)) {
       // Right card - closer to center on mobile
       return "translate-x-[-34%] sm:translate-x-[-20%] translate-y-[-50%] scale-75 brightness-[.4]";
     } else {
@@ -147,7 +159,7 @@ const EventCarousel = () => {
         </div>
       );
     }
-    
+
     if (event.status === "ongoing") {
       return (
         <div className="inline-flex items-center bg-green-500/20 text-green-300 px-3 py-2 rounded-full text-sm sm:text-base font-medium">
@@ -181,7 +193,9 @@ const EventCarousel = () => {
             <div className="w-[350px] h-[350px] sm:w-[600px] sm:h-[338px] rounded-xl bg-purple-600/20 backdrop-blur-sm border border-white/20 animate-pulse">
               <div className="p-4 sm:p-6 h-full flex flex-col justify-center items-center text-white">
                 <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/20 rounded-full animate-spin mb-4"></div>
-                <div className="text-lg sm:text-xl font-medium opacity-70">Loading Events...</div>
+                <div className="text-lg sm:text-xl font-medium opacity-70">
+                  Loading Events...
+                </div>
               </div>
             </div>
           </div>
@@ -229,11 +243,11 @@ const EventCarousel = () => {
             <li
               key={event.id}
               className={`absolute top-[50%] left-[50%] w-[350px] h-[350px] sm:w-[600px] sm:h-[338px] duration-400 ${
-                index === currentIndex && !event.isPlaceholder 
-                  ? 'cursor-pointer hover:scale-105' 
-                  : displayEvents.length > 1 
-                    ? 'cursor-pointer' 
-                    : 'cursor-default'
+                index === currentIndex && !event.isPlaceholder
+                  ? "cursor-pointer hover:scale-105"
+                  : displayEvents.length > 1
+                  ? "cursor-pointer"
+                  : "cursor-default"
               } ${getCardPosition(index)}`}
               onClick={() => {
                 // If it's the center card, navigate to the event
@@ -246,45 +260,52 @@ const EventCarousel = () => {
               }}
             >
               {/* Card with solid border */}
-              <div className={`relative w-full h-full rounded-xl overflow-hidden ${
-                event.isPlaceholder 
-                  ? 'bg-purple-800/60'
-                  : 'bg-purple-600'
-              } p-[3px]`}>
-
+              <div
+                className={`relative w-full h-full rounded-xl overflow-hidden ${
+                  event.isPlaceholder ? "bg-purple-800/60" : "bg-purple-600"
+                } p-[3px]`}
+              >
                 <div className="relative w-full h-full rounded-lg overflow-hidden bg-white/10 dark:bg-white/5 backdrop-blur-sm border border-white/20 dark:border-white/20">
                   {/* Dark overlay for better text contrast */}
-                  <div className={`absolute inset-0 ${
-                    event.isPlaceholder ? 'bg-black/30 dark:bg-black/50' : 'bg-black/25 dark:bg-black/40'
-                  }`}></div>
-                  
+                  <div
+                    className={`absolute inset-0 ${
+                      event.isPlaceholder
+                        ? "bg-black/30 dark:bg-black/50"
+                        : "bg-black/25 dark:bg-black/40"
+                    }`}
+                  ></div>
+
                   {/* Event Image/Icon */}
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <img 
-                      src={event.image} 
+                    <img
+                      src={event.image}
                       alt={event.name}
                       className={`w-16 h-16 sm:w-20 sm:h-20 object-contain ${
-                        event.isPlaceholder ? 'opacity-20' : 'opacity-30'
+                        event.isPlaceholder ? "opacity-20" : "opacity-30"
                       }`}
                     />
                   </div>
-                  
+
                   {/* Event Content Overlay */}
                   <div className="relative z-10 p-4 sm:p-6 h-full flex flex-col justify-between">
                     {/* Top Content */}
                     <div className="text-white">
-                      <h3 className={`text-xl sm:text-2xl lg:text-3xl font-bold mb-3 sm:mb-4 text-white drop-shadow-lg ${
-                        event.isPlaceholder ? 'text-purple-100' : 'text-white'
-                      }`}>
+                      <h3
+                        className={`text-xl sm:text-2xl lg:text-3xl font-bold mb-3 sm:mb-4 text-white drop-shadow-lg ${
+                          event.isPlaceholder ? "text-purple-100" : "text-white"
+                        }`}
+                      >
                         {event.name}
                       </h3>
-                      
+
                       {/* Event Description */}
-                      <p className={`text-sm sm:text-base lg:text-lg line-clamp-3 drop-shadow-md ${
-                        event.isPlaceholder 
-                          ? 'text-purple-100/80 dark:text-purple-100/70' 
-                          : 'text-white/90 dark:text-white/70'
-                      }`}>
+                      <p
+                        className={`text-sm sm:text-base lg:text-lg line-clamp-3 drop-shadow-md ${
+                          event.isPlaceholder
+                            ? "text-purple-100/80 dark:text-purple-100/70"
+                            : "text-white/90 dark:text-white/70"
+                        }`}
+                      >
                         {event.description}
                       </p>
                     </div>
@@ -292,11 +313,13 @@ const EventCarousel = () => {
                     {/* Bottom Content */}
                     <div className="text-white text-center">
                       {/* Event Times */}
-                      <div className={`space-y-1 mb-3 sm:mb-4 text-sm sm:text-base ${
-                        event.isPlaceholder 
-                          ? 'text-purple-100/80 dark:text-purple-100/70' 
-                          : 'text-white/90 dark:text-white/70'
-                      }`}>
+                      <div
+                        className={`space-y-1 mb-3 sm:mb-4 text-sm sm:text-base ${
+                          event.isPlaceholder
+                            ? "text-purple-100/80 dark:text-purple-100/70"
+                            : "text-white/90 dark:text-white/70"
+                        }`}
+                      >
                         <div className="flex items-center justify-center gap-1">
                           <span className="font-semibold">Start:</span>
                           <span>{event.startTime}</span>
@@ -306,7 +329,7 @@ const EventCarousel = () => {
                           <span>{event.endTime}</span>
                         </div>
                       </div>
-                      
+
                       {/* Event Status */}
                       <div className="flex justify-center">
                         {getStatusDisplay(event)}

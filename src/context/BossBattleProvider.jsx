@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { io } from "socket.io-client";
 import BossBattleContext from "./BossBattleContext";
 
-const BossBattleProvider = ({ children }) => {
+export const BossBattleProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
@@ -39,5 +39,3 @@ const BossBattleProvider = ({ children }) => {
     </BossBattleContext.Provider>
   );
 };
-
-export default BossBattleProvider;

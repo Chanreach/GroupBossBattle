@@ -4,15 +4,18 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 // ===== COMPONENTS ===== //
-import { ThemeProvider } from "./theme/theme-provider";
-import { AuthProvider } from "./context/AuthProvider";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import { AuthenticationCheck } from "./components/AuthenticationCheck";
-import PreventAuthenticatedAccess from "./components/PreventAuthenticatedAccess";
+import { PreventAuthenticatedAccess } from "./components/PreventAuthenticatedAccess";
 import { PlayerViewGuard } from "./components/PlayerViewGuard";
 import { MessageProvider } from "./context/MessageProvider";
-import ScrollToTop from "./components/ScrollToTop";
+import { ScrollToTop } from "./components/ScrollToTop";
+
+// ===== CONTEXT PROVIDERS ===== //
+import { ThemeProvider } from "./theme/theme-provider";
+import { AuthProvider } from "./context/AuthProvider";
+import { BossBattleProvider } from "./context/BossBattleProvider";
 
 // ===== STYLES ===== //
 import "./index.css";
@@ -45,378 +48,388 @@ import PlayerBossPreview from "./pages/Player/BossPreview2";
 import PlayerBossBattle from "./pages/Player/BossBattle2";
 import PlayerBossPodium from "./pages/Player/BossPodium2";
 
-// ===== HOST PAGES ===== //
+// ===== Manage PAGES ===== //
 // Bosses
-import HostBossesView from "./pages/Host/Bosses/View";
-import HostBossesCreate from "./pages/Host/Bosses/Create";
-import HostBossesEdit from "./pages/Host/Bosses/Edit";
+import ManageBossesView from "./pages/Manage/Bosses/View";
+import ManageBossesCreate from "./pages/Manage/Bosses/Create";
+import ManageBossesEdit from "./pages/Manage/Bosses/Edit";
 // Events
-import HostEventsView from "./pages/Host/Events/View";
-import HostEventsAssignBoss from "./pages/Host/Events/AssignBoss";
-import HostEventsBossTemplate from "./pages/Host/Events/BossTemplate";
-import HostEventsCreate from "./pages/Host/Events/Create";
-import HostEventsEdit from "./pages/Host/Events/Edit";
-import HostEventsPlayerbadges from "./pages/Host/Events/Playerbadges";
-import HostEventsPlayerBadges from "./pages/Host/Events/PlayerBadges2";
-import HostEventsPlayerBadgesEdit from "./pages/Host/Events/Playerbadgesedit";
-import HostEventsLeaderboard from "./pages/Host/Events/Leaderboard2";
-import HostEventsAllLeaderboard from "./pages/AllTimeLeaderboard";
+import ManageEventsView from "./pages/Manage/Events/View";
+import ManageEventsAssignBoss from "./pages/Manage/Events/AssignBoss";
+import ManageEventsBossTemplate from "./pages/Manage/Events/BossTemplate";
+import ManageEventsCreate from "./pages/Manage/Events/Create";
+import ManageEventsEdit from "./pages/Manage/Events/Edit";
+import ManageEventsPlayerbadges from "./pages/Manage/Events/Playerbadges";
+import ManageEventsPlayerBadges from "./pages/Manage/Events/PlayerBadges2";
+import ManageEventsPlayerBadgesEdit from "./pages/Manage/Events/Playerbadgesedit";
+import ManageEventsLeaderboard from "./pages/Manage/Events/Leaderboard2";
+import ManageEventsAllLeaderboard from "./pages/AllTimeLeaderboard";
 // Users
-import HostUsersView from "./pages/Host/Users/View";
-import HostUsersEdit from "./pages/Host/Users/Edit";
+import ManageUsersView from "./pages/Manage/Users/View";
+import ManageUsersEdit from "./pages/Manage/Users/Edit";
 // QuestionBank - Categories
-import HostCategoriesView from "./pages/Host/QuestionBank/Categories/View";
-import HostCategoriesCreate from "./pages/Host/QuestionBank/Categories/Create";
-import HostCategoriesEdit from "./pages/Host/QuestionBank/Categories/Edit";
+import ManageCategoriesView from "./pages/Manage/QuestionBank/Categories/View";
+import ManageCategoriesCreate from "./pages/Manage/QuestionBank/Categories/Create";
+import ManageCategoriesEdit from "./pages/Manage/QuestionBank/Categories/Edit";
 // QuestionBank - Questions
-import HostQuestionsIndex from "./pages/Host/QuestionBank/Questions/index";
-import HostCategoriesQuesitonsView from "./pages/Host/QuestionBank/Questions/View";
-import HostCategoriesQuestionsCreate from "./pages/Host/QuestionBank/Questions/Create";
-import HostCategoriesQuestionsEdit from "./pages/Host/QuestionBank/Questions/Edit";
+import ManageQuestionsIndex from "./pages/Manage/QuestionBank/Questions/index";
+import ManageCategoriesQuesitonsView from "./pages/Manage/QuestionBank/Questions/View";
+import ManageCategoriesQuestionsCreate from "./pages/Manage/QuestionBank/Questions/Create";
+import ManageCategoriesQuestionsEdit from "./pages/Manage/QuestionBank/Questions/Edit";
 // Profile
-import HostProfile from "./pages/Host/Profile/Profile";
-
-import BossBattleProvider from "./context/BossBattleProvider";
+import ManageProfile from "./pages/Manage/Profile/Profile";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  // <React.StrictMode>
-  <ThemeProvider>
-    <AuthProvider>
-      {/* <BossJoinProvider> */}
-      <BossBattleProvider>
-        <BrowserRouter>
-          <ScrollToTop />
-          <MessageProvider>
-            <Routes>
-              {/* ===== LANDING ROUTES ===== */}
-              <Route path="/landing" element={<AppLanding />}>
-                <Route
-                  index
-                  element={
-                    <PreventAuthenticatedAccess>
-                      <Landing />
-                    </PreventAuthenticatedAccess>
-                  }
-                />
-              </Route>
-
-              {/* About page for logged-out users */}
-              <Route path="/about-us" element={<AppLanding />}>
-                <Route
-                  index
-                  element={
-                    <PreventAuthenticatedAccess>
-                      <About />
-                    </PreventAuthenticatedAccess>
-                  }
-                />
-              </Route>
-
-              <Route path="/auth" element={<AppLanding />}>
-                <Route
-                  index
-                  element={
-                    <PreventAuthenticatedAccess>
-                      <Authentication />
-                    </PreventAuthenticatedAccess>
-                  }
-                />
-              </Route>
-
-              {/* ===== PLAYER ROUTES ===== */}
-              <Route path="/" element={<App />}>
-                <Route
-                  index
-                  element={
-                    <AuthenticationCheck>
-                      <PlayerViewGuard>
-                        <PlayerHome />
-                      </PlayerViewGuard>
-                    </AuthenticationCheck>
-                  }
-                />
-              </Route>
-
-              {/* About page for logged-in users */}
-              <Route path="/about" element={<App />}>
-                <Route
-                  index
-                  element={
-                    <AuthenticationCheck>
-                      <About />
-                    </AuthenticationCheck>
-                  }
-                />
-              </Route>
-
-              <Route path="/event-bosses" element={<App />}>
-                <Route index element={<PlayerEventBosses />} />
-              </Route>
-
-              <Route path="/qr" element={<App />}>
-                <Route
-                  index
-                  element={
-                    <AuthenticationCheck>
-                      <PlayerQR />
-                    </AuthenticationCheck>
-                  }
-                />
-              </Route>
-
-              <Route path="/player/join" element={<PlayerJoin />} />
-              <Route path="/boss-preview/join" element={<PlayerJoin />} />
-
-              <Route path="/join-test" element={<PlayerJoinTest />} />
-
-              <Route path="/qr-test" element={<App />}>
-                <Route
-                  index
-                  element={
-                    <AuthenticationCheck>
-                      <PlayerQRTest />
-                    </AuthenticationCheck>
-                  }
-                />
-              </Route>
-
-              <Route path="/badges" element={<App />}>
-                <Route
-                  index
-                  element={
-                    <AuthenticationCheck>
-                      <PlayerBadges />
-                    </AuthenticationCheck>
-                  }
-                />
-              </Route>
-
-              <Route path="/leaderboard" element={<App />}>
-                <Route
-                  index
-                  element={
-                    <AuthenticationCheck>
-                      <PlayerLeaderboard />
-                    </AuthenticationCheck>
-                  }
-                />
-              </Route>
-
-              <Route path="/profile" element={<App />}>
-                <Route
-                  index
-                  element={
-                    <AuthenticationCheck>
-                      <PlayerProfile />
-                    </AuthenticationCheck>
-                  }
-                />
-              </Route>
-
-              <Route
-                path="/boss-preview/:eventBossId/:joinCode"
-                element={<App />}
-              >
-                <Route
-                  index
-                  element={
-                    <AuthenticationCheck>
-                      <PlayerBossPreview />
-                    </AuthenticationCheck>
-                  }
-                />
-              </Route>
-
-              <Route
-                path="/boss-battle/:eventBossId/:joinCode"
-                element={<AppBattle />}
-              >
-                <Route
-                  index
-                  element={
-                    <AuthenticationCheck>
-                      <PlayerBossBattle />
-                    </AuthenticationCheck>
-                  }
-                />
-              </Route>
-
-              <Route
-                path="/boss-podium/:eventBossId/:joinCode"
-                element={<AppBattle />}
-              >
-                <Route
-                  index
-                  element={
-                    <AuthenticationCheck>
-                      <PlayerBossPodium />
-                    </AuthenticationCheck>
-                  }
-                />
-              </Route>
-
-              {/* ===== HOST ROUTES (Protected for host and admin roles) ===== */}
-              <Route
-                path="/host"
-                element={<ProtectedRoute allowedRoles={["host", "admin"]} />}
-              >
-                {/* <Route path="/host"> */}
-                {/* Host Bosses Routes */}
-                <Route path="bosses/create" element={<AppOP />}>
-                  <Route index element={<HostBossesCreate />} />
+  <React.StrictMode>
+    <ThemeProvider>
+      <AuthProvider>
+        <BossBattleProvider>
+          <BrowserRouter>
+            <ScrollToTop />
+            <MessageProvider>
+              <Routes>
+                {/* ===== LANDING ROUTES ===== */}
+                <Route path="/landing" element={<AppLanding />}>
+                  <Route
+                    index
+                    element={
+                      <PreventAuthenticatedAccess>
+                        <Landing />
+                      </PreventAuthenticatedAccess>
+                    }
+                  />
                 </Route>
 
-                <Route path="bosses/edit/:id" element={<AppOP />}>
-                  <Route index element={<HostBossesEdit />} />
+                {/* About page for logged-out users */}
+                <Route path="/about-us" element={<AppLanding />}>
+                  <Route
+                    index
+                    element={
+                      <PreventAuthenticatedAccess>
+                        <About />
+                      </PreventAuthenticatedAccess>
+                    }
+                  />
                 </Route>
 
-                <Route path="bosses/view" element={<AppOP />}>
-                  <Route index element={<HostBossesView />} />
+                <Route path="/auth" element={<AppLanding />}>
+                  <Route
+                    index
+                    element={
+                      <PreventAuthenticatedAccess>
+                        <Authentication />
+                      </PreventAuthenticatedAccess>
+                    }
+                  />
                 </Route>
 
-                {/* Host Events Routes */}
-                <Route path="events/view" element={<AppOP />}>
-                  <Route index element={<HostEventsView />} />
+                {/* ===== PLAYER ROUTES ===== */}
+                <Route path="/" element={<App />}>
+                  <Route
+                    index
+                    element={
+                      <AuthenticationCheck>
+                        <PlayerViewGuard>
+                          <PlayerHome />
+                        </PlayerViewGuard>
+                      </AuthenticationCheck>
+                    }
+                  />
                 </Route>
 
-                <Route path="events/assign_boss" element={<AppOP />}>
-                  <Route index element={<HostEventsAssignBoss />} />
+                {/* About page for logged-in users */}
+                <Route path="/about" element={<App />}>
+                  <Route
+                    index
+                    element={
+                      <AuthenticationCheck>
+                        <About />
+                      </AuthenticationCheck>
+                    }
+                  />
                 </Route>
 
-                <Route path="events/boss_template" element={<AppOP />}>
-                  <Route index element={<HostEventsBossTemplate />} />
+                <Route path="/event-bosses" element={<App />}>
+                  <Route index element={<PlayerEventBosses />} />
                 </Route>
 
-                <Route path="events/:eventId/player_badges" element={<AppOP />}>
-                  <Route index element={<HostEventsPlayerbadges />} />
+                <Route path="/qr" element={<App />}>
+                  <Route
+                    index
+                    element={
+                      <AuthenticationCheck>
+                        <PlayerQR />
+                      </AuthenticationCheck>
+                    }
+                  />
+                </Route>
+
+                <Route path="/player/join" element={<PlayerJoin />} />
+                <Route path="/boss-preview/join" element={<PlayerJoin />} />
+
+                <Route path="/join-test" element={<PlayerJoinTest />} />
+
+                <Route path="/qr-test" element={<App />}>
+                  <Route
+                    index
+                    element={
+                      <AuthenticationCheck>
+                        <PlayerQRTest />
+                      </AuthenticationCheck>
+                    }
+                  />
+                </Route>
+
+                <Route path="/badges" element={<App />}>
+                  <Route
+                    index
+                    element={
+                      <AuthenticationCheck>
+                        <PlayerBadges />
+                      </AuthenticationCheck>
+                    }
+                  />
+                </Route>
+
+                <Route path="/leaderboard" element={<App />}>
+                  <Route
+                    index
+                    element={
+                      <AuthenticationCheck>
+                        <PlayerLeaderboard />
+                      </AuthenticationCheck>
+                    }
+                  />
+                </Route>
+
+                <Route path="/profile" element={<App />}>
+                  <Route
+                    index
+                    element={
+                      <AuthenticationCheck>
+                        <PlayerProfile />
+                      </AuthenticationCheck>
+                    }
+                  />
                 </Route>
 
                 <Route
-                  path="events/:eventId/player_badges2"
-                  element={<AppOP />}
+                  path="/boss-preview/:eventBossId/:joinCode"
+                  element={<App />}
                 >
-                  <Route index element={<HostEventsPlayerBadges />} />
+                  <Route
+                    index
+                    element={
+                      <AuthenticationCheck>
+                        <PlayerBossPreview />
+                      </AuthenticationCheck>
+                    }
+                  />
                 </Route>
 
                 <Route
-                  path="events/:eventId/player_badges_edit"
-                  element={<AppOP />}
+                  path="/boss-battle/:eventBossId/:joinCode"
+                  element={<AppBattle />}
                 >
-                  <Route index element={<HostEventsPlayerBadgesEdit />} />
+                  <Route
+                    index
+                    element={
+                      <AuthenticationCheck>
+                        <PlayerBossBattle />
+                      </AuthenticationCheck>
+                    }
+                  />
                 </Route>
 
                 <Route
-                  path="events/:eventId/:eventBossId/leaderboard"
-                  element={<AppOP />}
+                  path="/boss-podium/:eventBossId/:joinCode"
+                  element={<AppBattle />}
                 >
-                  <Route index element={<HostEventsLeaderboard />} />
+                  <Route
+                    index
+                    element={
+                      <AuthenticationCheck>
+                        <PlayerBossPodium />
+                      </AuthenticationCheck>
+                    }
+                  />
                 </Route>
 
-                <Route path="all_leaderboard" element={<AppOP />}>
-                  <Route index element={<HostEventsAllLeaderboard />} />
-                </Route>
-
+                {/* ===== Manage ROUTES (Protected for Manage and admin roles) ===== */}
                 <Route
-                  path="events/create"
+                  path="/Manage"
                   element={
-                    <AdminRoute>
-                      <AppOP />
-                    </AdminRoute>
+                    <ProtectedRoute allowedRoles={["Manage", "admin"]} />
                   }
                 >
-                  <Route index element={<HostEventsCreate />} />
-                </Route>
+                  {/* <Route path="/Manage"> */}
+                  {/* Manage Bosses Routes */}
+                  <Route path="bosses/create" element={<AppOP />}>
+                    <Route index element={<ManageBossesCreate />} />
+                  </Route>
 
-                <Route
-                  path="events/edit"
-                  element={
-                    <AdminRoute>
-                      <AppOP />
-                    </AdminRoute>
-                  }
-                >
-                  <Route index element={<HostEventsEdit />} />
-                </Route>
+                  <Route path="bosses/edit/:id" element={<AppOP />}>
+                    <Route index element={<ManageBossesEdit />} />
+                  </Route>
 
-                {/* Host QuestionBank Routes */}
-                <Route path="questionbank/categories/view" element={<AppOP />}>
-                  <Route index element={<HostCategoriesView />} />
-                </Route>
+                  <Route path="bosses/view" element={<AppOP />}>
+                    <Route index element={<ManageBossesView />} />
+                  </Route>
 
-                <Route
-                  path="questionbank/categories/create"
-                  element={<AppOP />}
-                >
-                  <Route index element={<HostCategoriesCreate />} />
-                </Route>
+                  {/* Manage Events Routes */}
+                  <Route path="events/view" element={<AppOP />}>
+                    <Route index element={<ManageEventsView />} />
+                  </Route>
 
-                <Route
-                  path="questionbank/categories/edit/:id"
-                  element={<AppOP />}
-                >
-                  <Route index element={<HostCategoriesEdit />} />
-                </Route>
+                  <Route path="events/assign_boss" element={<AppOP />}>
+                    <Route index element={<ManageEventsAssignBoss />} />
+                  </Route>
 
-                <Route path="questionbank/questions" element={<AppOP />}>
-                  <Route index element={<HostQuestionsIndex />} />
-                </Route>
+                  <Route path="events/boss_template" element={<AppOP />}>
+                    <Route index element={<ManageEventsBossTemplate />} />
+                  </Route>
 
-                <Route path="questionbank/questions/view" element={<AppOP />}>
-                  <Route index element={<HostCategoriesQuesitonsView />} />
-                </Route>
+                  <Route
+                    path="events/:eventId/player_badges"
+                    element={<AppOP />}
+                  >
+                    <Route index element={<ManageEventsPlayerbadges />} />
+                  </Route>
 
-                <Route path="questionbank/questions/create" element={<AppOP />}>
-                  <Route index element={<HostCategoriesQuestionsCreate />} />
-                </Route>
+                  <Route
+                    path="events/:eventId/player_badges2"
+                    element={<AppOP />}
+                  >
+                    <Route index element={<ManageEventsPlayerBadges />} />
+                  </Route>
 
-                <Route path="questionbank/questions/edit" element={<AppOP />}>
-                  <Route index element={<HostCategoriesQuestionsEdit />} />
-                </Route>
+                  <Route
+                    path="events/:eventId/player_badges_edit"
+                    element={<AppOP />}
+                  >
+                    <Route index element={<ManageEventsPlayerBadgesEdit />} />
+                  </Route>
 
-                {/* Host Profile */}
-                <Route path="profile" element={<AppOP />}>
-                  <Route index element={<HostProfile />} />
-                </Route>
+                  <Route
+                    path="events/:eventId/:eventBossId/leaderboard"
+                    element={<AppOP />}
+                  >
+                    <Route index element={<ManageEventsLeaderboard />} />
+                  </Route>
 
-                {/* Host Users Routes - Admin Only */}
-                {/* <Route path="users/view" element={
+                  <Route path="all_leaderboard" element={<AppOP />}>
+                    <Route index element={<ManageEventsAllLeaderboard />} />
+                  </Route>
+
+                  <Route
+                    path="events/create"
+                    element={
+                      <AdminRoute>
+                        <AppOP />
+                      </AdminRoute>
+                    }
+                  >
+                    <Route index element={<ManageEventsCreate />} />
+                  </Route>
+
+                  <Route
+                    path="events/edit"
+                    element={
+                      <AdminRoute>
+                        <AppOP />
+                      </AdminRoute>
+                    }
+                  >
+                    <Route index element={<ManageEventsEdit />} />
+                  </Route>
+
+                  {/* Manage QuestionBank Routes */}
+                  <Route
+                    path="questionbank/categories/view"
+                    element={<AppOP />}
+                  >
+                    <Route index element={<ManageCategoriesView />} />
+                  </Route>
+
+                  <Route
+                    path="questionbank/categories/create"
+                    element={<AppOP />}
+                  >
+                    <Route index element={<ManageCategoriesCreate />} />
+                  </Route>
+
+                  <Route
+                    path="questionbank/categories/edit/:id"
+                    element={<AppOP />}
+                  >
+                    <Route index element={<ManageCategoriesEdit />} />
+                  </Route>
+
+                  <Route path="questionbank/questions" element={<AppOP />}>
+                    <Route index element={<ManageQuestionsIndex />} />
+                  </Route>
+
+                  <Route path="questionbank/questions/view" element={<AppOP />}>
+                    <Route index element={<ManageCategoriesQuesitonsView />} />
+                  </Route>
+
+                  <Route
+                    path="questionbank/questions/create"
+                    element={<AppOP />}
+                  >
+                    <Route
+                      index
+                      element={<ManageCategoriesQuestionsCreate />}
+                    />
+                  </Route>
+
+                  <Route path="questionbank/questions/edit" element={<AppOP />}>
+                    <Route index element={<ManageCategoriesQuestionsEdit />} />
+                  </Route>
+
+                  {/* Manage Profile */}
+                  <Route path="profile" element={<AppOP />}>
+                    <Route index element={<ManageProfile />} />
+                  </Route>
+
+                  {/* Manage Users Routes - Admin Only */}
+                  {/* <Route path="users/view" element={
                   <AdminRoute>
                     <AppOP />
                   </AdminRoute>
                 }>
-                  <Route index element={<HostUsersView />} />
+                  <Route index element={<ManageUsersView />} />
                 </Route> */}
-                <Route path="users/view" element={<AppOP />}>
-                  <Route index element={<HostUsersView />} />
-                </Route>
+                  <Route path="users/view" element={<AppOP />}>
+                    <Route index element={<ManageUsersView />} />
+                  </Route>
 
-                {/* <Route path="users/edit/:id" element={
+                  {/* <Route path="users/edit/:id" element={
                   <AdminRoute>
                     <AppOP />
                   </AdminRoute>
                 }>
-                  <Route index element={<HostUsersEdit />} />
+                  <Route index element={<ManageUsersEdit />} />
                 </Route> */}
-                <Route path="users/edit/:id" element={<AppOP />}>
-                  <Route index element={<HostUsersEdit />} />
+                  <Route path="users/edit/:id" element={<AppOP />}>
+                    <Route index element={<ManageUsersEdit />} />
+                  </Route>
                 </Route>
-              </Route>
 
-              {/* Loading Route */}
-              <Route path="/loading" element={<Loading />} />
+                {/* Loading Route */}
+                <Route path="/loading" element={<Loading />} />
 
-              {/* 404 Error Route */}
-              <Route path="/error" element={<Error />} />
+                {/* 404 Error Route */}
+                <Route path="/error" element={<Error />} />
 
-              <Route path="*" element={<AppError />}>
-                <Route path="*" element={<Error />} />
-              </Route>
-            </Routes>
-          </MessageProvider>
-        </BrowserRouter>
-        {/* </BossJoinProvider> */}
-      </BossBattleProvider>
-    </AuthProvider>
-  </ThemeProvider>
-  // </React.StrictMode>
+                <Route path="*" element={<AppError />}>
+                  <Route path="*" element={<Error />} />
+                </Route>
+              </Routes>
+            </MessageProvider>
+          </BrowserRouter>
+        </BossBattleProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  </React.StrictMode>
 );

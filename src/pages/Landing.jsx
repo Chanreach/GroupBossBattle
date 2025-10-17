@@ -30,14 +30,20 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import EventCarousel from "@/layouts/EventCarousel";
-import { LiquidPillElement, LiquidCircleElement, LiquidFloatingElement } from "@/lib/LiquidParallax"
+import {
+  LiquidPillElement,
+  LiquidCircleElement,
+  LiquidFloatingElement,
+} from "@/lib/LiquidParallax";
 
 // ===== LIB ===== //
-import IntersectionObserver, { useIntersectionObserver } from "@/lib/IntersectionObserver.jsx";
+import IntersectionObserver, {
+  useIntersectionObserver,
+} from "@/lib/IntersectionObserver.jsx";
 
 // ===== CONTEXTS ===== //
 import { useAuth } from "@/context/useAuth";
-import { apiClient } from "@/api";
+import { apiClient } from "@/api/apiClient";
 
 // ===== STYLES ===== //
 import "@/index.css";
@@ -81,16 +87,16 @@ const LandingContent = () => {
 
       // Set the user in auth context immediately
       setUser(user);
-      
+
       // Set authorization header for future requests
       apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
       toast.success("Logged in as guest!");
-      
+
       // Check for returnUrl parameter
       const params = new URLSearchParams(location.search);
       const returnUrl = params.get("returnUrl");
-      
+
       if (returnUrl) {
         setTimeout(() => navigate(decodeURIComponent(returnUrl)), 500);
       } else {
@@ -110,74 +116,74 @@ const LandingContent = () => {
   return (
     <main className="flex-grow">
       {/* ===== HERO SECTION ===== */}
-      <section 
-        ref={el => registerSection('hero', el)}
+      <section
+        ref={(el) => registerSection("hero", el)}
         id="hero"
         className={`relative min-h-screen overflow-hidden py-6 bg-[#f3f0ff] dark:bg-[#140f25] transition-all duration-1000 ease-out ${
-          isVisible('hero') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          isVisible("hero")
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 translate-y-8"
         }`}
       >
-
         {/* Liquid Parallax Decorative Elements */}
         <div className="absolute inset-0 opacity-20 pointer-events-none">
-          <LiquidPillElement 
-            className="absolute top-40 right-20 w-24 h-6 bg-blue-400 rounded-full transform rotate-12 blur-sm" 
+          <LiquidPillElement
+            className="absolute top-40 right-20 w-24 h-6 bg-blue-400 rounded-full transform rotate-12 blur-sm"
             intensity={1.2}
             delay={200}
             floatRange={12}
           />
-          <LiquidPillElement 
-            className="absolute bottom-32 left-16 w-36 h-9 bg-pink-400 rounded-full transform -rotate-12" 
+          <LiquidPillElement
+            className="absolute bottom-32 left-16 w-36 h-9 bg-pink-400 rounded-full transform -rotate-12"
             intensity={1.0}
             delay={400}
             floatRange={10}
           />
-          <LiquidPillElement 
-            className="absolute bottom-20 right-10 w-28 h-8 bg-purple-300 rounded-full transform rotate-45" 
+          <LiquidPillElement
+            className="absolute bottom-20 right-10 w-28 h-8 bg-purple-300 rounded-full transform rotate-45"
             intensity={1.1}
             delay={600}
             floatRange={11}
           />
-          <LiquidPillElement 
-            className="absolute bottom-40 right-1/4 w-20 h-5 bg-purple-400 rounded-full transform rotate-30" 
+          <LiquidPillElement
+            className="absolute bottom-40 right-1/4 w-20 h-5 bg-purple-400 rounded-full transform rotate-30"
             intensity={1.3}
             delay={500}
             floatRange={9}
           />
-          <LiquidCircleElement 
-            className="absolute bottom-16 left-1/3 w-16 h-16 bg-purple-500 rounded-full blur-sm" 
+          <LiquidCircleElement
+            className="absolute bottom-16 left-1/3 w-16 h-16 bg-purple-500 rounded-full blur-sm"
             intensity={1.3}
             delay={150}
             floatRange={22}
           />
-          <LiquidCircleElement 
-            className="absolute top-72 left-12 w-8 h-8 bg-blue-400 rounded-full opacity-60 blur-md" 
+          <LiquidCircleElement
+            className="absolute top-72 left-12 w-8 h-8 bg-blue-400 rounded-full opacity-60 blur-md"
             intensity={2.2}
             delay={350}
             floatRange={18}
           />
-          <LiquidCircleElement 
-            className="absolute bottom-60 right-16 w-12 h-12 bg-pink-400 rounded-full opacity-70 blur-sm" 
+          <LiquidCircleElement
+            className="absolute bottom-60 right-16 w-12 h-12 bg-pink-400 rounded-full opacity-70 blur-sm"
             intensity={1.8}
             delay={450}
             floatRange={16}
           />
-          <LiquidCircleElement 
-            className="absolute top-96 right-12 w-7 h-7 bg-purple-400 rounded-full opacity-50 blur-md" 
+          <LiquidCircleElement
+            className="absolute top-96 right-12 w-7 h-7 bg-purple-400 rounded-full opacity-50 blur-md"
             intensity={2.5}
             delay={550}
             floatRange={20}
           />
-          <LiquidPillElement 
-            className="absolute top-72 left-20 w-32 h-6 bg-blue-300 rounded-full transform -rotate-15 blur-sm" 
+          <LiquidPillElement
+            className="absolute top-72 left-20 w-32 h-6 bg-blue-300 rounded-full transform -rotate-15 blur-sm"
             intensity={0.9}
             delay={800}
             floatRange={13}
           />
 
-
-          <LiquidPillElement 
-            className="absolute bottom-12 left-1/4 w-24 h-5 bg-pink-300 rounded-full transform -rotate-40 blur-md" 
+          <LiquidPillElement
+            className="absolute bottom-12 left-1/4 w-24 h-5 bg-pink-300 rounded-full transform -rotate-40 blur-md"
             intensity={1.0}
             delay={700}
             floatRange={10}
@@ -187,9 +193,13 @@ const LandingContent = () => {
         <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 sm:px-6 md:px-12 lg:px-20 xl:px-32 2xl:px-48">
           <div className="max-w-6xl mx-auto text-center w-full">
             {/* Main Hero Content */}
-            <div className={`mb-12 sm:mb-12 transition-all duration-1000 ease-out delay-300 ${
-              isVisible('hero') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-            }`}>
+            <div
+              className={`mb-12 sm:mb-12 transition-all duration-1000 ease-out delay-300 ${
+                isVisible("hero")
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-8"
+              }`}
+            >
               {/* Swords Image */}
               <div className="mb-0 sm:mb-0 flex justify-center">
                 <img
@@ -208,16 +218,24 @@ const LandingContent = () => {
             </div>
 
             {/* Event Carousel */}
-            <div className={`mb-8 sm:mb-14 transition-all duration-1000 ease-out delay-500 ${
-              isVisible('hero') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-            }`}>
+            <div
+              className={`mb-8 sm:mb-14 transition-all duration-1000 ease-out delay-500 ${
+                isVisible("hero")
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-8"
+              }`}
+            >
               <EventCarousel />
             </div>
 
             {/* CTA Buttons */}
-            <div className={`flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-8 sm:mb-12 px-2 transition-all duration-1000 ease-out delay-700 ${
-              isVisible('hero') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-            }`}>
+            <div
+              className={`flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-8 sm:mb-12 px-2 transition-all duration-1000 ease-out delay-700 ${
+                isVisible("hero")
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-8"
+              }`}
+            >
               <Button
                 onClick={() => navigate("/auth?mode=register")}
                 size="lg"
@@ -271,17 +289,23 @@ const LandingContent = () => {
 
       {/* ===== HOW IT WORKS SECTION ===== */}
       <section
-        ref={el => registerSection('howItWorks', el)}
+        ref={(el) => registerSection("howItWorks", el)}
         id="howItWorks"
         className={`py-12 sm:py-16 md:py-24 px-4 sm:px-6 md:px-12 lg:px-20 xl:px-32 2xl:px-48 bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 transition-all duration-1000 ease-out ${
-          isVisible('howItWorks') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          isVisible("howItWorks")
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 translate-y-8"
         }`}
       >
         <div className="max-w-7xl mx-auto">
           {/* Section Header */}
-          <div className={`text-center mb-12 sm:mb-16 md:mb-20 transition-all duration-1000 ease-out delay-200 ${
-            isVisible('howItWorks') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-          }`}>
+          <div
+            className={`text-center mb-12 sm:mb-16 md:mb-20 transition-all duration-1000 ease-out delay-200 ${
+              isVisible("howItWorks")
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-8"
+            }`}
+          >
             <Badge className="mb-3 sm:mb-4 px-3 sm:px-4 py-1 sm:py-2 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-sm">
               <Target className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
               How It Works
@@ -299,9 +323,13 @@ const LandingContent = () => {
           </div>
 
           {/* How It Works Steps */}
-          <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 transition-all duration-1000 ease-out delay-400 ${
-            isVisible('howItWorks') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-          }`}>
+          <div
+            className={`grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 transition-all duration-1000 ease-out delay-400 ${
+              isVisible("howItWorks")
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-8"
+            }`}
+          >
             {/* Step 1 */}
             <Card className="relative overflow-hidden py-1 border-2 shadow-lg bg-white dark:bg-gray-800 hover:shadow-xl transition-shadow duration-300">
               <CardHeader className="relative z-10 text-center pt-10 sm:pt-12 px-6 sm:px-8">
@@ -369,18 +397,24 @@ const LandingContent = () => {
       </section>
 
       {/* ===== GAME FEATURES SECTION ===== */}
-      <section 
-        ref={el => registerSection('gameFeatures', el)}
+      <section
+        ref={(el) => registerSection("gameFeatures", el)}
         id="gameFeatures"
         className={`py-12 sm:py-16 md:py-24 px-4 sm:px-6 md:px-12 lg:px-20 xl:px-32 2xl:px-48 bg-gradient-to-br from-white to-gray-100 dark:from-gray-800 dark:to-gray-900 transition-all duration-1000 ease-out ${
-          isVisible('gameFeatures') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          isVisible("gameFeatures")
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 translate-y-8"
         }`}
       >
         <div className="max-w-7xl mx-auto">
           {/* Section Header */}
-          <div className={`text-center mb-12 sm:mb-16 transition-all duration-1000 ease-out delay-200 ${
-            isVisible('gameFeatures') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-          }`}>
+          <div
+            className={`text-center mb-12 sm:mb-16 transition-all duration-1000 ease-out delay-200 ${
+              isVisible("gameFeatures")
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-8"
+            }`}
+          >
             <Badge className="mb-3 sm:mb-4 px-3 sm:px-4 py-1 sm:py-2 bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 text-sm">
               <Zap className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
               Game Features
@@ -398,9 +432,13 @@ const LandingContent = () => {
           </div>
 
           {/* Game Features Grid */}
-          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 transition-all duration-1000 ease-out delay-400 ${
-            isVisible('gameFeatures') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-          }`}>
+          <div
+            className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 transition-all duration-1000 ease-out delay-400 ${
+              isVisible("gameFeatures")
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-8"
+            }`}
+          >
             {/* Hearts System */}
             <Card className="text-center p-6 bg-white dark:bg-gray-800 hover:shadow-lg transition-shadow duration-300">
               <div className="w-12 h-12 mx-auto mb-4 border-2 rounded-lg flex items-center justify-center">
@@ -458,7 +496,7 @@ const LandingContent = () => {
 // ===== MAIN LANDING COMPONENT WITH PROVIDER ===== //
 const Landing = () => {
   return (
-    <IntersectionObserver initialVisible={['hero']}>
+    <IntersectionObserver initialVisible={["hero"]}>
       <LandingContent />
     </IntersectionObserver>
   );

@@ -4,11 +4,17 @@ import { useNavigate } from "react-router-dom";
 import { QrCode, Camera, X, ArrowLeft, CheckCircle } from "lucide-react";
 
 // ===== COMPONENTS ===== //
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 // ===== API ===== //
-import { apiClient } from "@/api";
+import { apiClient } from "@/api/apiClient";
 import { eventBossAPI } from "@/services/api";
 
 // ===== QR SCANNER LOGIC ===== //
@@ -30,7 +36,7 @@ const QR = () => {
     isRequestingPermission: false,
     scanningActive: false,
     needsUserInteraction: false,
-    currentMessage: "Point camera at a QR Code"
+    currentMessage: "Point camera at a QR Code",
   });
 
   const videoRef = useRef(null);
@@ -49,16 +55,16 @@ const QR = () => {
       // onResult
       (result) => {
         setQrResult(result);
-        if (result.startsWith('http://') || result.startsWith('https://')) {
+        if (result.startsWith("http://") || result.startsWith("https://")) {
           setDetectedUrl(result);
           // Auto-redirect if URL contains /boss-preview
-          if (result.includes('/boss-preview')) {
+          if (result.includes("/boss-preview")) {
             window.location.href = result;
             return;
           }
         } else {
           setDetectedUrl("");
-          setCameraError('QR code does not contain a valid link.');
+          setCameraError("QR code does not contain a valid link.");
         }
       },
       // onError
@@ -107,7 +113,7 @@ const QR = () => {
     setQrResult("");
     setDetectedUrl("");
     setCameraError("");
-    setScannerState(prev => ({ ...prev, isProcessing: false }));
+    setScannerState((prev) => ({ ...prev, isProcessing: false }));
     qrScannerRef.current?.startCamera();
   };
 
@@ -123,14 +129,16 @@ const QR = () => {
 
     try {
       // Fetch eventBossId using the join code
-      const response = await eventBossAPI.getEventBossByJoinCode(bossCode.trim());
+      const response = await eventBossAPI.getEventBossByJoinCode(
+        bossCode.trim()
+      );
       const eventBossId = response.id;
 
       // Navigate to the new URL format with eventBossId and join code
       navigate(`/boss-preview/${eventBossId}/${bossCode.trim()}`);
     } catch (error) {
-      console.error('Error fetching boss by join code:', error);
-      setCameraError('Invalid join code. Please check and try again.');
+      console.error("Error fetching boss by join code:", error);
+      setCameraError("Invalid join code. Please check and try again.");
     } finally {
       setIsJoining(false);
     }
@@ -150,8 +158,12 @@ const QR = () => {
             </Button>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="mx-auto">
-                <h1 className="text-2xl sm:text-3xl font-bold text-center">Join with QR</h1>
-                <p className="text-muted-foreground text-center">Scan QR codes to join boss battles and events</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-center">
+                  Join with QR
+                </h1>
+                <p className="text-muted-foreground text-center">
+                  Scan QR codes to join boss battles and events
+                </p>
               </div>
             </div>
           </div>
@@ -167,7 +179,11 @@ const QR = () => {
                       autoPlay
                       playsInline
                       muted
-                      className={`w-full h-full object-cover transition-opacity duration-300 ${scannerState.isCameraActive ? 'opacity-100' : 'opacity-0'}`}
+                      className={`w-full h-full object-cover transition-opacity duration-300 ${
+                        scannerState.isCameraActive
+                          ? "opacity-100"
+                          : "opacity-0"
+                      }`}
                       onClick={handlePlayVideoManually}
                     />
 
@@ -178,61 +194,91 @@ const QR = () => {
 
                     <canvas ref={canvasRef} className="hidden" />
 
-                    {!scannerState.isCameraActive && !scannerState.isRequestingPermission && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 p-4">
-                        <QrCode className="w-16 h-16 text-white/60 mb-4" />
-                        <p className="text-white/80 font-medium">Camera is off</p>
-                      </div>
-                    )}
+                    {!scannerState.isCameraActive &&
+                      !scannerState.isRequestingPermission && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 p-4">
+                          <QrCode className="w-16 h-16 text-white/60 mb-4" />
+                          <p className="text-white/80 font-medium">
+                            Camera is off
+                          </p>
+                        </div>
+                      )}
 
                     {scannerState.isRequestingPermission && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 p-4">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white/80 mb-4"></div>
-                        <p className="text-white/80 font-medium">Starting Camera...</p>
+                        <p className="text-white/80 font-medium">
+                          Starting Camera...
+                        </p>
                       </div>
                     )}
 
                     {scannerState.isCameraActive && (
-                      <div className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full animate-pulse" title="Camera is active"></div>
+                      <div
+                        className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full animate-pulse"
+                        title="Camera is active"
+                      ></div>
                     )}
 
-                    {scannerState.isCameraActive && scannerState.needsUserInteraction && (
-                      <div className="absolute inset-0 bg-black/70 flex items-center justify-center text-center p-4 cursor-pointer" onClick={handlePlayVideoManually}>
-                        <div>
-                          <div className="text-4xl mb-2">▶️</div>
-                          <p className="text-lg font-medium">Click to Start Video</p>
+                    {scannerState.isCameraActive &&
+                      scannerState.needsUserInteraction && (
+                        <div
+                          className="absolute inset-0 bg-black/70 flex items-center justify-center text-center p-4 cursor-pointer"
+                          onClick={handlePlayVideoManually}
+                        >
+                          <div>
+                            <div className="text-4xl mb-2">▶️</div>
+                            <p className="text-lg font-medium">
+                              Click to Start Video
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
                   </div>
                 </div>
                 <CardDescription className="text-muted-foreground">
-                  {qrResult ? "QR Found!" :
-                    scannerState.isCameraActive ?
-                      (scannerState.isProcessing ? "Scanning..." : scannerState.currentMessage) :
-                      "Use your camera to scan"}
+                  {qrResult
+                    ? "QR Found!"
+                    : scannerState.isCameraActive
+                    ? scannerState.isProcessing
+                      ? "Scanning..."
+                      : scannerState.currentMessage
+                    : "Use your camera to scan"}
                 </CardDescription>
               </CardHeader>
 
               <CardContent className="space-y-4">
                 {cameraError && (
                   <div className="text-center p-3 bg-destructive/10 rounded-lg border border-destructive/20">
-                    <p className="text-destructive font-medium text-sm">{cameraError}</p>
-                    <Button onClick={handleDismissError} variant="ghost" size="sm" className="mt-2">Dismiss</Button>
+                    <p className="text-destructive font-medium text-sm">
+                      {cameraError}
+                    </p>
+                    <Button
+                      onClick={handleDismissError}
+                      variant="ghost"
+                      size="sm"
+                      className="mt-2"
+                    >
+                      Dismiss
+                    </Button>
                   </div>
                 )}
 
                 {qrResult ? (
                   <div className="text-center p-6 bg-green-500/10 rounded-lg border border-green-500/20 space-y-4">
                     <CheckCircle className="w-12 h-12 text-green-600 dark:text-green-400 mx-auto mb-4" />
-                    <p className="text-green-800 dark:text-green-200 font-medium text-lg">{qrResult}</p>
+                    <p className="text-green-800 dark:text-green-200 font-medium text-lg">
+                      {qrResult}
+                    </p>
                     <div className="flex flex-col space-y-2">
                       <Button onClick={handleScanAgain} variant="outline">
                         <Camera className="w-4 h-4 mr-2" />
                         Scan Again
                       </Button>
                       {detectedUrl && (
-                        <Button onClick={() => window.location.href = detectedUrl}>
+                        <Button
+                          onClick={() => (window.location.href = detectedUrl)}
+                        >
                           Go to Link
                         </Button>
                       )}
@@ -242,19 +288,41 @@ const QR = () => {
                   <>
                     {scannerState.isCameraActive ? (
                       <div className="space-y-3">
-                        <Button onClick={handleCaptureImage} disabled={scannerState.isProcessing} size="lg" className="w-full">
+                        <Button
+                          onClick={handleCaptureImage}
+                          disabled={scannerState.isProcessing}
+                          size="lg"
+                          className="w-full"
+                        >
                           <Camera className="w-5 h-5 mr-2" />
-                          {scannerState.isProcessing ? "Processing..." : "Capture Code"}
+                          {scannerState.isProcessing
+                            ? "Processing..."
+                            : "Capture Code"}
                         </Button>
-                        <Button onClick={handleToggleCamera} variant="destructive" size="lg" className="w-full">
+                        <Button
+                          onClick={handleToggleCamera}
+                          variant="destructive"
+                          size="lg"
+                          className="w-full"
+                        >
                           <X className="w-5 h-5 mr-2" /> Stop Camera
                         </Button>
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        <Button onClick={handleToggleCamera} disabled={scannerState.isRequestingPermission || scannerState.isProcessing} size="lg" className="w-full text-base sm:text-lg font-semibold !bg-purple-500 hover:!bg-purple-600 !text-white !border-purple-500 transition-all duration-300 rounded-xl shadow-xl hover:shadow-2xl group halftone-texture">
+                        <Button
+                          onClick={handleToggleCamera}
+                          disabled={
+                            scannerState.isRequestingPermission ||
+                            scannerState.isProcessing
+                          }
+                          size="lg"
+                          className="w-full text-base sm:text-lg font-semibold !bg-purple-500 hover:!bg-purple-600 !text-white !border-purple-500 transition-all duration-300 rounded-xl shadow-xl hover:shadow-2xl group halftone-texture"
+                        >
                           <Camera className="w-5 h-5 mr-2" />
-                          {scannerState.isRequestingPermission ? "Requesting..." : "Start Camera Scan"}
+                          {scannerState.isRequestingPermission
+                            ? "Requesting..."
+                            : "Start Camera Scan"}
                         </Button>
                       </div>
                     )}
