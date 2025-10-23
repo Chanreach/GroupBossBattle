@@ -103,7 +103,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               </Route>
 
               {/* ===== PUBLIC ROUTES ===== */}
-              <Route path="/event-bosses" element={<App />}>
+              <Route path="/:eventId/event-bosses" element={<App />}>
                 <Route index element={<PlayerEventBosses />} />
               </Route>
 

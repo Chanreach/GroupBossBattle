@@ -103,7 +103,7 @@ const EventCarousel = () => {
   const handleCardClick = (event) => {
     if (event.isPlaceholder) return;
 
-    navigate(`/event-bosses?eventId=${event.id}`);
+    navigate(`/${event.id}/event-bosses`);
   };
 
   const getCardPosition = (index) => {

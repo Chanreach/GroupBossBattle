@@ -1,88 +1,54 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+// ===== LIBRARIES ===== //
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Trophy, Clock, Zap } from "lucide-react";
+import { toast } from "sonner";
+
+// ===== COMPONENTS ===== //
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { StatusOverlay } from "@/components/StatusOverlay";
+
+// ===== API CLIENT ===== //
 import { apiClient } from "@/api/apiClient";
-import { useAuth } from "@/context/useAuth";
-import { toast } from "sonner";
+
+// ===== UTILITIES ===== //
+import { formatTextualDateTime } from "@/utils/helper";
 
 const EventBosses = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [searchParams] = useSearchParams();
-  const eventId = searchParams.get("eventId");
+  const { eventId } = useParams();
 
   const [event, setEvent] = useState(null);
+  const [eventBosses, setEventBosses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [assignedBosses, setAssignedBosses] = useState([]);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    // Add some debugging
-    console.log("EventBosses: useEffect triggered", { eventId, user });
-
-    if (eventId) {
-      fetchEventDetails();
-    } else {
+  const fetchEvent = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await apiClient.get(`/events/public/${eventId}`);
+      setEvent(response.data);
+      setEventBosses(response.data.eventBosses || []);
+    } catch (error) {
+      console.error("Error fetching event:", error);
+      const data = error.response?.data;
+      if (data?.errors && Array.isArray(data.errors)) {
+        data.errors.forEach((errMsg) => toast.error(errMsg));
+      } else {
+        toast.error(data?.message || "Failed to load event.");
+      }
+      setError(data?.message || "Failed to load event.");
+    } finally {
       setLoading(false);
     }
   }, [eventId]);
 
-  const fetchEventDetails = async () => {
-    // Don't make API calls if no eventId
-    if (!eventId) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      // Fetch event details (includes eventBosses data)
-      const eventResponse = await apiClient.get(`/public/events/${eventId}`);
-      if (eventResponse.data) {
-        const eventData = eventResponse.data;
-        console.log("EventBosses: Fetched event data:", eventData);
-        setEvent(eventData);
-
-        // Extract bosses from eventBosses association
-        const bosses =
-          eventData.eventBosses?.map((eventBoss) => ({
-            ...eventBoss.boss,
-            status: eventBoss.status || "active", // Default to active if no status
-            eventBossId: eventBoss.id,
-            joinCode: eventBoss.joinCode, // Add joinCode for navigation
-            categories: eventBoss.boss.Categories || [], // Include categories
-          })) || [];
-
-        console.log("EventBosses: Extracted bosses:", bosses);
-        console.log(
-          "EventBosses: Boss statuses:",
-          bosses.map((b) => ({
-            name: b.name,
-            status: b.status,
-            eventBossId: b.eventBossId,
-            joinCode: b.joinCode,
-          }))
-        );
-        setAssignedBosses(bosses);
-      }
-    } catch (error) {
-      console.error("Error fetching event details:", error);
-      // More specific error handling
-      if (error.response?.status === 404) {
-        toast.error("Event not found");
-      } else if (error.response?.status === 403) {
-        toast.error("Access denied to this event");
-      } else {
-        toast.error("Failed to load event details");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    fetchEvent();
+  }, [fetchEvent]);
 
   const handleBack = () => {
     navigate("/");
@@ -93,62 +59,22 @@ const EventBosses = () => {
   };
 
   const handleJoinBoss = (boss) => {
-    console.log("Attempting to join boss:", boss);
-
-    // Check if boss has required properties
-    if (!boss.eventBossId) {
-      toast.error("Invalid boss configuration: Missing eventBossId");
-      return;
-    }
-
-    if (!boss.joinCode) {
-      toast.error("Invalid boss configuration: Missing joinCode");
-      return;
-    }
-
-    // Construct the boss preview URL similar to AssignBoss.jsx
-    const joinUrl = `/boss-preview/${boss.eventBossId}/${boss.joinCode}`;
-    console.log("Navigating to:", joinUrl);
+    const joinUrl = `/boss-preview/${boss.id}/${boss.joinCode}`;
     navigate(joinUrl);
   };
 
   if (loading) {
     return (
       <div className="container mx-auto px-4 sm:px-6 py-6 max-w-4xl">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading event details...</p>
-          </div>
-        </div>
+        <StatusOverlay status="loading" message="Loading event..." />
       </div>
     );
   }
 
-  if (!eventId) {
+  if (error) {
     return (
       <div className="container mx-auto px-4 sm:px-6 py-6 max-w-4xl">
-        <div className="text-center py-8">
-          <h2 className="text-xl font-semibold mb-2">No Event Selected</h2>
-          <p className="text-muted-foreground mb-4">
-            Please select an event to view its bosses.
-          </p>
-          <Button onClick={handleBack}>Go Back to Home</Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!event) {
-    return (
-      <div className="container mx-auto px-4 sm:px-6 py-6 max-w-4xl">
-        <div className="text-center py-8">
-          <h2 className="text-xl font-semibold mb-2">Event Not Found</h2>
-          <p className="text-muted-foreground mb-4">
-            The requested event could not be found.
-          </p>
-          <Button onClick={handleBack}>Go Back</Button>
-        </div>
+        <StatusOverlay status="error" message={error} onRetry={fetchEvent} />
       </div>
     );
   }
@@ -204,14 +130,14 @@ const EventBosses = () => {
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <span>
                     <strong>Start:</strong>{" "}
-                    {event.startTimeFormatted?.formatted || "N/A"}
+                    {formatTextualDateTime(event.startAt) || "TBD"}
                   </span>
                   <span>
                     <strong>End:</strong>{" "}
-                    {event.endTimeFormatted?.formatted || "N/A"}
+                    {formatTextualDateTime(event.endAt) || "TBD"}
                   </span>
                   <span>
-                    <strong>Bosses:</strong> {assignedBosses.length} available
+                    <strong>Bosses:</strong> {eventBosses.length} available
                   </span>
                 </div>
               </div>
@@ -229,7 +155,7 @@ const EventBosses = () => {
         </Card>
 
         {/* Bosses Grid */}
-        {assignedBosses.length === 0 ? (
+        {eventBosses.length === 0 ? (
           <Card>
             <CardContent className="py-16">
               <div className="flex flex-col items-center justify-center text-center space-y-4">
@@ -256,14 +182,14 @@ const EventBosses = () => {
               <Label className="text-lg font-semibold">Available Bosses</Label>
               <div className="text-sm text-muted-foreground">
                 {
-                  assignedBosses.filter(
+                  eventBosses.filter(
                     (boss) =>
                       !boss.status || boss.status.toLowerCase() === "active"
                   ).length
                 }{" "}
                 Ready •{" "}
                 {
-                  assignedBosses.filter(
+                  eventBosses.filter(
                     (boss) =>
                       boss.status && boss.status.toLowerCase() !== "active"
                   ).length
@@ -273,7 +199,7 @@ const EventBosses = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {assignedBosses.map((boss) => (
+              {eventBosses.map((boss) => (
                 <Card
                   key={boss.id}
                   className="overflow-hidden hover:shadow-md transition-shadow"
