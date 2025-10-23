@@ -16,22 +16,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-// ===== CONTEXTS ===== //
+// ===== HOOKS ===== //
 import { useAuth } from "@/context/useAuth";
+
+// ===== API CLIENT ===== //
 import { apiClient } from "@/api/apiClient";
 
 const Authentication = () => {
-  const { login, setUser } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Determine initial form state from URL
   const params = new URLSearchParams(location.search);
-  const initialIsSignIn = params.get("mode") !== "register"; // true for login, false for register
+  const initialIsSignIn = params.get("mode") !== "register";
   const [isSignIn, setIsSignIn] = useState(initialIsSignIn);
-  const [isClosing, setIsClosing] = useState(false); // State to track when form is closing
+  const [isClosing, setIsClosing] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Add this state
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [registerData, setRegisterData] = useState({
     username: "",
@@ -62,48 +63,51 @@ const Authentication = () => {
 
       // Update URL while preserving all parameters
       if (newSignInState) {
-        // Switching to login - remove mode parameter but keep others
         currentParams.delete("mode");
         const queryString = currentParams.toString();
         const newUrl = queryString ? `/auth?${queryString}` : "/auth";
         navigate(newUrl, { replace: true });
       } else {
-        // Switching to register - add mode parameter
         currentParams.set("mode", "register");
         const queryString = currentParams.toString();
         const newUrl = `/auth?${queryString}`;
         navigate(newUrl, { replace: true });
       }
-    }, 180); // Match this with your CSS animation duration
+    }, 180);
   };
 
   const handleRegisterChange = (e) => {
-    setRegisterData({
-      ...registerData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setRegisterData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
   const handleLoginChange = (e) => {
-    setLoginData({
-      ...loginData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setLoginData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     if (registerData.password !== registerData.confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.error("Passwords do not match!");
       return;
     }
+
     try {
-      await apiClient.post("/auth/signup", {
+      const response = await apiClient.post("/auth/signup", {
         username: registerData.username,
         email: registerData.email,
         password: registerData.password,
       });
-      toast.success("Account created! You can now login.");
+      toast.success(
+        response.data?.message || "Account created! You can now login."
+      );
       handleFormTransition(true);
       setRegisterData({
         username: "",
@@ -111,14 +115,14 @@ const Authentication = () => {
         password: "",
         confirmPassword: "",
       });
-    } catch (err) {
-      let message = "Signup failed";
-      if (err.response && err.response.data && err.response.data.message) {
-        message = err.response.data.message;
-      } else if (err.message) {
-        message = err.message;
+    } catch (error) {
+      console.error("Registration error:", error);
+      const data = error.response?.data;
+      if (data?.errors && Array.isArray(data.errors)) {
+        data.errors.forEach((errMsg) => toast.error(errMsg));
+      } else {
+        toast.error(data?.message || "Registration failed.");
       }
-      toast.error(message);
     }
   };
 
@@ -126,90 +130,66 @@ const Authentication = () => {
     e.preventDefault();
     try {
       const response = await apiClient.post("/auth/login", {
-        email: loginData.emailOrUsername,
+        emailOrUsername: loginData.emailOrUsername,
         password: loginData.password,
       });
-      const data = response.data;
-      if (!data.token || !data.user) {
-        throw new Error("Invalid login response from server");
-      }
-      login({ accessToken: data.token, user: data.user });
+      const { user, token } = response.data;
+      login({ user, token, type: "user" });
+
+      const role = user.role;
+      const isPrivilegedUser =
+        role === "superadmin" || role === "admin" || role === "host";
 
       // Check for returnUrl parameter
       const params = new URLSearchParams(location.search);
       const returnUrl = params.get("returnUrl");
-
       if (returnUrl) {
-        const decodedUrl = decodeURIComponent(returnUrl);
-        // Use setTimeout to ensure login state is properly set before navigation
-        setTimeout(() => navigate(decodedUrl), 500);
+        navigate(decodeURIComponent(returnUrl), { replace: true });
       } else {
-        // Redirect based on user role
-        if (data.user.role === "admin" || data.user.role === "host") {
-          setTimeout(() => navigate("/host/events/view"), 500);
-        } else {
-          setTimeout(() => navigate("/"), 500);
-        }
+        navigate(isPrivilegedUser ? "/manage/events" : "/", {
+          replace: true,
+        });
       }
-    } catch (err) {
-      let message = "Login failed";
-      if (err.response && err.response.data && err.response.data.message) {
-        message = err.response.data.message;
-      } else if (err.message) {
-        message = err.message;
+      setTimeout(() => {
+        toast.success(response.data?.message || "Login successful!");
+      }, 100);
+    } catch (error) {
+      console.error("Login error:", error);
+      const data = error.response?.data;
+      if (data?.errors && Array.isArray(data.errors)) {
+        data.errors.forEach((errMsg) => toast.error(errMsg));
+      } else {
+        toast.error(data?.message || "Login failed.");
       }
-      toast.error(message);
     }
   };
 
   const handleGuestLogin = async () => {
     try {
-      // Call backend to create a guest session
       const response = await apiClient.post("/auth/guest-login");
-      const { token, user } = response.data;
-      console.log("Guest login response:", response.data);
-
-      if (!token || !user) {
-        console.error(
-          "Guest login failed, token or user missing",
-          response.data
-        );
-        toast.error("Guest login failed: token or user missing");
-        return;
-      }
-
-      // Store guest token and user data in localStorage
-      localStorage.setItem("guestToken", token);
-      localStorage.setItem("guestUser", JSON.stringify(user));
-      console.log("Stored guestToken in localStorage:", token);
-      console.log("Stored guestUser in localStorage:", JSON.stringify(user));
-
-      // Set the user in auth context immediately
-      setUser(user);
-
-      // Set authorization header for future requests
-      apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-      toast.success("Logged in as guest!");
+      const { user, token } = response.data;
+      login({ user, token, type: "guest" });
 
       // Check for returnUrl parameter
       const params = new URLSearchParams(location.search);
       const returnUrl = params.get("returnUrl");
+      navigate(returnUrl ? decodeURIComponent(returnUrl) : "/", {
+        replace: true,
+      });
 
-      if (returnUrl) {
-        const decodedUrl = decodeURIComponent(returnUrl);
-        setTimeout(() => navigate(decodedUrl), 500);
+      setTimeout(() => {
+        toast.success(
+          response.data.message || "Logged in as guest successfully."
+        );
+      }, 100);
+    } catch (error) {
+      console.error("Guest login error:", error);
+      const data = error.response?.data;
+      if (data?.errors && Array.isArray(data.errors)) {
+        data.errors.forEach((errMsg) => toast.error(errMsg));
       } else {
-        setTimeout(() => navigate("/"), 500);
+        toast.error(data?.message || "Guest login failed.");
       }
-    } catch (err) {
-      let message = "Failed to create guest session";
-      if (err.response && err.response.data && err.response.data.message) {
-        message = err.response.data.message;
-      } else if (err.message) {
-        message = err.message;
-      }
-      toast.error(message);
     }
   };
 
@@ -239,9 +219,6 @@ const Authentication = () => {
                 <h1 className="text-4xl font-bold mb-0 sm:mb-4">
                   Welcome to UniRAID
                 </h1>
-                {/* <p className="hidden md:block text-lg opacity-90 leading-relaxed">
-                  Join epic boss battles with your fellow students! Create your account to participate in multiplayer boss fights and compete for glory in the ultimate university gaming experience.
-                </p> */}
               </div>
             </div>
 
@@ -307,9 +284,6 @@ const Authentication = () => {
                           value={registerData.password}
                           onChange={handleRegisterChange}
                           className="pl-10 pr-10"
-                          minLength={8}
-                          pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
-                          title="8+ chars with uppercase, lowercase, number & symbol"
                           required
                         />
                         <button
@@ -320,9 +294,9 @@ const Authentication = () => {
                           className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
                         >
                           {showRegisterPassword ? (
-                            <EyeOff className="w-4 h-4" />
-                          ) : (
                             <Eye className="w-4 h-4" />
+                          ) : (
+                            <EyeOff className="w-4 h-4" />
                           )}
                         </button>
                       </div>
@@ -353,9 +327,9 @@ const Authentication = () => {
                           className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
                         >
                           {showConfirmPassword ? (
-                            <EyeOff className="w-4 h-4" />
-                          ) : (
                             <Eye className="w-4 h-4" />
+                          ) : (
+                            <EyeOff className="w-4 h-4" />
                           )}
                         </button>
                       </div>
@@ -419,9 +393,6 @@ const Authentication = () => {
                 <h1 className="text-4xl font-bold mb-0 sm:mb-4">
                   Welcome Back, Warrior!
                 </h1>
-                {/* <p className="hidden md:block text-lg opacity-90 leading-relaxed">
-                  Ready for another epic boss battle? Sign back into UniRAID and rejoin your team to take on legendary bosses and claim victory!
-                </p> */}
               </div>
             </div>
 
@@ -487,13 +458,6 @@ const Authentication = () => {
                         </button>
                       </div>
                     </div>
-
-                    {/* Forgot Password */}
-                    {/* <div className="text-right">
-                      <span className="text-sm text-primary cursor-pointer hover:underline">
-                        Forgot password?
-                      </span>
-                    </div> */}
 
                     <div className="flex gap-3 mt-6">
                       <Button

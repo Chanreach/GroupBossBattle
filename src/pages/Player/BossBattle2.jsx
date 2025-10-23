@@ -40,7 +40,7 @@ import "@/index.css";
 // ===== HOOKS ===== //
 import useBattleSession from "@/hooks/useBattleSession";
 import { useAuth } from "@/context/useAuth";
-import { useThemeColor } from "@/theme/theme-provider";
+import { useTheme } from "@/context/useTheme";
 
 // ===== UTILITIES ===== //
 import { getUserInfo } from "@/utils/userUtils";
@@ -87,7 +87,7 @@ const BossBattle = () => {
 
   // ===== UI ANIMATION STATES ===== //
   const [isLeaderboardVisible, setIsLeaderboardVisible] = useState(false);
-  const { colorScheme, toggleColorScheme } = useThemeColor();
+  const { colorScheme, toggleColorScheme } = useTheme();
 
   // ===== PLAYER REVIVAL SYSTEM ===== //
   const [isRevivalDialogVisible, setIsRevivalDialogVisible] = useState(false);

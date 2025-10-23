@@ -2,36 +2,25 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Calendar, Clock } from "lucide-react";
+
+// ===== API CLIENT ===== //
 import { apiClient } from "@/api/apiClient";
+
+// ===== UTILITIES ===== //
+import { formatTextualDateTime } from "@/utils/helper";
 
 const EventCarousel = () => {
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleString("en-US", {
-      month: "short",
-      day: "2-digit",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true, // Use 12-hour format to show AM/PM
-    });
-  };
-
-  // Fetch events from database
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        setLoading(true);
-        const response = await apiClient.get("/public/events");
+        setIsLoading(true);
+        const response = await apiClient.get("/events/public");
         const eventsData = response.data || [];
-
-        console.log("EventCarousel: Fetched events data:", eventsData);
 
         // Format events for the carousel
         const formattedEvents = eventsData.map((event) => ({
@@ -41,24 +30,20 @@ const EventCarousel = () => {
           description:
             event.description ||
             "Join forces with other participants and put your knowledge to the test! Answer questions, deal damage, and work together to defeat powerful bosses.",
-          startTime: formatDate(event.startTime) || "TBD",
-          endTime: formatDate(event.endTime) || "TBD",
+          startAt: formatTextualDateTime(event.startAt) || "TBD",
+          endAt: formatTextualDateTime(event.endAt) || "TBD",
           image:
             "https://em-content.zobj.net/source/microsoft-3D-fluent/406/crossed-swords_2694-fe0f.png",
-          isActive: event.status === "active" || event.status === "ongoing",
+          isActive: event.status === "ongoing",
           status: event.status || "upcoming",
-          eventBosses: event.eventBosses || [], // Include boss data for debugging
         }));
 
-        console.log("EventCarousel: Formatted events:", formattedEvents);
         setEvents(formattedEvents);
       } catch (err) {
         console.error("Error fetching events:", err);
-        setError(err);
-        // Set placeholder events if fetch fails
         setEvents([]);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
@@ -73,17 +58,17 @@ const EventCarousel = () => {
       title: "Stay Tuned for Epic Battles",
       description:
         "Some boss battle events are being planned! Check back soon for exciting interactive experiences where you can team up with others to defeat powerful bosses.",
-      startTime: "--",
-      endTime: "--",
+      startAt: "--",
+      endAt: "--",
       image:
         "https://em-content.zobj.net/source/microsoft-3D-fluent/406/crossed-swords_2694-fe0f.png",
       isActive: false,
-      status: "coming-soon",
+      status: "upcoming",
       isPlaceholder: true,
     },
   ];
 
-  // Use placeholder if no events or loading failed
+  // Use placeholder if no events or isLoading failed
   const displayEvents = events.length > 0 ? events : placeholderEvents;
 
   // Auto-advance carousel
@@ -116,62 +101,37 @@ const EventCarousel = () => {
   };
 
   const handleCardClick = (event) => {
-    console.log("EventCarousel: Card clicked for event:", event);
+    if (event.isPlaceholder) return;
 
-    // Don't navigate if it's a placeholder event
-    if (event.isPlaceholder) {
-      console.log("EventCarousel: Ignoring placeholder event click");
-      return;
-    }
-
-    // Navigate to event-bosses page with the event ID
-    console.log(
-      "EventCarousel: Navigating to event-bosses with eventId:",
-      event.id
-    );
     navigate(`/event-bosses?eventId=${event.id}`);
   };
 
   const getCardPosition = (index) => {
     const diff = index - currentIndex;
 
-    if (diff === 0) {
-      // Center card
-      return "translate-x-[-50%] translate-y-[-50%] z-10 scale-100 brightness-100";
-    } else if (diff === -1 || diff === displayEvents.length - 1) {
-      // Left card - closer to center on mobile
-      return "translate-x-[-66%] sm:translate-x-[-80%] translate-y-[-50%] scale-75 brightness-[.4]";
-    } else if (diff === 1 || diff === -(displayEvents.length - 1)) {
-      // Right card - closer to center on mobile
-      return "translate-x-[-34%] sm:translate-x-[-20%] translate-y-[-50%] scale-75 brightness-[.4]";
-    } else {
-      // Hidden cards - closer to center on mobile
-      return "translate-x-[-35%] sm:translate-x-[-20%] translate-y-[-50%] scale-75 brightness-[.4] opacity-0";
-    }
+    if (diff === 0)
+      return "translate-x-[-50%] translate-y-[-50%] z-10 scale-100 brightness-100"; // Center card
+    else if (diff === -1 || diff === displayEvents.length - 1)
+      return "translate-x-[-66%] sm:translate-x-[-80%] translate-y-[-50%] scale-75 brightness-[.4]"; // Left card - closer to center on mobile
+    else if (diff === 1 || diff === -(displayEvents.length - 1))
+      return "translate-x-[-34%] sm:translate-x-[-20%] translate-y-[-50%] scale-75 brightness-[.4]"; // Right card - closer to center on mobile
+    else
+      return "translate-x-[-35%] sm:translate-x-[-20%] translate-y-[-50%] scale-75 brightness-[.4] opacity-0"; // Hidden cards - closer to center on mobile
   };
 
   const getStatusDisplay = (event) => {
     if (event.status === "upcoming") {
       return (
-        <div className="inline-flex items-center bg-blue-500/20 text-blue-300 px-3 py-2 rounded-full text-sm sm:text-base font-medium">
+        <div className="inline-flex items-center bg-purple-500/20 text-purple-300 px-3 py-2 rounded-full text-sm sm:text-base font-medium">
           <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
           Coming Soon
         </div>
       );
-    }
-
-    if (event.status === "ongoing") {
+    } else if (event.status === "ongoing") {
       return (
         <div className="inline-flex items-center bg-green-500/20 text-green-300 px-3 py-2 rounded-full text-sm sm:text-base font-medium">
           <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
           Happening Now
-        </div>
-      );
-    } else if (event.status === "coming-soon") {
-      return (
-        <div className="inline-flex items-center bg-purple-500/20 text-purple-300 px-3 py-2 rounded-full text-sm sm:text-base font-medium">
-          <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-          Happening Soon!
         </div>
       );
     } else {
@@ -184,8 +144,8 @@ const EventCarousel = () => {
     }
   };
 
-  // Show loading state
-  if (loading) {
+  // Show isLoading state
+  if (isLoading) {
     return (
       <div className="relative w-full">
         <div className="relative w-full max-w-7xl mx-auto px-4">
@@ -204,17 +164,8 @@ const EventCarousel = () => {
     );
   }
 
-  const currentEvent = displayEvents[currentIndex];
-
   return (
     <div className="relative w-full">
-      {/* Title Section */}
-      {/* <div className="text-center mb-0">
-        <h2 className="text-white text-4xl sm:text-6xl lg:text-2xl font-bold leading-tight uppercase">
-          Boss Battle Events
-        </h2>
-      </div> */}
-
       {/* Carousel Section - Full Width */}
       <div className="relative w-full max-w-7xl mx-auto px-4">
         {/* Navigation Arrows - Only show if more than 1 event */}
@@ -322,11 +273,11 @@ const EventCarousel = () => {
                       >
                         <div className="flex items-center justify-center gap-1">
                           <span className="font-semibold">Start:</span>
-                          <span>{event.startTime}</span>
+                          <span>{event.startAt}</span>
                         </div>
                         <div className="flex items-center justify-center gap-1">
                           <span className="font-semibold">End:</span>
-                          <span>{event.endTime}</span>
+                          <span>{event.endAt}</span>
                         </div>
                       </div>
 

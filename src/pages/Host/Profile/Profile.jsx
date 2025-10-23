@@ -32,7 +32,7 @@ import { toast } from "sonner";
 
 const HostProfile = () => {
   const navigate = useNavigate();
-  const { user, logout, setUser } = useAuth();
+  const { user, logout, setAuth } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -124,7 +124,7 @@ const HostProfile = () => {
 
       // Update local state and auth context
       setProfileData(response.data.user);
-      setUser({ ...user, ...response.data.user });
+      setAuth({ ...user, ...response.data.user });
 
       setIsEditing(false);
       setShowPassword(false);

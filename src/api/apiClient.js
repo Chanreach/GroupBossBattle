@@ -45,7 +45,7 @@ apiClient.interceptors.response.use(
         ["TokenExpiredError", "JsonWebTokenError"].includes(
           error.response?.data?.error
         ));
-        
+
     if (isTokenError && !originalRequest._retry) {
       originalRequest._retry = true;
 
@@ -63,8 +63,8 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
       try {
         const refreshUrl = `${
-          import.meta.env.VITE_API_URL || "http://localhost:3000"
-        }/api/auth/refresh`;
+          import.meta.env.VITE_API_URL || "http://localhost:3000/api"
+        }/auth/refresh`;
 
         const refreshResponse = await axios.post(
           refreshUrl,

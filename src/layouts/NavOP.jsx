@@ -1,21 +1,19 @@
 // ===== LIBRARIES ===== //
 import { useCallback, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+
+// ===== COMPONENTS ===== //
 import {
   Calendar,
   Sword,
   BookOpen,
-  Settings,
   Home,
   Moon,
   Sun,
   User,
   LogOut,
   BarChart3,
-  PencilRuler,
 } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-
-// ===== COMPONENTS ===== //
 import {
   Sidebar,
   SidebarContent,
@@ -40,35 +38,35 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 
-// ===== CONTEXTS ===== //
-import { useThemeColor } from "@/theme/theme-provider";
+// ===== HOOKS ===== //
+import { useTheme } from "@/context/useTheme";
 import { useAuth } from "@/context/useAuth";
 
 // ===== NAVIGATION DATA ===== //
 const mainNavItems = [
   {
     title: "Events",
-    url: "/host/events/view",
+    url: "/manage/events",
     icon: Calendar,
   },
   {
     title: "Bosses",
-    url: "/host/bosses/view",
+    url: "/manage/bosses",
     icon: Sword,
   },
   {
     title: "Question Bank",
-    url: "/host/questionbank/categories/view",
+    url: "/manage/questionbank/categories",
     icon: BookOpen,
   },
   {
     title: "All Time Leaderboard",
-    url: "/host/all_leaderboard",
+    url: "/manage/all_leaderboard",
     icon: BarChart3,
   },
   {
     title: "User Management",
-    url: "/host/users/view",
+    url: "/manage/users",
     icon: User,
   },
 ];
@@ -83,17 +81,17 @@ const mockHostUser = {
 const NavOP = (props) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { colorScheme, toggleColorScheme } = useThemeColor();
-  const { user: authUser, logout, isAuthenticated } = useAuth();
+  const { colorScheme, toggleColorScheme } = useTheme();
+  const { auth, logout } = useAuth();
 
   // Use authenticated user or fallback to mock user
-  const user = authUser || mockHostUser;
+  const user = auth.user || mockHostUser;
 
   // Filter navigation items based on user role
   const filteredNavItems = mainNavItems.filter((item) => {
     // Only show User Management for admin users
     if (item.title === "User Management") {
-      return authUser?.role === "admin";
+      return user.role === "superadmin" || user.role === "admin";
     }
     return true;
   });
@@ -101,15 +99,11 @@ const NavOP = (props) => {
   const handleLogout = useCallback(async () => {
     try {
       logout();
-      // Clear the viewAsPlayer flag on logout
       localStorage.removeItem("viewAsPlayer");
-      localStorage.removeItem("viewAsPlayerTimestamp");
-      // Small delay to ensure logout is processed
       await new Promise((resolve) => setTimeout(resolve, 100));
       navigate("/auth", { replace: true });
     } catch (error) {
       console.error("Logout failed:", error);
-      // Still navigate to auth even if logout fails
       navigate("/auth", { replace: true });
     }
   }, [logout, navigate]);
@@ -160,7 +154,7 @@ const NavOP = (props) => {
             <SidebarMenuButton
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-              onClick={() => navigate("/host/events/view")}
+              onClick={() => navigate("/manage/events")}
             >
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 text-sidebar-primary-foreground">
                 <img
@@ -173,7 +167,7 @@ const NavOP = (props) => {
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">UniRAID</span>
                 <span className="truncate text-xs text-muted-foreground">
-                  Host Panel
+                  Manage Panel
                 </span>
               </div>
             </SidebarMenuButton>
@@ -281,24 +275,16 @@ const NavOP = (props) => {
                     <Avatar className="h-8 w-8 rounded-lg">
                       <AvatarImage
                         src={user?.profileImage}
-                        alt={user?.username || user?.name || "User"}
-                        onError={(e) => {
-                          console.log(
-                            "NavOP dropdown avatar image failed to load:",
-                            e.target.src
-                          );
-                          e.target.style.display = "none";
-                        }}
+                        alt={user?.username || "User"}
+                        onError={(e) => (e.target.style.display = "none")}
                       />
                       <AvatarFallback className="rounded-lg bg-gradient-to-br from-orange-600 to-red-600 text-white">
-                        {(user?.username || user?.name || "H")
-                          .charAt(0)
-                          .toUpperCase()}
+                        {(user?.username || "H").charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="grid flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-semibold">
-                        {user?.username || user?.name || "User"}
+                        {user?.username || "User"}
                       </span>
                       <span className="truncate text-xs text-muted-foreground">
                         {user?.email || ""}
@@ -308,7 +294,7 @@ const NavOP = (props) => {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
 
-                {!isAuthenticated ? (
+                {!auth ? (
                   <>
                     <DropdownMenuItem onClick={() => navigate("/auth")}>
                       <User className="mr-2 h-4 w-4" />
@@ -317,17 +303,15 @@ const NavOP = (props) => {
                   </>
                 ) : (
                   <>
-                    <DropdownMenuItem onClick={() => navigate("/host/profile")}>
+                    <DropdownMenuItem
+                      onClick={() => navigate("/manage/profile")}
+                    >
                       <User className="mr-2 h-4 w-4" />
                       <span>Profile</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => {
                         localStorage.setItem("viewAsPlayer", "true");
-                        localStorage.setItem(
-                          "viewAsPlayerTimestamp",
-                          Date.now().toString()
-                        );
                         navigate("/");
                       }}
                     >

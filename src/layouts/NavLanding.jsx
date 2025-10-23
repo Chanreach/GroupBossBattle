@@ -19,11 +19,11 @@ import {
 } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator";
 
-// ===== CONTEXTS ===== //
-import { useThemeColor } from "@/theme/theme-provider";
+// ===== HOOKS ===== //
+import { useTheme } from "@/context/useTheme";
 
 const NavLanding = ({ ...props }) => {
-  const { colorScheme, toggleColorScheme } = useThemeColor();
+  const { colorScheme, toggleColorScheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 

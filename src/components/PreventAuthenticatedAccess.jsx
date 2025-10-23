@@ -11,19 +11,18 @@ const PreventAuthenticatedAccess = ({ children }) => {
 
   if (auth) {
     const viewAsPlayer = localStorage.getItem("viewAsPlayer");
-    const isPrivileged =
-      auth.role === "superadmin" ||
-      auth.role === "admin" ||
-      auth.role === "host";
+    const role = auth?.user?.role;
+    const isPrivilegedUser =
+      role === "superadmin" || role === "admin" || role === "host";
 
-    if (isPrivileged && viewAsPlayer) {
+    if (isPrivilegedUser && viewAsPlayer) {
       if (window.location.pathname === "/auth") {
         return <Navigate to="/" replace />;
       }
       return children;
     }
 
-    const redirectPath = isPrivileged ? "/host/events/view" : "/";
+    const redirectPath = isPrivilegedUser ? "/manage/events" : "/";
     return <Navigate to={redirectPath} replace />;
   }
 

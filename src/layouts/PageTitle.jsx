@@ -2,14 +2,14 @@
 import { useLocation } from "react-router-dom";
 import { Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useThemeColor } from "@/theme/theme-provider";
+import { useTheme } from "@/context/useTheme";
 
 // ===== PAGE TITLE COMPONENT ===== //
 export function PageTitle({
   className = "text-lg font-semibold text-foreground",
 }) {
   const location = useLocation();
-  const { colorScheme, toggleColorScheme } = useThemeColor();
+  const { colorScheme, toggleColorScheme } = useTheme();
 
   // Function to get page title from pathname
   const getPageTitle = (pathname) => {
@@ -33,20 +33,20 @@ export function PageTitle({
     if (pathname.includes("/boss-battle")) return "Boss Battle";
     if (pathname.includes("/authentication")) return "Authentication";
     if (pathname.includes("/admin")) return "Admin Panel";
-    if (pathname.includes("/host/events/view")) return "Events";
-    if (pathname.includes("/host/events/assign_boss")) return "Events";
-    if (pathname.includes("/host/events/boss_template")) return "Events";
-    if (pathname.includes("/host/events/player_badges")) return "Bosses";
-    if (pathname.includes("/host/events/player_badges/edit")) return "Bosses";
-    if (pathname.includes("/host/events/leaderboard")) return "Bosses";
-    if (pathname.includes("/host/bosses/view")) return "Bosses";
-    if (pathname.includes("/host/bosses/create")) return "Bosses";
-    if (pathname.includes("/host/bosses/edit")) return "Bosses";
-    if (pathname.includes("/host/questionbank")) return "Question Bank";
-    if (pathname.includes("/host/categories")) return "Question Bank";
-    if (pathname.includes("/host/questions")) return "Question Bank";
-    if (pathname.includes("/host/profile")) return "Profile";
-    if (pathname.includes("/host")) return "Host Panel";
+    if (pathname.includes("/manage/events")) return "Events";
+    if (pathname.includes("/manage/events/assign_boss")) return "Events";
+    if (pathname.includes("/manage/events/:eventId/assign-boss")) return "Events";
+    if (pathname.includes("/manage/events/player_badges")) return "Bosses";
+    if (pathname.includes("/manage/events/player_badges/edit")) return "Bosses";
+    if (pathname.includes("/manage/events/leaderboard")) return "Bosses";
+    if (pathname.includes("/manage/bosses/view")) return "Bosses";
+    if (pathname.includes("/manage/bosses/create")) return "Bosses";
+    if (pathname.includes("/manage/bosses/edit")) return "Bosses";
+    if (pathname.includes("/manage/questionbank")) return "Question Bank";
+    if (pathname.includes("/manage/categories")) return "Question Bank";
+    if (pathname.includes("/manage/questions")) return "Question Bank";
+    if (pathname.includes("/manage/profile")) return "Profile";
+    if (pathname.includes("/manage")) return "Host Panel";
     if (pathname.includes("/leaderboard")) return "Leaderboard";
 
     return routes[pathname] || "UniRAID";

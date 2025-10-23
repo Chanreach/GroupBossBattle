@@ -33,16 +33,11 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      const { token, type } = storedAuth;
+      const { token } = storedAuth;
       apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
       try {
-        let response;
-        if (type === "user") {
-          response = await apiClient.get("/auth/me");
-        } else if (type === "guest") {
-          response = await apiClient.get("/heartbeat");
-        }
+        const response = await apiClient.get("/auth/me");
         setAuth({ user: response.data.user, token, type: response.data.type });
       } catch (error) {
         console.error("Session invalid:", error);
@@ -61,9 +56,9 @@ export const AuthProvider = ({ children }) => {
 
     const interval = setInterval(async () => {
       try {
-        await apiClient.get("/heartbeat");
+        await apiClient.get("/auth/me");
       } catch (error) {
-        console.warn("Heartbeat failed:", error);
+        console.warn("Auth check failed:", error);
         if (error.response?.status === 401) {
           console.warn("Session expired. Logging out...");
           logout();

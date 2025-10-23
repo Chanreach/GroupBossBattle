@@ -1,8 +1,8 @@
-"use client";
-
 // ===== LIBRARIES ===== //
 import { useMemo, useState, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+
+// ===== COMPONENTS ===== //
 import {
   Sun,
   Moon,
@@ -20,8 +20,6 @@ import {
   Shield,
   PencilRuler,
 } from "lucide-react";
-
-// ===== COMPONENTS ===== //
 import {
   Sidebar,
   SidebarContent,
@@ -47,25 +45,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 import AlertLogout from "./AlertLogout";
 
-// ===== CONTEXTS ===== //
-import { useThemeColor } from "@/theme/theme-provider";
+// ===== HOOKS ===== //
+import { useTheme } from "@/context/useTheme";
 import { useAuth } from "@/context/useAuth";
-import { isGuestUser } from "@/utils/guestUtils";
 
 export function NavSidebar({ ...props }) {
-  const { colorScheme, toggleColorScheme } = useThemeColor();
+  const { colorScheme, toggleColorScheme } = useTheme();
+  const { auth, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
   // ===== AUTHENTICATION HANDLERS ===== //
   const handleLogout = useCallback(async () => {
     try {
       logout();
-      // Clear the viewAsPlayer flag on logout
       localStorage.removeItem("viewAsPlayer");
-      localStorage.removeItem("viewAsPlayerTimestamp");
       navigate("/auth");
     } catch (error) {
       console.error("Logout failed:", error);
@@ -242,7 +237,7 @@ export function NavSidebar({ ...props }) {
         <Separator />
 
         {/* User Menu - show when user is authenticated (including guests) */}
-        {user && (
+        {auth && (
           <SidebarMenu>
             <SidebarMenuItem>
               <DropdownMenu>
@@ -253,8 +248,8 @@ export function NavSidebar({ ...props }) {
                   >
                     <Avatar className="h-8 w-8 rounded-lg">
                       <AvatarImage
-                        src={user?.profileImage}
-                        alt={user?.username || user?.name || "User"}
+                        src={auth.user?.profileImage}
+                        alt={auth.user?.username || "User"}
                         onError={(e) => {
                           console.log(
                             "Avatar image failed to load:",
@@ -264,17 +259,15 @@ export function NavSidebar({ ...props }) {
                         }}
                       />
                       <AvatarFallback className="rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 text-white">
-                        {(user?.username || user?.name || "BF")
-                          .charAt(0)
-                          .toUpperCase()}
+                        {(auth.user?.username || "BF").charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="grid flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-semibold">
-                        {user?.username || user?.name || "User"}
+                        {auth.user?.username || "User"}
                       </span>
                       <span className="truncate text-xs text-muted-foreground">
-                        {user?.email || ""}
+                        {auth.user?.email || ""}
                       </span>
                     </div>
                   </SidebarMenuButton>
@@ -289,8 +282,8 @@ export function NavSidebar({ ...props }) {
                     <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                       <Avatar className="h-8 w-8 rounded-lg">
                         <AvatarImage
-                          src={user?.profileImage}
-                          alt={user?.username || user?.name || "User"}
+                          src={auth.user?.profileImage}
+                          alt={auth.user?.username || "User"}
                           onError={(e) => {
                             console.log(
                               "Dropdown avatar image failed to load:",
@@ -300,17 +293,17 @@ export function NavSidebar({ ...props }) {
                           }}
                         />
                         <AvatarFallback className="rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 text-white">
-                          {(user?.username || user?.name || "BF")
+                          {(auth.user?.username || "BF")
                             .charAt(0)
                             .toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div className="grid flex-1 text-left text-sm leading-tight">
                         <span className="truncate font-semibold">
-                          {user?.username || user?.name || "User"}
+                          {auth.user?.username || "User"}
                         </span>
                         <span className="truncate text-xs text-muted-foreground">
-                          {user?.email || ""}
+                          {auth.user?.email || ""}
                         </span>
                       </div>
                     </div>
@@ -318,19 +311,21 @@ export function NavSidebar({ ...props }) {
                   <DropdownMenuSeparator />
 
                   {/* Profile - only show for non-guest users */}
-                  {!isGuestUser() && (
+                  {auth.type === "user" && (
                     <DropdownMenuItem onClick={() => navigate("/profile")}>
                       <User className="mr-2 h-4 w-4" />
                       <span>Profile</span>
                     </DropdownMenuItem>
                   )}
-                  {/* User Management for admin/host only */}
-                  {(user?.role === "admin" || user?.role === "host") && (
+                  {/* User Management for superadmin/admin/host only */}
+                  {(auth.user?.role === "superadmin" ||
+                    auth.user?.role === "admin" ||
+                    auth.user?.role === "host") && (
                     <DropdownMenuItem
                       onClick={() => {
                         localStorage.removeItem("viewAsPlayer");
                         localStorage.removeItem("viewAsPlayerTimestamp");
-                        navigate("/host/events/view");
+                        navigate("/manage/events");
                       }}
                     >
                       <PencilRuler className="mr-2 h-4 w-4" />
@@ -364,5 +359,4 @@ export function NavSidebar({ ...props }) {
   );
 }
 
-// Default export for compatibility with existing imports
 export default NavSidebar;

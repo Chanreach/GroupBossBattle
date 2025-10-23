@@ -1,9 +1,13 @@
-// Error 404
-import React from 'react';
+// ===== LIBRARIES ===== //
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import { ArrowLeftIcon, Home } from 'lucide-react';
+
+// ===== COMPONENTS ===== //
+import { Button } from '@/components/ui/button';
+
+// ===== STYLES ===== //
 import '@/index.css';
+
 const Error = () => {
   const navigate = useNavigate();
 

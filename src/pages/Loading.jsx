@@ -1,6 +1,7 @@
-// Loading Page
-import React from 'react';
+// ===== LIBRARIES ===== //
 import { Loader2 } from 'lucide-react';
+
+// ===== STYLES ===== //
 import '@/index.css';
 
 const Loading = () => {

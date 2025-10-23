@@ -1,26 +1,14 @@
-// Master for OP (Host and Admin)
 // ===== LIBRARIES ===== //
 import { Outlet } from "react-router-dom";
 
-// ===== LAYOUTS ===== //
+// ===== COMPONENTS ===== //
 import NavOP from "@/layouts/NavOP";
 import Footer from "@/layouts/Footer";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-
-// ===== COMPONENTS ===== //
-import { MessageDisplay } from "./components/MessageDisplay";
 import PageTitle from "@/layouts/PageTitle";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
-// import { useAuth } from "./context/useAuth";
-// import { setupInterceptors } from "./api";
 
 export default function App() {
-  // ===== AUTHENTICATION INTERCEPTORS ===== //
-  // const auth = useAuth();
-  // useEffect(() => {
-  //   setupInterceptors(auth, navigate);
-  // }, [auth, navigate]);
-
   return (
     <SidebarProvider key="host-sidebar">
       <div className="flex min-h-screen w-full">
@@ -33,9 +21,6 @@ export default function App() {
             <SidebarTrigger />
             <PageTitle />
           </div>
-
-          {/* ===== MESSAGE DISPLAY ===== */}
-          <MessageDisplay />
 
           {/* ===== PAGE CONTENT (Outlet for route rendering) ===== */}
           <main className="flex-1 w-full overflow-x-hidden">

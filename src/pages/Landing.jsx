@@ -1,11 +1,7 @@
 // ===== LIBRARIES ===== //
-import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Users,
-  ChevronRight,
-  ArrowRight,
-  Sparkles,
   Zap,
   Trophy,
   Target,
@@ -16,8 +12,12 @@ import {
   Shield,
   VenetianMask,
 } from "lucide-react";
-import { toast } from "sonner";
 import { startConfettiCelebration } from "@/lib/Confetti";
+import { LiquidPillElement, LiquidCircleElement } from "@/lib/LiquidParallax";
+import IntersectionObserver, {
+  useIntersectionObserver,
+} from "@/lib/IntersectionObserver.jsx";
+import { toast } from "sonner";
 
 // ===== COMPONENTS ===== //
 import {
@@ -30,19 +30,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import EventCarousel from "@/layouts/EventCarousel";
-import {
-  LiquidPillElement,
-  LiquidCircleElement,
-  LiquidFloatingElement,
-} from "@/lib/LiquidParallax";
 
-// ===== LIB ===== //
-import IntersectionObserver, {
-  useIntersectionObserver,
-} from "@/lib/IntersectionObserver.jsx";
-
-// ===== CONTEXTS ===== //
+// ===== HOOKS ===== //
 import { useAuth } from "@/context/useAuth";
+
+// ===== API CLIENT ===== //
 import { apiClient } from "@/api/apiClient";
 
 // ===== STYLES ===== //
@@ -52,22 +44,13 @@ import "@/index.css";
 const LandingContent = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { setUser } = useAuth();
-  const [logoClicked, setLogoClicked] = useState(false);
+  const { login } = useAuth();
+
   const { registerSection, isVisible } = useIntersectionObserver();
 
   // ===== HANDLERS ===== //
-  const handleLearnMore = () => {
-    document.getElementById("howItWorks")?.scrollIntoView({
-      behavior: "smooth",
-    });
-  };
-
-  const handleLogoClick = async () => {
-    setLogoClicked(true);
-    setTimeout(() => setLogoClicked(false), 600);
-
-    await startConfettiCelebration({
+  const handleLogoClick = () => {
+    startConfettiCelebration({
       origin: { x: 0.5, y: 0.3 },
       maxBursts: 1,
       burstInterval: 1500,
@@ -76,40 +59,28 @@ const LandingContent = () => {
 
   const handleGuestLogin = async () => {
     try {
-      // Call backend to create a guest session
       const response = await apiClient.post("/auth/guest-login");
-      const { token, user } = response.data;
-      console.log("Guest login response:", response.data);
-
-      // Store guest token and user data in localStorage
-      localStorage.setItem("guestToken", token);
-      localStorage.setItem("guestUser", JSON.stringify(user));
-
-      // Set the user in auth context immediately
-      setUser(user);
-
-      // Set authorization header for future requests
-      apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-      toast.success("Logged in as guest!");
+      const { user, token } = response.data;
+      login({ user, token, type: "guest" });
+      toast.success(
+        response.data.message || "Logged in as guest successfully."
+      );
 
       // Check for returnUrl parameter
       const params = new URLSearchParams(location.search);
       const returnUrl = params.get("returnUrl");
-
-      if (returnUrl) {
-        setTimeout(() => navigate(decodeURIComponent(returnUrl)), 500);
+      setTimeout(
+        () => navigate(returnUrl ? decodeURIComponent(returnUrl) : "/"),
+        500
+      );
+    } catch (error) {
+      console.error("Guest login error:", error);
+      const data = error.response?.data;
+      if (data?.errors && Array.isArray(data.errors)) {
+        data.errors.forEach((errMsg) => toast.error(errMsg));
       } else {
-        setTimeout(() => navigate("/"), 500);
+        toast.error(data?.message || "Guest login failed.");
       }
-    } catch (err) {
-      let message = "Failed to create guest session";
-      if (err.response && err.response.data && err.response.data.message) {
-        message = err.response.data.message;
-      } else if (err.message) {
-        message = err.message;
-      }
-      toast.error(message);
     }
   };
 
@@ -255,34 +226,6 @@ const LandingContent = () => {
                 Login as Guest
               </Button>
             </div>
-
-            {/* Stats */}
-            {/* <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-2xl mx-auto px-2">
-              <div className="text-center p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-800 backdrop-blur-sm border border-gray-200 dark:border-gray-700">
-                <div className="text-2xl sm:text-3xl font-bold mb-1 text-gray-900 dark:text-white">
-                  50
-                </div>
-                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
-                  Battles Fought
-                </div>
-              </div>
-              <div className="text-center p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-800 backdrop-blur-sm border border-gray-200 dark:border-gray-700">
-                <div className="text-2xl sm:text-3xl font-bold mb-1 text-gray-900 dark:text-white">
-                  3
-                </div>
-                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
-                  Epic Bosses
-                </div>
-              </div>
-              <div className="text-center p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-800 backdrop-blur-sm border border-gray-200 dark:border-gray-700">
-                <div className="text-2xl sm:text-3xl font-bold mb-1 text-gray-900 dark:text-white">
-                  123
-                </div>
-                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
-                  Unique Players
-                </div>
-              </div>
-            </div> */}
           </div>
         </div>
       </section>

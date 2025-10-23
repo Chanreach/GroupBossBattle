@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { SVG_Boss, SVG_Checkmark } from "@/components/SVG";
+// ===== LIBRARIES ===== //
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   Plus,
@@ -17,6 +17,11 @@ import {
   Check,
   Edit,
 } from "lucide-react";
+import { QRCodeCanvas } from "qrcode.react";
+import { toast } from "sonner";
+
+// ===== COMPONENTS ===== //
+import { SVG_Boss, SVG_Checkmark } from "@/components/SVG";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -45,60 +50,59 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { apiClient } from "@/api/apiClient";
-import { useAuth } from "@/context/useAuth";
-import { toast } from "sonner";
+import { StatusOverlay } from "@/components/StatusOverlay";
 
-const AssignBoss = () => {
+// ===== HOOKS ===== //
+import { useAuth } from "@/context/useAuth";
+
+// ===== API CLIENT ===== //
+import { apiClient } from "@/api/apiClient";
+
+// ==== UTILITIES ===== //
+import { formatTextualDateTime } from "@/utils/helper";
+
+const EventDetails = () => {
+  const { eventId } = useParams();
+  const { auth } = useAuth();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [searchParams] = useSearchParams();
-  const eventId = searchParams.get("eventId");
 
   const [confirmDialog, setConfirmDialog] = useState({
     isOpen: false,
-    bossId: null,
-    bossName: "",
+    bossNames: [],
   });
   const [qrDialog, setQrDialog] = useState({
     isOpen: false,
     bossName: "",
     qrUrl: "",
-    qrCode: null,
-    loading: false,
   });
+  const qrRef = useRef(null);
   const [copied, setCopied] = useState(false);
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [assignedBosses, setAssignedBosses] = useState([]);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedBosses, setSelectedBosses] = useState([]);
+  const [isUnAssigning, setIsUnAssigning] = useState(false);
 
   const fetchEventDetails = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       const response = await apiClient.get(`/events/${eventId}`);
-      setEvent(response.data);
-
-      // Extract assigned bosses from event data
-      const bosses =
-        response.data.eventBosses?.map((eventBoss) => ({
-          id: eventBoss.boss.id,
-          eventBossId: eventBoss.id,
-          name: eventBoss.boss.name,
-          image: eventBoss.boss.image,
-          description: eventBoss.boss.description,
-          cooldownDuration: eventBoss.cooldownDuration,
-          numberOfTeams: eventBoss.numberOfTeams,
-          status: eventBoss.status,
-          joinCode: eventBoss.joinCode,
-          creatorId: eventBoss.boss.creatorId,
-          creator: eventBoss.boss.creator,
-          categories: eventBoss.boss.Categories || [], // Include categories
-        })) || [];
-
-      setAssignedBosses(bosses);
+      const event = response.data;
+      event.startAt = formatTextualDateTime(event.startAt);
+      event.endAt = formatTextualDateTime(event.endAt);
+      setEvent(event);
+      setAssignedBosses(response.data.eventBosses);
     } catch (error) {
       console.error("Error fetching event details:", error);
-      toast.error("Failed to fetch event details");
+      setError("Failed to fetch event details.");
+      const data = error.response?.data;
+      if (data?.errors && Array.isArray(data.errors)) {
+        data.errors.forEach((errMsg) => toast.error(errMsg));
+      } else {
+        toast.error(data?.message || "Failed to fetch event details.");
+      }
     } finally {
       setLoading(false);
     }
@@ -108,65 +112,33 @@ const AssignBoss = () => {
     if (eventId) {
       fetchEventDetails();
     } else {
-      // If no eventId, redirect back to events view
-      navigate("/host/events/view");
+      navigate("/manage/events");
     }
   }, [eventId, navigate, fetchEventDetails]);
 
   const handleShowQR = async (boss) => {
-    try {
-      const joinUrl = `${window.location.origin}/boss-preview/${boss.eventBossId}/${boss.joinCode}`;
-      setQrDialog({
-        isOpen: true,
-        bossName: boss.name,
-        qrUrl: joinUrl,
-        qrCode: null,
-        loading: true,
-      });
+    const joinUrl = `${window.location.origin}/boss-preview/${boss.id}/${boss.joinCode}`;
+    setQrDialog({
+      isOpen: true,
+      bossName: boss.name,
+      qrUrl: joinUrl,
+    });
 
-      try {
-        // Try to fetch the QR code from the API first
-        const response = await apiClient.get(
-          `/events/${eventId}/bosses/${boss.eventBossId}/qr`
-        );
-
-        setQrDialog((prev) => ({
-          ...prev,
-          qrCode: response.data.qrCode,
-          loading: false,
-        }));
-      } catch (apiError) {
-        console.warn("Backend QR generation failed, using fallback:", apiError);
-
-        // Fallback: Generate QR code using a client-side library or service
-        // For now, we'll use a free QR code service
-        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=${encodeURIComponent(
-          joinUrl
-        )}`;
-
-        setQrDialog((prev) => ({
-          ...prev,
-          qrCode: qrCodeUrl,
-          loading: false,
-        }));
-      }
-    } catch (error) {
-      console.error("Error generating QR code:", error);
-      toast.error("Failed to generate QR code");
-      setQrDialog((prev) => ({
-        ...prev,
-        loading: false,
-      }));
-    }
+    setQrDialog((prev) => ({
+      ...prev,
+      loading: false,
+    }));
   };
 
   const handleDownloadQR = () => {
-    if (qrDialog.qrCode) {
-      const link = document.createElement("a");
-      link.download = `${qrDialog.bossName.replace(/\s+/g, "_")}_QR.png`;
-      link.href = qrDialog.qrCode;
-      link.click();
-    }
+    if (!qrRef.current) return;
+
+    const canvas = qrRef.current.querySelector("canvas");
+    const dataUrl = canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.download = `${qrDialog.bossName.replace(/\s+/g, "_")}_QR.png`;
+    link.href = dataUrl;
+    link.click();
   };
 
   const handleCopyUrl = async () => {
@@ -176,53 +148,91 @@ const AssignBoss = () => {
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error("Failed to copy URL:", err);
+      toast.error("Failed to copy URL.");
     }
   };
 
+  const handleBossSelect = (bossId) => {
+    if (selectedBosses.includes(bossId)) {
+      setSelectedBosses(selectedBosses.filter((id) => id !== bossId));
+    } else {
+      setSelectedBosses([...selectedBosses, bossId]);
+    }
+  };
+
+  const handleUnAssignSelected = () => {
+    if (selectedBosses.length === 0) return;
+
+    const bossNames = assignedBosses
+      .filter((boss) => selectedBosses.includes(boss.id))
+      .map((boss) => boss.name);
+
+    setConfirmDialog({
+      isOpen: true,
+      bossNames,
+    });
+  };
+
   const handleRemoveBoss = (boss) => {
-    // Check if user can unassign this boss (hosts can only unassign their own bosses)
-    if (user.role === "host" && boss.creatorId !== user.id) {
+    if (auth.user.role === "host" && boss.creatorId !== auth.user.id) {
       toast.error("You can only unassign bosses you created");
       return;
     }
 
+    setSelectedBosses([boss.id]);
     setConfirmDialog({
       isOpen: true,
-      bossId: boss.id,
-      eventBossId: boss.eventBossId,
-      bossName: boss.name,
+      bossNames: [boss.name],
     });
   };
 
-  const confirmRemoveBoss = async () => {
-    if (confirmDialog.eventBossId) {
-      try {
-        await apiClient.delete(
-          `/events/${eventId}/bosses/${confirmDialog.bossId}`
+  const confirmUnAssignedSelected = async () => {
+    setIsUnAssigning(true);
+    try {
+      console.log("Unassigning bosses:", selectedBosses);
+      const response = await apiClient.delete(`/events/${eventId}/bosses`, {
+        data: {
+          eventBossIds: selectedBosses,
+        },
+      });
+      const results = response.data.results;
+      setAssignedBosses(response.data.eventBosses);
+      if (results.success.length > 0) {
+        toast.success(
+          `Successfully unassigned ${results.success.length} boss(es)!`
         );
-        setAssignedBosses(
-          assignedBosses.filter((boss) => boss.id !== confirmDialog.bossId)
-        );
-        toast.success("Boss unassigned successfully");
-      } catch (error) {
-        console.error("Error unassigning boss:", error);
-        toast.error("Failed to unassign boss");
       }
+      if (results.failed.length > 0) {
+        results.failed.forEach((fail) => {
+          toast.error(
+            `Failed to unassign boss ${fail.eventBossName}: ${fail.reason}`
+          );
+        });
+      }
+
+      setSelectedBosses([]);
+      setSelectionMode(false);
+    } catch (error) {
+      console.error("Error unassigning bosses:", error);
+      const data = error.response?.data;
+      if (data?.errors && Array.isArray(data.errors)) {
+        data.errors.forEach((errMsg) => toast.error(errMsg));
+      } else {
+        toast.error(data?.message || "Failed to unassign bosses.");
+      }
+    } finally {
+      setIsUnAssigning(false);
+      setConfirmDialog({
+        isOpen: false,
+        bossNames: [],
+      });
     }
-    setConfirmDialog({
-      isOpen: false,
-      bossId: null,
-      eventBossId: null,
-      bossName: "",
-    });
   };
 
-  const cancelRemoveBoss = () => {
+  const cancelConfirmUnAssign = () => {
     setConfirmDialog({
       isOpen: false,
-      bossId: null,
-      eventBossId: null,
-      bossName: "",
+      bossNames: [],
     });
   };
 
@@ -237,38 +247,87 @@ const AssignBoss = () => {
   };
 
   const handleAssignBoss = () => {
-    navigate(`/host/events/${eventId}/assign-boss`);
+    navigate(`/manage/events/${eventId}/assign-boss`);
   };
 
   const handleBack = () => {
-    navigate("/host/events/view");
+    navigate("/manage/events");
   };
 
   const handlePlayerBadges = () => {
-    navigate(`/host/events/${eventId}/player_badges2`);
+    navigate(`/manage/events/${eventId}/player_badges2`);
   };
 
   const handleEditEvent = () => {
-    navigate(`/host/events/edit?eventId=${eventId}`);
+    navigate(`/manage/events/${eventId}/edit`);
+  };
+
+  // Get status badge style
+  const getStatusBadgeStyle = (status) => {
+    switch (status?.toLowerCase()) {
+      case "upcoming":
+        return "bg-yellow-50 dark:bg-yellow-950 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800";
+      case "ongoing":
+        return "bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800";
+      case "completed":
+        return "bg-muted text-muted-foreground border-border";
+      default:
+        return "bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800";
+    }
+  };
+
+  const getBossStatusBadge = (status) => {
+    switch (status?.toLowerCase()) {
+      case "pending":
+        return (
+          <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+            <AlertTriangle className="w-3 h-3 mr-1" />
+            Pending
+          </Badge>
+        );
+      case "active":
+        return (
+          <Badge className="bg-green-500 hover:bg-green-600">
+            <Zap className="w-3 h-3 mr-1" />
+            Active
+          </Badge>
+        );
+      case "in battle":
+        return (
+          <Badge className="bg-red-500 hover:bg-red-600">
+            <Zap className="w-3 h-3 mr-1" />
+            In Battle
+          </Badge>
+        );
+      case "cooldown":
+        return (
+          <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+            <Clock className="w-3 h-3 mr-1" />
+            Cooldown
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+            <AlertTriangle className="w-3 h-3 mr-1" />
+            Unknown
+          </Badge>
+        );
+    }
   };
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 sm:px-6 py-6 max-w-4xl">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading event details...</p>
-          </div>
-        </div>
+      <div className="container mx-auto px-4 sm:px-6 py-6 max-w-6xl">
+        <StatusOverlay message="Loading event details..." type="loading" />
       </div>
     );
   }
 
-  if (!event) {
+  if (error) {
     return (
-      <div className="container mx-auto px-4 sm:px-6 py-6 max-w-4xl">
-        <div className="text-center py-8">Event not found</div>
+      <div className="container mx-auto px-4 sm:px-6 py-6 max-w-6xl">
+        <StatusOverlay message={error} type="error" />
       </div>
     );
   }
@@ -297,14 +356,48 @@ const AssignBoss = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                onClick={handleAssignBoss}
-                className="flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Assign Boss</span>
-              </Button>
+              {selectionMode ? (
+                <>
+                  <Button
+                    size="sm"
+                    onClick={() => setSelectionMode(false)}
+                    className="flex items-center gap-2"
+                  >
+                    <X className="w-4 h-4" />
+                    <span className="hidden sm:inline">Discard</span>
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleUnAssignSelected}
+                    className="flex items-center gap-2"
+                    disabled={selectedBosses.length === 0 || isUnAssigning}
+                  >
+                    <Check className="w-4 h-4" />
+                    <span className="hidden sm:inline">Unassign</span>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  {assignedBosses.length > 0 && (
+                    <Button
+                      size="sm"
+                      onClick={() => setSelectionMode(true)}
+                      className="flex items-center gap-2"
+                    >
+                      <SVG_Boss className="w-4 h-4" />
+                      <span className="hidden sm:inline">Select Boss</span>
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    onClick={handleAssignBoss}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span className="hidden sm:inline">Assign Boss</span>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
 
@@ -318,15 +411,9 @@ const AssignBoss = () => {
                       <h2 className="text-lg font-semibold">{event.name}</h2>
                       <Badge
                         variant="outline"
-                        className={`mt-[4px] ${
-                          event.status?.toLowerCase() === "upcoming"
-                            ? "bg-yellow-50 dark:bg-yellow-950 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800 self-start"
-                            : event.status?.toLowerCase() === "ongoing"
-                            ? "bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800 self-start"
-                            : event.status?.toLowerCase() === "completed"
-                            ? "bg-muted text-muted-foreground border-border self-start"
-                            : "bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800 self-start"
-                        }`}
+                        className={`mt-[4px] self-start capitalize ${getStatusBadgeStyle(
+                          event.status
+                        )}`}
                       >
                         {event.status?.toLowerCase() === "upcoming" ? (
                           <Clock className="w-3 h-3 mr-1" />
@@ -337,10 +424,7 @@ const AssignBoss = () => {
                         ) : (
                           <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full animate-pulse mr-1"></div>
                         )}
-                        {event.status
-                          ? event.status.charAt(0).toUpperCase() +
-                            event.status.slice(1).toLowerCase()
-                          : "--"}
+                        {event.status || "--"}
                       </Badge>
                     </div>{" "}
                     <div className="justify-end flex gap-2">
@@ -353,7 +437,6 @@ const AssignBoss = () => {
                         <BadgeIcon className="w-4 h-4" />
                         <span className="hidden sm:inline">Manage Badges</span>
                       </Button>
-                      {user?.role === "admin" && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -363,7 +446,6 @@ const AssignBoss = () => {
                           <Edit className="h-4 w-4" />
                           <span className="hidden sm:inline">Edit Event</span>
                         </Button>
-                      )}
                     </div>
                   </div>
 
@@ -378,14 +460,7 @@ const AssignBoss = () => {
                       <Clock className="w-4 h-4 text-muted-foreground" />
                       <span className="text-muted-foreground">Start:</span>
                       <span className="font-medium text-muted-foreground">
-                        {event.startTime
-                          ? new Date(event.startTime).toLocaleDateString() +
-                            " " +
-                            new Date(event.startTime).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          : "N/A"}
+                        {event.startAt || "TBD"}
                       </span>
                     </div>
 
@@ -395,14 +470,7 @@ const AssignBoss = () => {
                       <Clock className="w-4 h-4 text-muted-foreground" />
                       <span className="text-muted-foreground">End:</span>
                       <span className="font-medium text-muted-foreground">
-                        {event.endTime
-                          ? new Date(event.endTime).toLocaleDateString() +
-                            " " +
-                            new Date(event.endTime).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          : "N/A"}
+                        {event.endAt || "TBD"}
                       </span>
                     </div>
 
@@ -469,7 +537,16 @@ const AssignBoss = () => {
                 {assignedBosses.map((boss) => (
                   <Card
                     key={boss.id}
-                    className="overflow-hidden hover:shadow-md transition-shadow"
+                    className={`overflow-hidden hover:shadow-md transition-shadow  ${
+                      selectionMode && selectedBosses.includes(boss.id)
+                        ? "ring-2 ring-primary border-primary cursor-pointer"
+                        : selectionMode
+                        ? "hover:border-primary/50 cursor-pointer"
+                        : ""
+                    }`}
+                    onClick={() => {
+                      if (selectionMode) handleBossSelect(boss.id);
+                    }}
                   >
                     <CardContent className="p-0">
                       {/* Boss Image */}
@@ -484,25 +561,26 @@ const AssignBoss = () => {
                           className="w-full h-[270px] object-cover"
                         />
                         <div className="absolute top-2 left-2">
-                          {boss.status === "active" ? (
-                            <Badge className="bg-green-500 hover:bg-green-600">
-                              <Zap className="w-3 h-3 mr-1" />
-                              Active
-                            </Badge>
-                          ) : (
-                            <Badge
-                              variant="secondary"
-                              className="bg-orange-100 text-orange-800"
-                            >
-                              <Clock className="w-3 h-3 mr-1" />
-                              Cooldown
-                            </Badge>
-                          )}
+                          {getBossStatusBadge(boss.status)}
                         </div>
                         <div className="absolute top-2 right-2">
                           {/* Only show remove button if user can unassign this boss */}
-                          {(user?.role === "admin" ||
-                            boss.creatorId === user?.id) && (
+                          {(auth.user?.role === "superadmin" ||
+                            auth.user?.role === "admin" ||
+                            boss.creatorId === auth.user?.id) &&
+                          selectionMode ? (
+                            <div
+                              className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-colors ${
+                                selectedBosses.includes(boss.id)
+                                  ? "bg-primary border-primary text-primary-foreground"
+                                  : "bg-background border-border"
+                              }`}
+                            >
+                              {selectedBosses.includes(boss.id) && (
+                                <Check className="w-3 h-3" />
+                              )}
+                            </div>
+                          ) : (
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button
@@ -628,7 +706,7 @@ const AssignBoss = () => {
                                 className="w-8 h-8 p-0"
                                 onClick={() =>
                                   navigate(
-                                    `/host/events/${eventId}/${boss.eventBossId}/leaderboard`
+                                    `/manage/events/${eventId}/${boss.eventBossId}/leaderboard`
                                   )
                                 }
                               >
@@ -668,21 +746,18 @@ const AssignBoss = () => {
             <div className="flex flex-col items-center space-y-4 py-4">
               {/* QR Code Image */}
               <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
-                {qrDialog.loading ? (
-                  <div className="w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center">
-                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-                  </div>
-                ) : qrDialog.qrCode ? (
-                  <img
-                    src={qrDialog.qrCode}
-                    alt="QR Code"
-                    className="w-48 h-48 sm:w-56 sm:h-56 object-contain"
+                <div
+                  ref={qrRef}
+                  className="w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center"
+                >
+                  <QRCodeCanvas
+                    value={qrDialog.qrUrl}
+                    size={224}
+                    bgColor={"#ffffff"}
+                    fgColor={"#000000"}
+                    level={"M"}
                   />
-                ) : (
-                  <div className="w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center text-gray-500">
-                    Failed to load QR code
-                  </div>
-                )}
+                </div>
               </div>
 
               {/* URL Display */}
@@ -721,11 +796,7 @@ const AssignBoss = () => {
               >
                 Close
               </Button>
-              <Button
-                onClick={handleDownloadQR}
-                className="w-full sm:w-auto"
-                disabled={!qrDialog.qrCode || qrDialog.loading}
-              >
+              <Button onClick={handleDownloadQR} className="w-full sm:w-auto">
                 <Download className="w-4 h-4 mr-2" />
                 Download QR
               </Button>
@@ -736,7 +807,7 @@ const AssignBoss = () => {
         {/* Confirmation Dialog */}
         <AlertDialog
           open={confirmDialog.isOpen}
-          onOpenChange={cancelRemoveBoss}
+          onOpenChange={() => cancelConfirmUnAssign()}
         >
           <AlertDialogContent className="sm:max-w-md">
             <AlertDialogHeader>
@@ -749,7 +820,7 @@ const AssignBoss = () => {
                   <AlertDialogDescription className="mt-1">
                     Are you sure you want to unassign{" "}
                     <span className="font-semibold">
-                      {confirmDialog.bossName}
+                      {confirmDialog.bossNames.join(", ")}
                     </span>{" "}
                     from this event?
                   </AlertDialogDescription>
@@ -765,7 +836,7 @@ const AssignBoss = () => {
             <AlertDialogFooter className="gap-2">
               <AlertDialogCancel className="mt-0">Cancel</AlertDialogCancel>
               <AlertDialogAction
-                onClick={confirmRemoveBoss}
+                onClick={confirmUnAssignedSelected}
                 className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
               >
                 Unassign Boss
@@ -778,4 +849,4 @@ const AssignBoss = () => {
   );
 };
 
-export default AssignBoss;
+export default EventDetails;

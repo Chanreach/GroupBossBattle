@@ -4,17 +4,19 @@ import PropTypes from "prop-types";
 import Loading from "../pages/Loading.jsx";
 
 export const ProtectedRoute = ({ allowedRoles = [] }) => {
-  const { user, isLoading } = useAuth();
+  const { auth, isLoading } = useAuth();
 
   if (isLoading) {
     return <Loading />;
   }
-  if (!user) {
+
+  if (!auth) {
     return <Navigate to="/auth" replace />;
   }
+
   if (
     allowedRoles.length > 0 &&
-    (!user.role || !allowedRoles.includes(user.role))
+    (!auth?.user?.role || !allowedRoles.includes(auth.user.role))
   ) {
     return <Navigate to="/error" replace />;
   }

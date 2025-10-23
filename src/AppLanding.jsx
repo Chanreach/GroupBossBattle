@@ -1,19 +1,16 @@
 // ===== LIBRARIES ===== //
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 
 // ===== COMPONENTS ===== //
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import Footer from "@/layouts/Footer";
 import NavLanding from "@/layouts/NavLanding";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 
 // ===== STYLES ===== //
 import "@/index.css";
 
 const AppLanding = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
@@ -28,7 +25,6 @@ const AppLanding = () => {
           </header>
 
           <main className="flex-1">
-            {/* Always render outlet content for all routes */}
             <Outlet />
           </main>
 

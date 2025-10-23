@@ -1,5 +1,5 @@
 // ===== LIBRARIES ===== //
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   User,
@@ -14,6 +14,7 @@ import {
   ArrowLeft,
   LogOut,
 } from "lucide-react";
+import { toast } from "sonner";
 
 // ===== COMPONENTS (Shadcn.ui) ===== //
 import { Button } from "@/components/ui/button";
@@ -25,22 +26,16 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import AlertLogout from "@/layouts/AlertLogout";
 
-// ===== CONTEXTS ===== //
+// ===== HOOKS ===== //
 import { useAuth } from "@/context/useAuth";
+
+// ===== API CLIENT ===== //
 import { apiClient } from "@/api/apiClient";
-import { toast } from "sonner";
 
 const HostProfile = () => {
+  const { auth, setAuth, logout } = useAuth();
   const navigate = useNavigate();
-  const { user, logout, setUser } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [profileData, setProfileData] = useState(null);
-
   const [editData, setEditData] = useState({
     username: "",
     email: "",
@@ -48,32 +43,43 @@ const HostProfile = () => {
     confirmPassword: "",
     profileImage: null,
   });
-
-  // Fetch profile data on component mount
-  useEffect(() => {
-    fetchProfile();
-  }, []);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const fetchProfile = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       const response = await apiClient.get("/users/profile");
       setProfileData(response.data);
-      console.log(response.data);
       setEditData({
         username: response.data.username,
         email: response.data.email,
         password: "",
         confirmPassword: "",
-        profileImage: null,
+        profileImage: response.data.profileImage,
       });
     } catch (error) {
       console.error("Error fetching profile:", error);
-      toast.error("Failed to load profile data");
+      const data = error.response?.data;
+      if (data?.errors && Array.isArray(data.errors)) {
+        data.errors.forEach((errMsg) => toast.error(errMsg));
+      } else {
+        toast.error(data?.message || "Failed to load profile data.");
+      }
+      setError(data?.message || "Failed to load profile data.");
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -87,25 +93,13 @@ const HostProfile = () => {
   };
 
   const handleSave = async () => {
+    if (editData.password && editData.password !== editData.confirmPassword) {
+      toast.error("Passwords do not match!");
+      return;
+    }
+
+    setIsSaving(true);
     try {
-      // Validation
-      if (editData.password && editData.password !== editData.confirmPassword) {
-        toast.error("Passwords do not match!");
-        return;
-      }
-
-      if (
-        editData.password &&
-        editData.password.length > 0 &&
-        editData.password.length < 8
-      ) {
-        toast.error("Password must be at least 8 characters long!");
-        return;
-      }
-
-      setSaving(true);
-
-      // Create FormData for file upload
       const formData = new FormData();
       formData.append("username", editData.username);
       formData.append("email", editData.email);
@@ -124,7 +118,7 @@ const HostProfile = () => {
 
       // Update local state and auth context
       setProfileData(response.data.user);
-      setUser({ ...user, ...response.data.user });
+      setAuth({ ...auth.user, ...response.data.user });
 
       setIsEditing(false);
       setShowPassword(false);
@@ -136,7 +130,7 @@ const HostProfile = () => {
         error.response?.data?.message || "Failed to update profile";
       toast.error(errorMessage);
     } finally {
-      setSaving(false);
+      setIsSaving(false);
     }
   };
 
@@ -491,9 +485,9 @@ const HostProfile = () => {
                     <Button
                       onClick={handleSave}
                       className="flex-1 flex items-center justify-center gap-2"
-                      disabled={saving}
+                      disabled={isSaving}
                     >
-                      {saving ? (
+                      {isSaving ? (
                         <>
                           <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                           Saving...
