@@ -144,7 +144,9 @@ const Authentication = () => {
       const params = new URLSearchParams(location.search);
       const returnUrl = params.get("returnUrl");
       if (returnUrl) {
-        navigate(decodeURIComponent(returnUrl), { replace: true });
+        setTimeout(() => {
+          navigate(decodeURIComponent(returnUrl), { replace: true });
+        }, 50);
       } else {
         navigate(isPrivilegedUser ? "/manage/events" : "/", {
           replace: true,
@@ -173,9 +175,11 @@ const Authentication = () => {
       // Check for returnUrl parameter
       const params = new URLSearchParams(location.search);
       const returnUrl = params.get("returnUrl");
-      navigate(returnUrl ? decodeURIComponent(returnUrl) : "/", {
-        replace: true,
-      });
+      setTimeout(() => {
+        navigate(returnUrl ? decodeURIComponent(returnUrl) : "/", {
+          replace: true,
+        });
+      }, 50);
 
       setTimeout(() => {
         toast.success(
