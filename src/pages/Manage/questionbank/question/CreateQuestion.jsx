@@ -34,18 +34,18 @@ const CreateQuestion = () => {
   const [categoryFromUrl, setCategoryFromUrl] = useState("");
   const [isCategoryLocked, setIsCategoryLocked] = useState(false);
   const [questionData, setQuestionData] = useState({
-    questionText: "",
+    text: "",
     timeLimit: "",
   });
   const [answerChoices, setAnswerChoices] = useState([
-    { id: "uuid1", choiceText: "", isCorrect: false },
-    { id: "uuid2", choiceText: "", isCorrect: false },
-    { id: "uuid3", choiceText: "", isCorrect: false },
-    { id: "uuid4", choiceText: "", isCorrect: false },
-    { id: "uuid5", choiceText: "", isCorrect: false },
-    { id: "uuid6", choiceText: "", isCorrect: false },
-    { id: "uuid7", choiceText: "", isCorrect: false },
-    { id: "uuid8", choiceText: "", isCorrect: false },
+    { id: "uuid1", text: "", isCorrect: false },
+    { id: "uuid2", text: "", isCorrect: false },
+    { id: "uuid3", text: "", isCorrect: false },
+    { id: "uuid4", text: "", isCorrect: false },
+    { id: "uuid5", text: "", isCorrect: false },
+    { id: "uuid6", text: "", isCorrect: false },
+    { id: "uuid7", text: "", isCorrect: false },
+    { id: "uuid8", text: "", isCorrect: false },
   ]);
   const [correctAnswerId, setCorrectAnswerId] = useState("uuid1");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -95,7 +95,7 @@ const CreateQuestion = () => {
   const handleAnswerChange = (answerId, newText) => {
     setAnswerChoices((prev) =>
       prev.map((answer) =>
-        answer.id === answerId ? { ...answer, choiceText: newText } : answer
+        answer.id === answerId ? { ...answer, text: newText } : answer
       )
     );
   };
@@ -106,14 +106,14 @@ const CreateQuestion = () => {
 
   const isCreateDisabled =
     !selectedCategoryId ||
-    !questionData.questionText.trim() ||
-    answerChoices.some((ans) => !ans.choiceText.trim());
+    !questionData.text.trim() ||
+    answerChoices.some((ans) => !ans.text.trim());
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
       const choices = answerChoices.map((answer) => ({
-        choiceText: answer.choiceText,
+        text: answer.text,
         isCorrect: answer.id === correctAnswerId,
       }));
 
@@ -270,8 +270,8 @@ const CreateQuestion = () => {
               <div className="text-lg font-bold mt-2 p-4 bg-muted rounded-lg border">
                 <textarea
                   id="question"
-                  name="questionText"
-                  value={questionData.questionText}
+                  name="text"
+                  value={questionData.text}
                   onChange={handleChange}
                   placeholder="Enter your question here"
                   className="!bg-transparent !border-0 !ring-0 !outline-none !shadow-none focus:!ring-0 focus:!border-0 focus:!outline-none p-0 !text-lg !font-bold dark:text-white w-full resize-none overflow-hidden"

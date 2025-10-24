@@ -152,7 +152,7 @@ const QuestionDetails = () => {
                 Question
               </Label>
               <div className="text-lg font-bold mt-2 p-4 bg-muted rounded-lg border whitespace-pre-wrap break-words">
-                {question.questionText}
+                {question.text}
               </div>
             </div>
 
@@ -163,7 +163,7 @@ const QuestionDetails = () => {
               </Label>
               <div className="space-y-2">
                 {question.answerChoices
-                  ?.sort((a, b) => a.choiceText.localeCompare(b.choiceText))
+                  ?.sort((a, b) => a.text.localeCompare(b.text))
                   .map((answer) => (
                     <div
                       key={answer.id}
@@ -194,8 +194,8 @@ const QuestionDetails = () => {
                             : "text-gray-900 dark:text-white"
                         }`}
                       >
-                        {/* A{index + 1}: {answer.choiceText} */}
-                        {answer.choiceText}
+                        {/* A{index + 1}: {answer.text} */}
+                        {answer.text}
                       </div>
 
                       {/* Correct Badge */}

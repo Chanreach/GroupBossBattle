@@ -16,11 +16,7 @@ import { useAuth } from "@/context/useAuth";
 // ===== API CLIENT ===== //
 import { apiClient } from "@/api/apiClient";
 
-const QuestionList = ({
-  search,
-  categoryFilter,
-  ownershipFilter,
-}) => {
+const QuestionList = ({ search, categoryFilter, ownershipFilter }) => {
   const [searchParams] = useSearchParams();
   const { auth } = useAuth();
   const navigate = useNavigate();
@@ -97,7 +93,7 @@ const QuestionList = ({
 
   // Filter questions based on search query, category filter, and ownership
   const filteredQuestions = (questions || []).filter((question) => {
-    const matchesSearch = question.questionText
+    const matchesSearch = question.text
       ?.toLowerCase()
       .includes(search.toLowerCase());
     const matchesCategory =
@@ -192,9 +188,9 @@ const QuestionList = ({
                       <div className="col-span-7 flex items-center">
                         <p
                           className="font-medium text-sm text-gray-900 dark:text-white truncate"
-                          title={question.questionText}
+                          title={question.text}
                         >
-                          {question.questionText}
+                          {question.text}
                         </p>
                       </div>
 
@@ -250,7 +246,7 @@ const QuestionList = ({
                   <div className="flex justify-between items-start gap-2">
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm text-gray-900 dark:text-white leading-tight mb-1.5">
-                        {question.questionText}
+                        {question.text}
                       </p>
                       <div className="flex flex-wrap gap-1.5 mb-1.5">
                         <Badge

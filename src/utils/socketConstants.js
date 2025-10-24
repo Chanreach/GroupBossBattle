@@ -5,6 +5,11 @@ export const SOCKET_EVENTS = {
   DISCONNECT: "disconnect",
   ERROR: "error",
 
+  // ===== JOIN RESTRICTION EVENTS ===== //
+  JOIN_RESTRICTION: {
+    RESPONSE: "join-restriction:response",
+  },
+
   // ===== BOSS EVENTS ===== //
   BOSS: {
     REQUEST: "boss:request",
@@ -180,11 +185,13 @@ export const SOCKET_ROOMS = {
 // ===== SOCKET MESSAGES ===== //
 export const SOCKET_MESSAGES = {
   BADGE_EARNED: {
-    mvp: (playerName) =>
+    "mvp": (playerName) =>
       `Congratulations ${playerName}! You've earned the MVP badge for your outstanding performance!`,
     "last-hit": (playerName) =>
       `Congratulations ${playerName}! You've earned the Last Hit badge for delivering the final blow!`,
-    "team-victory": (teamName) =>
-      `Congratulations Team ${teamName}! You've earned the Team Victory badge for your collective effort!`,
+    "boss-defeated": (teamName) =>
+      `Congratulations Team ${teamName}! You've earned the Boss Defeated badge for your collective effort!`,
+    "hero": (playerName) =>
+      `Congratulations ${playerName}! You've earned the Hero badge for defeating all bosses in the event!`,
   },
 };

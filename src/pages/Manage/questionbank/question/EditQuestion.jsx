@@ -115,11 +115,11 @@ const EditQuestion = () => {
   // Auto-resize textarea when questionText changes
   useEffect(() => {
     const textarea = document.getElementById("question");
-    if (textarea && questionData.questionText) {
+    if (textarea && questionData.text) {
       textarea.style.height = "auto";
       textarea.style.height = textarea.scrollHeight + "px";
     }
-  }, [questionData?.questionText]);
+  }, [questionData?.text]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -132,7 +132,7 @@ const EditQuestion = () => {
   const handleAnswerChange = (answerId, newText) => {
     setAnswerChoices((prev) =>
       prev.map((answer) =>
-        answer.id === answerId ? { ...answer, choiceText: newText } : answer
+        answer.id === answerId ? { ...answer, text: newText } : answer
       )
     );
   };
@@ -145,31 +145,31 @@ const EditQuestion = () => {
     originalQuestionData &&
     (selectedCategoryId !== originalQuestionData.categoryId ||
       questionData.timeLimit !== originalQuestionData.timeLimit ||
-      questionData.questionText !== originalQuestionData.questionText ||
+      questionData.text !== originalQuestionData.text ||
       correctAnswerId !== originalQuestionData.correctAnswerId ||
       answerChoices.some(
         (answer, index) =>
-          answer.choiceText !==
-          (originalQuestionData.answerChoices[index]?.choiceText || "")
+          answer.text !==
+          (originalQuestionData.answerChoices[index]?.text || "")
       ));
 
   const isSaveEnabled =
     hasChanges &&
     selectedCategoryId &&
-    questionData.questionText.trim() &&
-    answerChoices.every((answer) => answer.choiceText.trim());
+    questionData.text.trim() &&
+    answerChoices.every((answer) => answer.text.trim());
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
       const choices = answerChoices.map((answer) => ({
-        choiceText: answer.choiceText,
+        text: answer.text,
         isCorrect: answer.id === correctAnswerId,
       }));
 
       const response = await apiClient.put(`/questions/${questionId}`, {
         categoryId: selectedCategoryId,
-        questionText: questionData.questionText,
+        text: questionData.text,
         timeLimit: questionData.timeLimit,
         answerChoices: choices,
       });
@@ -344,8 +344,8 @@ const EditQuestion = () => {
               <div className="text-lg font-bold mt-2 p-4 bg-muted rounded-lg border">
                 <textarea
                   id="question"
-                  name="questionText"
-                  value={questionData.questionText}
+                  name="text"
+                  value={questionData.text}
                   onChange={handleChange}
                   placeholder="Q: Enter your question here"
                   className="!bg-transparent !border-0 !ring-0 !outline-none !shadow-none focus:!ring-0 focus:!border-0 focus:!outline-none p-0 !text-lg !font-bold dark:text-white w-full resize-none overflow-hidden"
@@ -401,7 +401,7 @@ const EditQuestion = () => {
                     {/* Answer Input */}
                     <div className="flex-1">
                       <Input
-                        value={answer.choiceText}
+                        value={answer.text}
                         onChange={(e) =>
                           handleAnswerChange(answer.id, e.target.value)
                         }
@@ -463,7 +463,7 @@ const EditQuestion = () => {
                 <br />
                 <br />
                 <span className="font-semibold text-gray-200">
-                  "{questionData?.questionText}"
+                  "{questionData?.text}"
                 </span>
                 <br />
                 <br />

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LeaderboardOverview } from "@/components/leaderboard/LeaderboardOverview";
+import { StatusOverlay } from "@/components/StatusOverlay";
 
 // ===== STYLES ===== //
 import "@/index.css";
@@ -20,15 +21,13 @@ import useBattleQueue from "@/hooks/useBattleQueue";
 import { useAuth } from "@/context/useAuth";
 
 // ===== UTILITIES ===== //
-import { getUserInfo } from "@/utils/userUtils";
 import { getPlayerState, removePlayerState } from "@/utils/playerUtils";
 
 const BossPreview = () => {
   const { eventBossId, joinCode } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { auth } = useAuth();
 
-  // HOOKS
   const bossPreview = useBossPreview(eventBossId, joinCode);
   const battleQueue = useBattleQueue(eventBossId, joinCode);
   const MINIMUM_PLAYERS_REQUIRED = 2;
@@ -37,10 +36,13 @@ const BossPreview = () => {
     eventBoss,
     eventBossStatus,
     cooldownTimer,
-    isEventBossNotFound,
     sessionSize,
     leaderboard,
-    isLoading,
+    isJoinable,
+    joinRestrictionReason,
+    loading,
+    error,
+    fetchEventBoss,
   } = bossPreview;
 
   const {
@@ -102,20 +104,13 @@ const BossPreview = () => {
       .padStart(2, "0")}s`;
   };
 
-  useEffect(() => {
-    if (isEventBossNotFound) {
-      navigate("/error");
-    }
-  }, [isEventBossNotFound, navigate]);
-
   // Auto-fill nickname with username when user is available
   useEffect(() => {
     if (!nickname) {
-      const userInfo = getUserInfo(user);
-      const name = userInfo?.username || "";
+      const name = auth?.user?.username || "";
       setNickname(name);
     }
-  }, [user, nickname]);
+  }, [auth, nickname]);
 
   useEffect(() => {
     const storedPlayer = getPlayerState(eventBossId);
@@ -143,7 +138,7 @@ const BossPreview = () => {
       return;
     }
 
-    const userInfo = getUserInfo(user);
+    const userInfo = auth?.user;
     const playerInfo = {
       ...userInfo,
       nickname: nickname.trim(),
@@ -163,9 +158,24 @@ const BossPreview = () => {
   }, [countdownTimer, eventBossId, joinCode, navigate]);
 
   const handleUnjoin = () => {
-    const userInfo = getUserInfo(user);
-    leaveQueue(userInfo?.id || null);
+    leaveQueue(auth?.user?.id || null);
   };
+
+  if (loading.eventBoss) {
+    return (
+      <div className="container mx-auto p-3 sm:p-6 max-w-4xl">
+        <StatusOverlay type="loading" message="Loading boss preview..." />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-3 sm:p-6 max-w-4xl">
+        <StatusOverlay type="error" message={error} onRetry={fetchEventBoss} />
+      </div>
+    );
+  }
 
   return (
     <main className="flex-grow min-h-screen">
@@ -188,7 +198,16 @@ const BossPreview = () => {
         </div>
 
         <div className="max-w-sm mx-auto">
-          <Card className="overflow-hidden">
+          {!isJoinable && joinRestrictionReason && (
+            <div className="bg-yellow-100 text-yellow-800 p-4 text-center">
+              You cannot join the battle right now. <br />
+              {joinRestrictionReason}
+            </div>
+          )}
+
+          <Card
+            className={`overflow-hidden ${!isJoinable ? "opacity-50" : ""}`}
+          >
             {/* Boss Name Header */}
             <CardHeader className="text-center">
               <CardTitle className="capitalize text-xl font-bold">
@@ -295,7 +314,11 @@ const BossPreview = () => {
                 <Button
                   onClick={handleJoin}
                   className="w-full !bg-purple-500 hover:!bg-purple-600 !text-white !border-purple-500 halftone-texture"
-                  disabled={!nickname.trim() || eventBossStatus === "cooldown"}
+                  disabled={
+                    !nickname.trim() ||
+                    eventBossStatus === "cooldown" ||
+                    !isJoinable
+                  }
                 >
                   {eventBossStatus === "cooldown"
                     ? `Available in ${formatTime(cooldownTimer)}`
@@ -353,7 +376,8 @@ const BossPreview = () => {
                   disabled={
                     hasJoinedQueue ||
                     hasJoinedMidGame ||
-                    (playerContextStatus === "in-battle" && !isPlayerDead)
+                    (playerContextStatus === "in-battle" && !isPlayerDead) ||
+                    !isJoinable
                   }
                 />
               </div>
@@ -364,7 +388,7 @@ const BossPreview = () => {
         {/* Leaderboard Card */}
         <LeaderboardOverview
           leaderboard={leaderboard}
-          isLoading={isLoading.leaderboard}
+          isLoading={loading.leaderboard}
           isPreview={true}
         />
       </div>

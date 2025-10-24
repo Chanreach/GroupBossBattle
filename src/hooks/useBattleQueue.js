@@ -20,7 +20,7 @@ const useBattleQueue = (eventBossId, joinCode) => {
   const [session, setSession] = useState(null);
   const [queueSize, setQueueSize] = useState(0);
   const [countdownTimer, setCountdownTimer] = useState(null);
-  const [countdownEndTime, setCountdownEndTime] = useState(null);
+  const [countdownEndAt, setCountdownEndAt] = useState(null);
   const [playerContextStatus, setPlayerContextStatus] = useState("idle");
 
   const [hasJoinedQueue, setHasJoinedQueue] = useState(false);
@@ -88,18 +88,18 @@ const useBattleQueue = (eventBossId, joinCode) => {
   }, [socket, eventBossId]);
 
   useEffect(() => {
-    if (!countdownEndTime) return;
+    if (!countdownEndAt) return;
 
     const interval = setInterval(() => {
       const timeLeft = Math.max(
         0,
-        Math.ceil((countdownEndTime - Date.now()) / 1000)
+        Math.ceil((countdownEndAt - Date.now()) / 1000)
       );
       setCountdownTimer(timeLeft);
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [countdownEndTime]);
+  }, [countdownEndAt]);
 
   useEffect(() => {
     const storedPlayer = getPlayerState(eventBossId);
@@ -155,9 +155,9 @@ const useBattleQueue = (eventBossId, joinCode) => {
     };
 
     const handleBattleCountdown = (payload) => {
-      setCountdownEndTime(payload.data.countdownEndTime);
+      setCountdownEndAt(payload.data.countdownEndAt);
       setCountdownTimer(
-        Math.ceil((payload.data.countdownEndTime - Date.now()) / 1000)
+        Math.ceil((payload.data.countdownEndAt - Date.now()) / 1000)
       );
       updatePlayerState(eventBossId, {
         battleSessionId: payload.data.battleSessionId,
