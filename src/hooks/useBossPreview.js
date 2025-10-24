@@ -117,6 +117,7 @@ const useBossPreview = (eventBossId, joinCode) => {
     };
 
     const handleSessionSizeResponse = (payload) => {
+      console.log("Session size response:", payload.data.sessionSize);
       setSessionSize(payload.data.sessionSize);
     };
 

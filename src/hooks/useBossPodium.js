@@ -6,16 +6,12 @@ import { toast } from "sonner";
 import useBossBattle from "./useBossBattle";
 import { useAuth } from "@/context/useAuth";
 
-// ===== SERVICES ===== //
-// import { fetchEventBossById } from "@/services/eventBossService";
-
 // ===== UTILITIES ===== //
 import { SOCKET_EVENTS } from "@/utils/socketConstants";
-import { getUserInfo } from "@/utils/userUtils";
 
 const useBossPodium = (eventBossId, joinCode) => {
   const { socket } = useBossBattle();
-  const { user } = useAuth();
+  const { auth } = useAuth();
 
   const [eventBoss, setEventBoss] = useState(null);
   const [battleState, setBattleState] = useState(null);
@@ -78,9 +74,8 @@ const useBossPodium = (eventBossId, joinCode) => {
   useEffect(() => {
     if (!socket || !eventBossId || !joinCode || hasJoinedPodium) return;
 
-    const userInfo = getUserInfo(user);
-    joinPodium(userInfo.id || null);
-  }, [socket, eventBossId, joinCode, hasJoinedPodium, user, joinPodium]);
+    joinPodium(auth?.user?.id || null);
+  }, [socket, eventBossId, joinCode, hasJoinedPodium, auth, joinPodium]);
 
   useEffect(() => {
     if (

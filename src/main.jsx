@@ -39,9 +39,9 @@ import PlayerBadges from "./pages/player/Badges2";
 import PlayerLeaderboard from "./pages/AllTimeLeaderboard";
 import PlayerProfile from "./pages/player/Profile";
 import PlayerQR from "./pages/player/QR";
-import PlayerBossPreview from "./pages/player/BossPreview2";
-import PlayerBossBattle from "./pages/player/BossBattle2";
-import PlayerBossPodium from "./pages/player/BossPodium2";
+import BossPreview from "./pages/player/BossPreview";
+import BossBattle from "./pages/player/BossBattle";
+import BossPodium from "./pages/player/BossPodium";
 
 // ===== Manage PAGES ===== //
 // Bosses
@@ -72,7 +72,7 @@ import QuestionDetails from "./pages/manage/questionbank/question/QuestionDetail
 import CreateQuestion from "./pages/manage/questionbank/question/CreateQuestion";
 import EditQuestion from "./pages/manage/questionbank/question/EditQuestion";
 // Profile
-import ManageProfile from "./pages/manage/profile/Profile";
+import OpProfile from "./pages/manage/profile/Profile";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -184,7 +184,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   index
                   element={
                     <AuthenticationCheck>
-                      <PlayerBossPreview />
+                      <BossPreview />
                     </AuthenticationCheck>
                   }
                 />
@@ -198,7 +198,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   index
                   element={
                     <AuthenticationCheck>
-                      <PlayerBossBattle />
+                      <BossBattle />
                     </AuthenticationCheck>
                   }
                 />
@@ -212,7 +212,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   index
                   element={
                     <AuthenticationCheck>
-                      <PlayerBossPodium />
+                      <BossPodium />
                     </AuthenticationCheck>
                   }
                 />
@@ -292,7 +292,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   />
 
                   {/* Manage Profile */}
-                  <Route path="profile" element={<ManageProfile />} />
+                  <Route path="profile" element={<OpProfile />} />
                 </Route>
 
                 {/* Nested Protected Routes for Admin & Superadmin Only */}

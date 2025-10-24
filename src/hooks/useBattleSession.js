@@ -8,7 +8,6 @@ import { useAuth } from "@/context/useAuth";
 
 // ===== UTILITIES ===== //
 import { SOCKET_EVENTS } from "@/utils/socketConstants";
-import { getUserInfo } from "@/utils/userUtils";
 import { updatePlayerState, removePlayerState } from "@/utils/playerUtils";
 
 // ===== AUDIOS ===== //
@@ -19,7 +18,7 @@ import heartbeatsSound from "@/assets/Audio/heartbeats.mp3";
 
 const useBattleSession = (eventBossId, joinCode) => {
   const { socket } = useBossBattle();
-  const { user } = useAuth();
+  const { auth } = useAuth();
 
   const [eventBoss, setEventBoss] = useState(null);
   const [eventBossCurrentHP, setEventBossCurrentHP] = useState(0);
@@ -196,14 +195,13 @@ const useBattleSession = (eventBossId, joinCode) => {
     (revivalCode) => {
       if (!socket || !eventBossId || !revivalCode) return;
 
-      const userInfo = getUserInfo(user);
       socket.emit(SOCKET_EVENTS.BATTLE_SESSION.REVIVAL_CODE.SUBMIT, {
         eventBossId,
-        playerId: userInfo.id || null,
+        playerId: auth?.user?.id || null,
         revivalCode,
       });
     },
-    [socket, eventBossId, user]
+    [socket, eventBossId, auth]
   );
 
   // Function to generate floating damage numbers
@@ -252,10 +250,9 @@ const useBattleSession = (eventBossId, joinCode) => {
   useEffect(() => {
     if (!socket || !eventBossId || !joinCode || hasJoinedSession) return;
 
-    const userInfo = getUserInfo(user);
-    joinSession(userInfo.id || null);
+    joinSession(auth?.user?.id || null);
     setHasJoinedSession(true);
-  }, [socket, eventBossId, joinCode, hasJoinedSession, user, joinSession]);
+  }, [socket, eventBossId, joinCode, hasJoinedSession, auth, joinSession]);
 
   useEffect(() => {
     if (playerBadges.length === 0 || isBadgeDisplaying) return;
@@ -285,8 +282,7 @@ const useBattleSession = (eventBossId, joinCode) => {
       const timeLeft = Math.max(0, questionEndTime - Date.now());
       setQuestionTimeRemaining(timeLeft);
       if (timeLeft <= 0 && !hasSubmittedAnswerRef.current) {
-        const userInfo = getUserInfo(user);
-        submitAnswer(userInfo.id || null, -1, currentQuestion.timeLimit);
+        submitAnswer(auth?.user?.id || null, -1, currentQuestion.timeLimit);
         clearInterval(interval);
       }
     }, 100);
@@ -299,7 +295,7 @@ const useBattleSession = (eventBossId, joinCode) => {
     currentQuestion,
     questionEndTime,
     isLoading,
-    user,
+    auth,
     submitAnswer,
   ]);
 
@@ -338,8 +334,7 @@ const useBattleSession = (eventBossId, joinCode) => {
       toast.success(payload.message);
 
       if (!payload.data.question.currentQuestion) {
-        const userInfo = getUserInfo(user);
-        requestNextQuestion(userInfo.id || null);
+        requestNextQuestion(auth?.user?.id || null);
       }
     };
 
@@ -389,8 +384,7 @@ const useBattleSession = (eventBossId, joinCode) => {
       }
 
       if (playerHearts > 0 && !isEventBossDefeated) {
-        const userInfo = getUserInfo(user);
-        setTimeout(() => requestNextQuestion(userInfo.id || null), 500);
+        setTimeout(() => requestNextQuestion(auth?.user?.id || null), 500);
       }
     };
 
@@ -490,8 +484,7 @@ const useBattleSession = (eventBossId, joinCode) => {
       setPlayerLivesRemaining(payload.data.playerHearts);
       toast.success(payload.message || "You have been revived!");
       if (!isEventBossDefeated) {
-        const userInfo = getUserInfo(user);
-        setTimeout(() => requestNextQuestion(userInfo.id || null), 500);
+        setTimeout(() => requestNextQuestion(auth?.user?.id || null), 500);
       }
       // Stop heartbeats sound
       if (heartbeatsAudioRef.current) {
@@ -646,7 +639,7 @@ const useBattleSession = (eventBossId, joinCode) => {
     socket,
     eventBossId,
     joinCode,
-    user,
+    auth,
     hasJoinedSession,
     currentQuestion,
     isPlayerKnockedOut,
@@ -671,17 +664,16 @@ const useBattleSession = (eventBossId, joinCode) => {
       console.log("Revival countdown:", timeLeft);
 
       if (timeLeft <= 0) {
-        const userInfo = getUserInfo(user);
         socket.emit(SOCKET_EVENTS.BATTLE_SESSION.REVIVAL_CODE.EXPIRED, {
           eventBossId,
-          playerId: userInfo.id || null,
+          playerId: auth?.user?.id || null,
         });
         clearInterval(interval);
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [revivalEndTime, socket, eventBossId, user]);
+  }, [revivalEndTime, socket, eventBossId, auth]);
 
   // Cleanup effect to stop heartbeats sound when component unmounts or player becomes dead
   useEffect(() => {
