@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -48,6 +48,7 @@ const EditUser = () => {
     role: "player",
   });
   const [originalUserData, setOriginalUserData] = useState(null);
+  const [userProfileImage, setUserProfileImage] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -66,6 +67,7 @@ const EditUser = () => {
       };
       setUserData(data);
       setOriginalUserData(data);
+      setUserProfileImage(response.data.profileImage || null);
     } catch (error) {
       console.error("Error fetching user:", error);
       const data = error.response?.data;
@@ -235,6 +237,7 @@ const EditUser = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-3">
               <Avatar className="h-10 w-10">
+                <AvatarImage src={userProfileImage} alt={userData.username} />
                 <AvatarFallback className="bg-primary/10 text-primary font-medium">
                   {userData.username.charAt(0).toUpperCase()}
                 </AvatarFallback>

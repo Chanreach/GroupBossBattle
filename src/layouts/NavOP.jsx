@@ -61,7 +61,7 @@ const mainNavItems = [
   },
   {
     title: "All Time Leaderboard",
-    url: "/manage/all_leaderboard",
+    url: "/manage/all-leaderboard",
     icon: BarChart3,
   },
   {
@@ -97,14 +97,13 @@ const NavOP = (props) => {
   });
 
   const handleLogout = useCallback(async () => {
-    try {
+  try {
       logout();
       localStorage.removeItem("viewAsPlayer");
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      navigate("/auth", { replace: true });
     } catch (error) {
       console.error("Logout failed:", error);
-      navigate("/auth", { replace: true });
+    } finally {
+      navigate("/landing", { replace: true });
     }
   }, [logout, navigate]);
 

@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -73,9 +73,10 @@ const UserList = () => {
   };
 
   const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const username = user.username?.toLowerCase() || "";
+    const email = user.email?.toLowerCase() || "";
+    const query = searchQuery.toLowerCase();
+    const matchesSearch = username.includes(query) || email.includes(query);
     const matchesRole = roleFilter === "all" ? true : user.role === roleFilter;
     return matchesSearch && matchesRole;
   });
@@ -206,7 +207,7 @@ const UserList = () => {
             )}
             {!loading && !error && paginatedData.length > 0 && (
               <div className="divide-y divide-gray-200 dark:divide-accent">
-                {users.map((user) => (
+                {paginatedData.map((user) => (
                   <div
                     key={user.id}
                     className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200 ease-in-out"
@@ -214,6 +215,10 @@ const UserList = () => {
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <Avatar className="h-10 w-10 flex-shrink-0">
+                          <AvatarImage
+                            src={user.profileImage}
+                            alt={user.username}
+                          />
                           <AvatarFallback className="bg-primary/10 text-primary font-medium uppercase">
                             {user.username.charAt(0)}
                           </AvatarFallback>

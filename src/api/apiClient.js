@@ -23,7 +23,8 @@ const processQueue = (error, token = null) => {
 
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("accessToken");
+    const auth = localStorage.getItem("auth");
+    const token = auth ? JSON.parse(auth)?.token : null;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -75,7 +76,10 @@ apiClient.interceptors.response.use(
         );
         const { token } = refreshResponse.data;
 
-        localStorage.setItem("accessToken", token);
+        const storedAuth = JSON.parse(localStorage.getItem("auth"));
+        storedAuth.token = token;
+        localStorage.setItem("auth", JSON.stringify(storedAuth));
+
         processQueue(null, token);
 
         originalRequest.headers.Authorization = `Bearer ${token}`;

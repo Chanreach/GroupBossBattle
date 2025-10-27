@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+// ===== LIBRARIES ===== //
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   Edit,
@@ -11,12 +12,15 @@ import {
   Target,
   Crown,
   Medal,
-  TrendingUp,
   Star,
   ChevronLeft,
   ChevronRight,
   Clock,
+  X,
 } from "lucide-react";
+import { toast } from "sonner";
+
+// ===== COMPONENTS ===== //
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -26,7 +30,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -38,700 +41,227 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { StatusOverlay } from "@/components/StatusOverlay";
+
+// ===== API CLIENT ===== //
 import { apiClient } from "@/api/apiClient";
-import { toast } from "sonner";
+
+// ===== UTILITIES ===== //
+import { formatTextualDateTime } from "@/utils/helper";
 
 const PlayerBadges = () => {
+  const { eventId } = useParams();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const eventId = searchParams.get("eventId");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [event, setEvent] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const itemsPerPage = 10;
 
-  // Fetch event details
-  const fetchEventDetails = useCallback(async () => {
+  const [event, setEvent] = useState(null);
+  const [players, setPlayers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [tempBadges, setTempBadges] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 10;
+
+  const fetchAllUserBadges = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const response = await apiClient.get(`/events/${eventId}`);
-      setEvent(response.data);
+      const response = await apiClient.get(`/user-badges/${eventId}`);
+      if (response.data) {
+        setEvent(response.data.event);
+        setPlayers(response.data.users);
+      }
     } catch (error) {
-      console.error("Error fetching event details:", error);
-      toast.error("Failed to fetch event details");
+      setError(error);
+      console.error("Error fetching user badges:", error);
+      const data = error.response?.data;
+      if (data?.errors && Array.isArray(data.errors)) {
+        data.errors.forEach((errMsg) => toast.error(errMsg));
+      } else {
+        toast.error(data?.message || "Failed to fetch user badges.");
+      }
     } finally {
       setLoading(false);
     }
   }, [eventId]);
-
   useEffect(() => {
-    if (eventId) {
-      fetchEventDetails();
-    } else {
-      // If no eventId, redirect back to events view
-      navigate("/host/events/view");
-    }
-  }, [eventId, navigate, fetchEventDetails]);
-
-  // Player data with individual boss badges + event milestone badges
-  const players = [
-    {
-      id: 1,
-      name: "Sodavith",
-      avatar: "/src/assets/Placeholder/Profile1.jpg",
-      badges: [
-        // Boss 1 - Neil Ian Uy
-        {
-          name: "Boss Defeated (Neil Ian Uy)",
-          icon: Skull,
-          earned: true,
-          redeemed: true,
-          bossName: "Neil Ian Uy",
-          group: "boss1",
-        },
-        {
-          name: "Last-Hit (Neil Ian Uy)",
-          icon: Target,
-          earned: true,
-          redeemed: false,
-          bossName: "Neil Ian Uy",
-          group: "boss1",
-        },
-        {
-          name: "MVP (Neil Ian Uy)",
-          icon: Crown,
-          earned: false,
-          redeemed: false,
-          bossName: "Neil Ian Uy",
-          group: "boss1",
-        },
-        // Boss 2 - Knowledge Guardian
-        {
-          name: "Boss Defeated (Knowledge Guardian)",
-          icon: Skull,
-          earned: true,
-          redeemed: false,
-          bossName: "Knowledge Guardian",
-          group: "boss2",
-        },
-        {
-          name: "Last-Hit (Knowledge Guardian)",
-          icon: Target,
-          earned: false,
-          redeemed: false,
-          bossName: "Knowledge Guardian",
-          group: "boss2",
-        },
-        {
-          name: "MVP (Knowledge Guardian)",
-          icon: Crown,
-          earned: false,
-          redeemed: false,
-          bossName: "Knowledge Guardian",
-          group: "boss2",
-        },
-        // Boss 3 - Tech Titan
-        {
-          name: "Boss Defeated (Tech Titan)",
-          icon: Skull,
-          earned: false,
-          redeemed: false,
-          bossName: "Tech Titan",
-          group: "boss3",
-        },
-        {
-          name: "Last-Hit (Tech Titan)",
-          icon: Target,
-          earned: false,
-          redeemed: false,
-          bossName: "Tech Titan",
-          group: "boss3",
-        },
-        {
-          name: "MVP (Tech Titan)",
-          icon: Crown,
-          earned: false,
-          redeemed: false,
-          bossName: "Tech Titan",
-          group: "boss3",
-        },
-        // Event Milestones
-        {
-          name: "10 Questions Milestone",
-          icon: Medal,
-          earned: true,
-          redeemed: true,
-          group: "milestone",
-        },
-        {
-          name: "25 Questions Milestone",
-          icon: Medal,
-          earned: false,
-          redeemed: false,
-          group: "milestone",
-        },
-        {
-          name: "50 Questions Milestone",
-          icon: Medal,
-          earned: false,
-          redeemed: false,
-          group: "milestone",
-        },
-        {
-          name: "100 Questions Milestone",
-          icon: Medal,
-          earned: false,
-          redeemed: false,
-          group: "milestone",
-        },
-        {
-          name: "Hero",
-          icon: Trophy,
-          earned: false,
-          redeemed: false,
-          group: "milestone",
-        },
-      ],
-    },
-    {
-      id: 2,
-      name: "Chanreach",
-      avatar: "/src/assets/Placeholder/Profile2.jpg",
-      badges: [
-        // Boss 1 - Neil Ian Uy
-        {
-          name: "Boss Defeated (Neil Ian Uy)",
-          icon: Skull,
-          earned: false,
-          redeemed: false,
-          bossName: "Neil Ian Uy",
-          group: "boss1",
-        },
-        {
-          name: "Last-Hit (Neil Ian Uy)",
-          icon: Target,
-          earned: true,
-          redeemed: false,
-          bossName: "Neil Ian Uy",
-          group: "boss1",
-        },
-        {
-          name: "MVP (Neil Ian Uy)",
-          icon: Crown,
-          earned: false,
-          redeemed: false,
-          bossName: "Neil Ian Uy",
-          group: "boss1",
-        },
-        // Boss 2 - Knowledge Guardian
-        {
-          name: "Boss Defeated (Knowledge Guardian)",
-          icon: Skull,
-          earned: true,
-          redeemed: false,
-          bossName: "Knowledge Guardian",
-          group: "boss2",
-        },
-        {
-          name: "Last-Hit (Knowledge Guardian)",
-          icon: Target,
-          earned: false,
-          redeemed: false,
-          bossName: "Knowledge Guardian",
-          group: "boss2",
-        },
-        {
-          name: "MVP (Knowledge Guardian)",
-          icon: Crown,
-          earned: true,
-          redeemed: true,
-          bossName: "Knowledge Guardian",
-          group: "boss2",
-        },
-        // Boss 3 - Tech Titan
-        {
-          name: "Boss Defeated (Tech Titan)",
-          icon: Skull,
-          earned: false,
-          redeemed: false,
-          bossName: "Tech Titan",
-          group: "boss3",
-        },
-        {
-          name: "Last-Hit (Tech Titan)",
-          icon: Target,
-          earned: false,
-          redeemed: false,
-          bossName: "Tech Titan",
-          group: "boss3",
-        },
-        {
-          name: "MVP (Tech Titan)",
-          icon: Crown,
-          earned: false,
-          redeemed: false,
-          bossName: "Tech Titan",
-          group: "boss3",
-        },
-        // Event Milestones
-        {
-          name: "10 Questions Milestone",
-          icon: Medal,
-          earned: false,
-          redeemed: false,
-          group: "milestone",
-        },
-        {
-          name: "25 Questions Milestone",
-          icon: Medal,
-          earned: false,
-          redeemed: false,
-          group: "milestone",
-        },
-        {
-          name: "50 Questions Milestone",
-          icon: Medal,
-          earned: false,
-          redeemed: false,
-          group: "milestone",
-        },
-        {
-          name: "100 Questions Milestone",
-          icon: Medal,
-          earned: false,
-          redeemed: false,
-          group: "milestone",
-        },
-        {
-          name: "Hero",
-          icon: Trophy,
-          earned: false,
-          redeemed: false,
-          group: "milestone",
-        },
-      ],
-    },
-    {
-      id: 3,
-      name: "Visoth",
-      avatar: "/src/assets/Placeholder/Profile3.jpg",
-      badges: [
-        // Boss 1 - Neil Ian Uy
-        {
-          name: "Boss Defeated (Neil Ian Uy)",
-          icon: Skull,
-          earned: true,
-          redeemed: false,
-          bossName: "Neil Ian Uy",
-          group: "boss1",
-        },
-        {
-          name: "Last-Hit (Neil Ian Uy)",
-          icon: Target,
-          earned: false,
-          redeemed: false,
-          bossName: "Neil Ian Uy",
-          group: "boss1",
-        },
-        {
-          name: "MVP (Neil Ian Uy)",
-          icon: Crown,
-          earned: true,
-          redeemed: true,
-          bossName: "Neil Ian Uy",
-          group: "boss1",
-        },
-        // Boss 2 - Knowledge Guardian
-        {
-          name: "Boss Defeated (Knowledge Guardian)",
-          icon: Skull,
-          earned: true,
-          redeemed: false,
-          bossName: "Knowledge Guardian",
-          group: "boss2",
-        },
-        {
-          name: "Last-Hit (Knowledge Guardian)",
-          icon: Target,
-          earned: true,
-          redeemed: false,
-          bossName: "Knowledge Guardian",
-          group: "boss2",
-        },
-        {
-          name: "MVP (Knowledge Guardian)",
-          icon: Crown,
-          earned: false,
-          redeemed: false,
-          bossName: "Knowledge Guardian",
-          group: "boss2",
-        },
-        // Boss 3 - Tech Titan
-        {
-          name: "Boss Defeated (Tech Titan)",
-          icon: Skull,
-          earned: false,
-          redeemed: false,
-          bossName: "Tech Titan",
-          group: "boss3",
-        },
-        {
-          name: "Last-Hit (Tech Titan)",
-          icon: Target,
-          earned: false,
-          redeemed: false,
-          bossName: "Tech Titan",
-          group: "boss3",
-        },
-        {
-          name: "MVP (Tech Titan)",
-          icon: Crown,
-          earned: false,
-          redeemed: false,
-          bossName: "Tech Titan",
-          group: "boss3",
-        },
-        // Event Milestones
-        {
-          name: "10 Questions Milestone",
-          icon: Medal,
-          earned: true,
-          redeemed: false,
-          group: "milestone",
-        },
-        {
-          name: "25 Questions Milestone",
-          icon: Medal,
-          earned: true,
-          redeemed: false,
-          group: "milestone",
-        },
-        {
-          name: "50 Questions Milestone",
-          icon: Medal,
-          earned: false,
-          redeemed: false,
-          group: "milestone",
-        },
-        {
-          name: "100 Questions Milestone",
-          icon: Medal,
-          earned: false,
-          redeemed: false,
-          group: "milestone",
-        },
-        {
-          name: "Hero",
-          icon: Trophy,
-          earned: false,
-          redeemed: false,
-          group: "milestone",
-        },
-      ],
-    },
-    {
-      id: 4,
-      name: "Roth",
-      avatar: "/src/assets/Placeholder/Profile4.jpg",
-      badges: [
-        // Boss 1 - Neil Ian Uy
-        {
-          name: "Boss Defeated (Neil Ian Uy)",
-          icon: Skull,
-          earned: true,
-          redeemed: false,
-          bossName: "Neil Ian Uy",
-          group: "boss1",
-        },
-        {
-          name: "Last-Hit (Neil Ian Uy)",
-          icon: Target,
-          earned: false,
-          redeemed: false,
-          bossName: "Neil Ian Uy",
-          group: "boss1",
-        },
-        {
-          name: "MVP (Neil Ian Uy)",
-          icon: Crown,
-          earned: false,
-          redeemed: false,
-          bossName: "Neil Ian Uy",
-          group: "boss1",
-        },
-        // Boss 2 - Knowledge Guardian
-        {
-          name: "Boss Defeated (Knowledge Guardian)",
-          icon: Skull,
-          earned: true,
-          redeemed: false,
-          bossName: "Knowledge Guardian",
-          group: "boss2",
-        },
-        {
-          name: "Last-Hit (Knowledge Guardian)",
-          icon: Target,
-          earned: true,
-          redeemed: true,
-          bossName: "Knowledge Guardian",
-          group: "boss2",
-        },
-        {
-          name: "MVP (Knowledge Guardian)",
-          icon: Crown,
-          earned: false,
-          redeemed: false,
-          bossName: "Knowledge Guardian",
-          group: "boss2",
-        },
-        // Boss 3 - Tech Titan
-        {
-          name: "Boss Defeated (Tech Titan)",
-          icon: Skull,
-          earned: true,
-          redeemed: false,
-          bossName: "Tech Titan",
-          group: "boss3",
-        },
-        {
-          name: "Last-Hit (Tech Titan)",
-          icon: Target,
-          earned: false,
-          redeemed: false,
-          bossName: "Tech Titan",
-          group: "boss3",
-        },
-        {
-          name: "MVP (Tech Titan)",
-          icon: Crown,
-          earned: false,
-          redeemed: false,
-          bossName: "Tech Titan",
-          group: "boss3",
-        },
-        // Event Milestones
-        {
-          name: "10 Questions Milestone",
-          icon: Medal,
-          earned: true,
-          redeemed: false,
-          group: "milestone",
-        },
-        {
-          name: "25 Questions Milestone",
-          icon: Medal,
-          earned: true,
-          redeemed: false,
-          group: "milestone",
-        },
-        {
-          name: "50 Questions Milestone",
-          icon: Medal,
-          earned: true,
-          redeemed: true,
-          group: "milestone",
-        },
-        {
-          name: "100 Questions Milestone",
-          icon: Medal,
-          earned: false,
-          redeemed: false,
-          group: "milestone",
-        },
-        {
-          name: "Hero",
-          icon: Trophy,
-          earned: true,
-          redeemed: true,
-          group: "milestone",
-        },
-      ],
-    },
-    {
-      id: 5,
-      name: "Alice",
-      avatar: "/src/assets/Placeholder/Profile5.jpg",
-      badges: [
-        // Boss 1 - Neil Ian Uy
-        {
-          name: "Boss Defeated (Neil Ian Uy)",
-          icon: Skull,
-          earned: true,
-          redeemed: true,
-          bossName: "Neil Ian Uy",
-          group: "boss1",
-        },
-        {
-          name: "Last-Hit (Neil Ian Uy)",
-          icon: Target,
-          earned: false,
-          redeemed: false,
-          bossName: "Neil Ian Uy",
-          group: "boss1",
-        },
-        {
-          name: "MVP (Neil Ian Uy)",
-          icon: Crown,
-          earned: false,
-          redeemed: false,
-          bossName: "Neil Ian Uy",
-          group: "boss1",
-        },
-        // Boss 2 - Knowledge Guardian
-        {
-          name: "Boss Defeated (Knowledge Guardian)",
-          icon: Skull,
-          earned: false,
-          redeemed: false,
-          bossName: "Knowledge Guardian",
-          group: "boss2",
-        },
-        {
-          name: "Last-Hit (Knowledge Guardian)",
-          icon: Target,
-          earned: false,
-          redeemed: false,
-          bossName: "Knowledge Guardian",
-          group: "boss2",
-        },
-        {
-          name: "MVP (Knowledge Guardian)",
-          icon: Crown,
-          earned: false,
-          redeemed: false,
-          bossName: "Knowledge Guardian",
-          group: "boss2",
-        },
-        // Boss 3 - Tech Titan
-        {
-          name: "Boss Defeated (Tech Titan)",
-          icon: Skull,
-          earned: false,
-          redeemed: false,
-          bossName: "Tech Titan",
-          group: "boss3",
-        },
-        {
-          name: "Last-Hit (Tech Titan)",
-          icon: Target,
-          earned: false,
-          redeemed: false,
-          bossName: "Tech Titan",
-          group: "boss3",
-        },
-        {
-          name: "MVP (Tech Titan)",
-          icon: Crown,
-          earned: false,
-          redeemed: false,
-          bossName: "Tech Titan",
-          group: "boss3",
-        },
-        // Event Milestones
-        {
-          name: "10 Questions Milestone",
-          icon: Medal,
-          earned: true,
-          redeemed: false,
-          group: "milestone",
-        },
-        {
-          name: "25 Questions Milestone",
-          icon: Medal,
-          earned: false,
-          redeemed: false,
-          group: "milestone",
-        },
-        {
-          name: "50 Questions Milestone",
-          icon: Medal,
-          earned: false,
-          redeemed: false,
-          group: "milestone",
-        },
-        {
-          name: "100 Questions Milestone",
-          icon: Medal,
-          earned: false,
-          redeemed: false,
-          group: "milestone",
-        },
-        {
-          name: "Hero",
-          icon: Trophy,
-          earned: false,
-          redeemed: false,
-          group: "milestone",
-        },
-      ],
-    },
-  ];
+    fetchAllUserBadges();
+  }, [fetchAllUserBadges]);
 
   // Filter and sort players alphabetically by name
   const filteredPlayers = players
-    .filter((player) =>
-      player.name.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .sort((a, b) => a.name.localeCompare(b.name));
+    ? players
+        .filter((player) =>
+          player.name.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        .sort((a, b) => a.name.localeCompare(b.name))
+    : [];
 
   // Pagination logic
-  const totalPages = Math.ceil(filteredPlayers.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
+  const totalPages = Math.ceil(filteredPlayers.length / PAGE_SIZE);
+  const startIndex = (currentPage - 1) * PAGE_SIZE;
+  const endIndex = startIndex + PAGE_SIZE;
   const paginatedPlayers = filteredPlayers.slice(startIndex, endIndex);
 
-  // Reset to first page when search changes
+  const getDefaultIcon = (badge, isMilestone) => {
+    if (isMilestone) {
+      if (!badge.threshold) return Trophy;
+      return Medal;
+    }
+
+    if (badge.code === "boss-defeated") return Skull;
+    if (badge.code === "last-hit") return Target;
+    return Crown;
+  };
+
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
   };
 
+  const handleBadgeClick = async (userBadgeId, currentlyRedeemed) => {
+    if (!userBadgeId) {
+      console.error("Invalid Requirements!");
+      toast.error("Invalid Requirements! Please refresh the page.");
+      return;
+    }
+
+    setTempBadges((prev) => {
+      const existingIndex = prev.findIndex(
+        (b) => b.userBadgeId === userBadgeId
+      );
+      let updated;
+
+      if (existingIndex >= 0) {
+        const existingBadge = prev[existingIndex];
+        const newRedeemedState = !existingBadge.isRedeemed;
+
+        if (newRedeemedState === currentlyRedeemed) {
+          updated = prev.filter((b) => b.userBadgeId !== userBadgeId);
+        } else {
+          updated = [...prev];
+          updated[existingIndex].isRedeemed = newRedeemedState;
+        }
+      } else {
+        updated = [
+          ...prev,
+          {
+            userBadgeId,
+            isRedeemed: !currentlyRedeemed,
+          },
+        ];
+      }
+
+      setHasChanges(updated.length > 0);
+      return updated;
+    });
+  };
+
+  const handleDiscard = () => {
+    setIsEditing(false);
+    setTempBadges([]);
+    setHasChanges(false);
+  };
+
+  const handleSave = async () => {
+    if (tempBadges.length === 0) return;
+
+    try {
+      const requests = tempBadges.map(({ userBadgeId, isRedeemed }) =>
+        apiClient.put(`/user-badges/${userBadgeId}/update`, {
+          isRedeemed,
+        })
+      );
+
+      const results = await Promise.allSettled(requests);
+      const successes = [];
+      const failures = [];
+
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled") {
+          successes.push(tempBadges[index]);
+        } else {
+          failures.push({
+            ...tempBadges[index],
+            error: result.reason,
+          });
+        }
+      });
+
+      if (successes.length > 0) {
+        setPlayers((prev) =>
+          prev.map((player) => ({
+            ...player,
+            eventBosses: player.eventBosses.map((eb) => ({
+              ...eb,
+              badges: eb.badges.map((b) => {
+                const updated = tempBadges.find(
+                  (tb) => tb.userBadgeId === b.userBadgeId
+                );
+                return updated ? { ...b, isRedeemed: updated.isRedeemed } : b;
+              }),
+            })),
+            milestoneBadges: player.milestoneBadges.map((b) => {
+              const updated = tempBadges.find(
+                (tb) => tb.userBadgeId === b.userBadgeId
+              );
+              return updated ? { ...b, isRedeemed: updated.isRedeemed } : b;
+            }),
+          }))
+        );
+        setEvent((prev) => {
+          const redeemedCountChange = successes.reduce((acc, badge) => {
+            return acc + (badge.isRedeemed ? 1 : -1);
+          }, 0);
+
+          return {
+            ...prev,
+            totalBadgesRedeemed: Math.max(
+              0,
+              (prev.totalBadgesRedeemed || 0) + redeemedCountChange
+            ),
+          };
+        });
+        toast.success(`${successes.length} badge(s) saved successfully!`);
+      }
+
+      if (failures.length > 0) {
+        console.error("Failed updates:", failures);
+        toast.error(`${failures.length} badge(s) failed to save.`);
+      }
+
+      setTempBadges(failures);
+      setHasChanges(failures.length > 0);
+      setIsEditing(failures.length > 0);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to save changes.");
+    }
+  };
+
   const handleBack = () => {
-    navigate(`/host/events/assign_boss?eventId=${eventId}`);
-  };
-
-  const handleEditBadges = () => {
-    navigate(`/host/events/player_badges_edit?eventId=${eventId}`);
-  };
-
-  const getEarnedBadgeCount = () => {
-    return players.reduce(
-      (total, player) =>
-        total + player.badges.filter((badge) => badge.earned).length,
-      0
-    );
-  };
-
-  const getRedeemedBadgeCount = () => {
-    return players.reduce(
-      (total, player) =>
-        total + player.badges.filter((badge) => badge.redeemed).length,
-      0
-    );
-  };
-
-  const getTotalBadgeCount = () => {
-    return players.reduce((total, player) => total + player.badges.length, 0);
+    navigate(`/manage/events/${eventId}`);
   };
 
   if (loading) {
     return (
       <div className="container mx-auto px-4 sm:px-6 py-6 max-w-4xl">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading event details...</p>
-          </div>
-        </div>
+        <StatusOverlay message="Loading player badges..." type="loading" />
       </div>
     );
   }
 
-  if (!event) {
+  if (error) {
     return (
       <div className="container mx-auto px-4 sm:px-6 py-6 max-w-4xl">
-        <div className="text-center py-8">Event not found</div>
+        <StatusOverlay
+          message="Failed to load player badges."
+          type="error"
+          onRetry={fetchAllUserBadges}
+        />
       </div>
     );
   }
@@ -773,7 +303,7 @@ const PlayerBadges = () => {
                       </h2>
                       <Badge
                         variant="outline"
-                        className={`mt-[4px] ${
+                        className={`mt-[4px] capitalize ${
                           event?.status?.toLowerCase() === "upcoming"
                             ? "bg-yellow-50 dark:bg-yellow-950 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800 self-start"
                             : event?.status?.toLowerCase() === "ongoing"
@@ -792,10 +322,7 @@ const PlayerBadges = () => {
                         ) : (
                           <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full animate-pulse mr-1"></div>
                         )}
-                        {event?.status
-                          ? event.status.charAt(0).toUpperCase() +
-                            event.status.slice(1).toLowerCase()
-                          : "--"}
+                        {event?.status || "--"}
                       </Badge>
                     </div>
                   </div>
@@ -811,14 +338,9 @@ const PlayerBadges = () => {
                       <Clock className="w-4 h-4 text-muted-foreground" />
                       <span className="text-muted-foreground">Start:</span>
                       <span className="font-medium text-muted-foreground">
-                        {event?.startTime
-                          ? new Date(event.startTime).toLocaleDateString() +
-                            " " +
-                            new Date(event.startTime).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          : "N/A"}
+                        {event?.startAt
+                          ? formatTextualDateTime(event.startAt)
+                          : "TBD"}
                       </span>
                     </div>
 
@@ -828,14 +350,9 @@ const PlayerBadges = () => {
                       <Clock className="w-4 h-4 text-muted-foreground" />
                       <span className="text-muted-foreground">End:</span>
                       <span className="font-medium text-muted-foreground">
-                        {event?.endTime
-                          ? new Date(event.endTime).toLocaleDateString() +
-                            " " +
-                            new Date(event.endTime).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          : "N/A"}
+                        {event?.endAt
+                          ? formatTextualDateTime(event.endAt)
+                          : "TBD"}
                       </span>
                     </div>
 
@@ -845,7 +362,7 @@ const PlayerBadges = () => {
                       <SVG_Boss className="w-6 h-6 text-muted-foreground" />
                       <span className="text-muted-foreground">Bosses:</span>
                       <span className="font-medium text-muted-foreground">
-                        {event?.eventBosses?.length || 0} assigned
+                        {event?.totalEventBosses || 0} assigned
                       </span>
                     </div>
                   </div>
@@ -876,7 +393,7 @@ const PlayerBadges = () => {
                     <p className="text-sm font-medium text-muted-foreground">
                       Total Players
                     </p>
-                    <p className="text-xl font-bold">{players.length}</p>
+                    <p className="text-xl font-bold">{players?.length}</p>
                   </div>
                 </div>
 
@@ -888,7 +405,9 @@ const PlayerBadges = () => {
                     <p className="text-sm font-medium text-muted-foreground">
                       Badges Earned
                     </p>
-                    <p className="text-xl font-bold">{getEarnedBadgeCount()}</p>
+                    <p className="text-xl font-bold">
+                      {event?.totalBadgesEarned || 0}
+                    </p>
                   </div>
                 </div>
 
@@ -905,7 +424,7 @@ const PlayerBadges = () => {
                       Badges Redeemed
                     </p>
                     <p className="text-xl font-bold">
-                      {getRedeemedBadgeCount()}
+                      {event?.totalBadgesRedeemed || 0}
                     </p>
                   </div>
                 </div>
@@ -921,15 +440,38 @@ const PlayerBadges = () => {
                     className="pl-9"
                   />
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleEditBadges}
-                  className="flex items-center gap-2"
-                >
-                  <Edit className="w-4 h-4" />
-                  <span className="hidden sm:inline">Edit</span>
-                </Button>
+                {isEditing ? (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDiscard}
+                      className="flex items-center gap-2"
+                    >
+                      <X className="w-4 h-4" />
+                      <span className="hidden sm:inline">Discard</span>
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={handleSave}
+                      disabled={!hasChanges}
+                      className="flex items-center gap-2"
+                    >
+                      <SVG_Checkmark className="w-4 h-4" />
+                      <span className="hidden sm:inline">Save</span>
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsEditing(!isEditing)}
+                    className="flex items-center gap-2"
+                  >
+                    <Edit className="w-4 h-4" />
+                    <span className="hidden sm:inline">Edit</span>
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent>
@@ -959,7 +501,12 @@ const PlayerBadges = () => {
                             <div className="flex flex-col sm:flex-row items-center gap-3">
                               <Avatar>
                                 <AvatarImage
-                                  src={player.avatar}
+                                  src={
+                                    player.profileImage ||
+                                    `/src/assets/Placeholder/Profile${
+                                      (index % 5) + 1
+                                    }.jpg`
+                                  }
                                   alt={player.name}
                                 />
                                 <AvatarFallback>
@@ -976,145 +523,193 @@ const PlayerBadges = () => {
                               {/* Boss Badges Table */}
                               <table className="w-full border-collapse">
                                 <tbody>
-                                  {/* Boss Badges - Group by boss name */}
-                                  {["boss1", "boss2", "boss3"].map((group) => {
-                                    const groupBadges = player.badges.filter(
-                                      (badge) => badge.group === group
-                                    );
-                                    if (groupBadges.length === 0) return null;
-
-                                    // Get boss name from first badge in group
-                                    const bossName = groupBadges[0]?.bossName;
-
-                                    return (
-                                      <tr key={group}>
-                                        <td className="pt-3 text-xs text-muted-foreground text-wrap w-32 py-1 pr-3 align-top">
-                                          {bossName}
-                                        </td>
-                                        <td className="py-1">
-                                          <div className="flex items-center gap-1">
-                                            {groupBadges.map(
-                                              (badge, badgeIndex) => {
-                                                const IconComponent =
-                                                  badge.icon;
-                                                return (
-                                                  <Tooltip key={badgeIndex}>
-                                                    <TooltipTrigger asChild>
-                                                      <div className="flex items-center gap-1">
-                                                        <div className="relative">
-                                                          <div
-                                                            className={`w-8 h-8 rounded-full flex items-center justify-center ring-1 ring-inset transition-all ${
-                                                              badge.earned
-                                                                ? "bg-gradient-to-tr from-emerald-500 to-green-400 text-white ring-emerald-300/70"
-                                                                : "bg-gradient-to-tr from-gray-200 to-gray-300 text-gray-600 dark:from-gray-700 dark:to-gray-600 dark:text-gray-300 ring-gray-300/60 dark:ring-gray-500/50"
-                                                            } ${
-                                                              badge.redeemed
-                                                                ? "opacity-70"
-                                                                : ""
-                                                            }`}
-                                                          >
-                                                            <IconComponent className="h-4 w-4" />
-                                                          </div>
-                                                          {badge.redeemed && (
-                                                            <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center">
-                                                              <span className="text-white/70 text-[5px] font-bold whitespace-nowrap bg-green-900 ms-[2px] ps-[2px] pt-[1.5px] pb-[1px] px-[2px] rounded-[1px] rotate-[45deg]">
-                                                                REDEEMED
-                                                              </span>
-                                                            </div>
-                                                          )}
+                                  {/* Boss Badges */}
+                                  {player.eventBosses.map((eventBoss) => (
+                                    <tr key={eventBoss.id}>
+                                      <td className="pt-3 text-xs text-muted-foreground text-wrap w-32 py-1 pr-3 align-top">
+                                        {eventBoss.name}
+                                      </td>
+                                      <td className="py-1">
+                                        <div className="flex items-center gap-1">
+                                          {eventBoss.badges.map(
+                                            (badge, badgeIndex) => {
+                                              const IconComponent =
+                                                badge.icon ||
+                                                getDefaultIcon(badge, false);
+                                              const isTempRedeemed =
+                                                tempBadges.find(
+                                                  (b) =>
+                                                    b.userBadgeId ===
+                                                    badge?.userBadgeId
+                                                )?.isRedeemed ??
+                                                badge.isRedeemed;
+                                              return (
+                                                <Tooltip key={badgeIndex}>
+                                                  <TooltipTrigger asChild>
+                                                    <div
+                                                      className={`flex items-center gap-1 ${
+                                                        isEditing
+                                                          ? badge.isEarned
+                                                            ? "cursor-pointer"
+                                                            : "cursor-not-allowed"
+                                                          : ""
+                                                      }`}
+                                                      onClick={
+                                                        isEditing &&
+                                                        badge.isEarned
+                                                          ? () =>
+                                                              handleBadgeClick(
+                                                                badge?.userBadgeId,
+                                                                badge.isRedeemed
+                                                              )
+                                                          : undefined
+                                                      }
+                                                    >
+                                                      <div className="relative">
+                                                        <div
+                                                          className={`w-8 h-8 rounded-full flex items-center justify-center ring-1 ring-inset transition-all ${
+                                                            badge.isEarned
+                                                              ? "bg-gradient-to-tr from-emerald-500 to-green-400 text-white ring-emerald-300/70"
+                                                              : "bg-gradient-to-tr from-gray-200 to-gray-300 text-gray-600 dark:from-gray-700 dark:to-gray-600 dark:text-gray-300 ring-gray-300/60 dark:ring-gray-500/50"
+                                                          } ${
+                                                            isTempRedeemed
+                                                              ? "opacity-70"
+                                                              : ""
+                                                          }`}
+                                                        >
+                                                          <IconComponent className="h-4 w-4" />
                                                         </div>
+                                                        {isTempRedeemed && (
+                                                          <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center">
+                                                            <span className="text-white/70 text-[5px] font-bold whitespace-nowrap bg-green-900 ms-[2px] ps-[2px] pt-[1.5px] pb-[1px] px-[2px] rounded-[1px] rotate-[45deg]">
+                                                              REDEEMED
+                                                            </span>
+                                                          </div>
+                                                        )}
                                                       </div>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                      <p className="text-center">
-                                                        {badge.name}
-                                                        <br />
-                                                        <b>
-                                                          {badge.redeemed
-                                                            ? "Redeemed"
-                                                            : badge.earned
-                                                            ? "Earned"
-                                                            : "Locked"}
-                                                        </b>
-                                                      </p>
-                                                    </TooltipContent>
-                                                  </Tooltip>
-                                                );
-                                              }
-                                            )}
-                                          </div>
-                                        </td>
-                                      </tr>
-                                    );
-                                  })}
+                                                    </div>
+                                                  </TooltipTrigger>
+                                                  <TooltipContent>
+                                                    <p className="text-center">
+                                                      {badge.name}
+                                                      <br />
+                                                      <b>
+                                                        {isTempRedeemed
+                                                          ? "Redeemed"
+                                                          : badge.isEarned
+                                                          ? "Earned"
+                                                          : "Locked"}
+                                                      </b>
+                                                    </p>
+                                                  </TooltipContent>
+                                                </Tooltip>
+                                              );
+                                            }
+                                          )}
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  ))}
 
                                   {/* Milestone Badges */}
-                                  {(() => {
-                                    const milestoneBadges =
-                                      player.badges.filter(
-                                        (badge) => badge.group === "milestone"
-                                      );
-                                    if (milestoneBadges.length === 0)
-                                      return null;
-
-                                    return (
-                                      <tr key="milestones">
-                                        <td className="pt-3 text-xs text-muted-foreground w-32 py-1 pr-3 align-top">
-                                          Milestones:
-                                        </td>
-                                        <td className="py-1">
-                                          <div className="flex items-center gap-1 flex-wrap">
-                                            {milestoneBadges.map(
-                                              (badge, badgeIndex) => {
-                                                const IconComponent =
-                                                  badge.icon;
-                                                return (
-                                                  <Tooltip key={badgeIndex}>
-                                                    <TooltipTrigger asChild>
-                                                      <div className="flex items-center gap-1">
-                                                        <div className="relative">
-                                                          <div
-                                                            className={`w-8 h-8 rounded-full flex items-center justify-center ring-1 ring-inset transition-all ${
-                                                              badge.earned
-                                                                ? "bg-gradient-to-tr from-emerald-500 to-green-400 text-white ring-emerald-300/70"
-                                                                : "bg-gradient-to-tr from-gray-200 to-gray-300 text-gray-600 dark:from-gray-700 dark:to-gray-600 dark:text-gray-300 ring-gray-300/60 dark:ring-gray-500/50"
-                                                            } ${
-                                                              badge.redeemed
-                                                                ? "opacity-70"
-                                                                : ""
-                                                            }`}
-                                                          >
-                                                            <IconComponent className="h-4 w-4" />
-                                                          </div>
-                                                          {badge.redeemed && (
-                                                            <div className="absolute inset-0 bg-black/20 rounded-full flex items-center justify-center">
-                                                              <span className="text-white/70 text-[5px] font-bold whitespace-nowrap bg-green-900 ms-[2px] ps-[2px] pt-[1.5px] pb-[1px] px-[2px] rounded-[1px] rotate-[45deg]">
-                                                                REDEEMED
-                                                              </span>
-                                                            </div>
-                                                          )}
+                                  {player.milestoneBadges.length > 0 && (
+                                    <tr key="milestones">
+                                      <td className="pt-3 text-xs text-muted-foreground w-32 py-1 pr-3 align-top">
+                                        Milestones:
+                                      </td>
+                                      <td className="py-1">
+                                        <div className="flex items-center gap-1 flex-wrap">
+                                          {player.milestoneBadges.map(
+                                            (badge) => {
+                                              const IconComponent =
+                                                badge.icon ||
+                                                getDefaultIcon(badge, true);
+                                              const isTempRedeemed =
+                                                tempBadges.find(
+                                                  (b) =>
+                                                    b.userBadgeId ===
+                                                    badge?.userBadgeId
+                                                )?.isRedeemed ??
+                                                badge.isRedeemed;
+                                              return (
+                                                <Tooltip key={badge.id}>
+                                                  <TooltipTrigger asChild>
+                                                    <div
+                                                      className={`flex items-center gap-1 ${
+                                                        isEditing
+                                                          ? badge.isEarned
+                                                            ? "cursor-pointer"
+                                                            : "cursor-not-allowed"
+                                                          : ""
+                                                      }`}
+                                                      onClick={
+                                                        isEditing &&
+                                                        badge.isEarned
+                                                          ? () =>
+                                                              handleBadgeClick(
+                                                                badge?.userBadgeId,
+                                                                badge.isRedeemed
+                                                              )
+                                                          : undefined
+                                                      }
+                                                    >
+                                                      <div className="relative">
+                                                        <div
+                                                          className={`w-8 h-8 rounded-full flex items-center justify-center ring-1 ring-inset transition-all ${
+                                                            badge.isEarned
+                                                              ? "bg-gradient-to-tr from-emerald-500 to-green-400 text-white ring-emerald-300/70"
+                                                              : "bg-gradient-to-tr from-gray-200 to-gray-300 text-gray-600 dark:from-gray-700 dark:to-gray-600 dark:text-gray-300 ring-gray-300/60 dark:ring-gray-500/50"
+                                                          } ${
+                                                            isTempRedeemed
+                                                              ? "opacity-70"
+                                                              : ""
+                                                          }`}
+                                                        >
+                                                          <IconComponent className="h-4 w-4" />
                                                         </div>
+                                                        {isTempRedeemed && (
+                                                          <div className="absolute inset-0 bg-black/20 rounded-full flex items-center justify-center">
+                                                            <span className="text-white/70 text-[5px] font-bold whitespace-nowrap bg-green-900 ms-[2px] ps-[2px] pt-[1.5px] pb-[1px] px-[2px] rounded-[1px] rotate-[45deg]">
+                                                              REDEEMED
+                                                            </span>
+                                                          </div>
+                                                        )}
                                                       </div>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
+                                                    </div>
+                                                  </TooltipTrigger>
+                                                  <TooltipContent>
+                                                    {isEditing ? (
+                                                      <p className="text-center">
+                                                        {badge.name} <br />
+                                                        <b>
+                                                          {badge.isEarned
+                                                            ? ` Click to ${
+                                                                isTempRedeemed
+                                                                  ? "unredeem"
+                                                                  : "redeem"
+                                                              }`
+                                                            : " Locked"}{" "}
+                                                        </b>
+                                                      </p>
+                                                    ) : (
                                                       <p>
                                                         {badge.name}{" "}
-                                                        {badge.redeemed
+                                                        {isTempRedeemed
                                                           ? "(Redeemed)"
-                                                          : badge.earned
+                                                          : badge.isEarned
                                                           ? "(Earned)"
                                                           : "(Locked)"}
                                                       </p>
-                                                    </TooltipContent>
-                                                  </Tooltip>
-                                                );
-                                              }
-                                            )}
-                                          </div>
-                                        </td>
-                                      </tr>
-                                    );
-                                  })()}
+                                                    )}
+                                                  </TooltipContent>
+                                                </Tooltip>
+                                              );
+                                            }
+                                          )}
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  )}
                                 </tbody>
                               </table>
                             </div>

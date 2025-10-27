@@ -199,8 +199,7 @@ const BossPreview = () => {
 
         <div className="max-w-sm mx-auto">
           {!isJoinable && joinRestrictionReason && (
-            <div className="bg-yellow-100 text-yellow-800 p-4 text-center">
-              You cannot join the battle right now. <br />
+            <div className="bg-yellow-100 text-yellow-800 p-4 text-center whitespace-pre-line break-words">
               {joinRestrictionReason}
             </div>
           )}
@@ -277,6 +276,9 @@ const BossPreview = () => {
                     Boss available for battle
                   </div>
                 )}
+                {eventBossStatus === "pending" && (
+                  <div className="font-semibold">Boss battle pending</div>
+                )}
               </div>
 
               {/* Players Joined */}
@@ -310,7 +312,9 @@ const BossPreview = () => {
                 >
                   Return to Battle
                 </Button>
-              ) : !hasJoinedQueue && !hasJoinedMidGame ? (
+              ) : playerContextStatus !== "in-queue" &&
+                !hasJoinedQueue &&
+                !hasJoinedMidGame ? (
                 <Button
                   onClick={handleJoin}
                   className="w-full !bg-purple-500 hover:!bg-purple-600 !text-white !border-purple-500 halftone-texture"

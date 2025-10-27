@@ -20,10 +20,7 @@ const LeaderboardBattle = ({ isOpen, onClose }) => {
     eventBossId,
     joinCode
   );
-
   const [expandedTeams, setExpandedTeams] = useState(new Set());
-  const [battleStats, setBattleStats] = useState(null);
-  const [lastUpdate, setLastUpdate] = useState(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -209,7 +206,7 @@ const LeaderboardBattle = ({ isOpen, onClose }) => {
                       {/* Team Accuracy */}
                       <div className="col-span-2 text-right">
                         <div className="font-bold text-sm">
-                          {(team.accuracy * 100).toFixed(2) || "0"}%
+                          {(team.accuracy * 100).toFixed(1) || "0"}
                         </div>
                       </div>
 
@@ -239,9 +236,6 @@ const LeaderboardBattle = ({ isOpen, onClose }) => {
                                   <p className="text-xs font-medium truncate text-foreground">
                                     {playerName}
                                   </p>
-                                  {/* <p className="text-xs truncate text-muted-foreground/70">
-                                    {playerUsername}
-                                  </p> */}
                                   {playerCorrectAnswers > 0 && (
                                     <p className="text-xs text-muted-foreground/60">
                                       {(player.accuracy * 100).toFixed(2) || "0"}% accuracy
@@ -282,22 +276,6 @@ const LeaderboardBattle = ({ isOpen, onClose }) => {
                     0
                   )}
                 </p>
-                {battleStats && (
-                  <>
-                    <p className="mt-1">
-                      Boss HP: {battleStats.bossHpRemaining}/
-                      {battleStats.bossMaxHp} ({battleStats.bossHpPercentage}%)
-                    </p>
-                    <p className="mt-1">
-                      Total Damage: {battleStats.totalDamageDealt}
-                    </p>
-                  </>
-                )}
-                {lastUpdate && (
-                  <p className="mt-1 text-xs">
-                    Updated: {lastUpdate.toLocaleTimeString()}
-                  </p>
-                )}
               </div>
             </div>
           </CardContent>

@@ -36,7 +36,7 @@ export function PageTitle({
     if (pathname.includes("/manage/events")) return "Events";
     if (pathname.includes("/manage/events/assign_boss")) return "Events";
     if (pathname.includes("/manage/events/:eventId/assign-boss")) return "Events";
-    if (pathname.includes("/manage/events/player_badges")) return "Bosses";
+    if (pathname.includes("/manage/events/player-badges")) return "Bosses";
     if (pathname.includes("/manage/events/player_badges/edit")) return "Bosses";
     if (pathname.includes("/manage/events/leaderboard")) return "Bosses";
     if (pathname.includes("/manage/bosses/view")) return "Bosses";

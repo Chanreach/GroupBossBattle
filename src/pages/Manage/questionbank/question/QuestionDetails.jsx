@@ -162,50 +162,48 @@ const QuestionDetails = () => {
                 Answer Options
               </Label>
               <div className="space-y-2">
-                {question.answerChoices
-                  ?.sort((a, b) => a.text.localeCompare(b.text))
-                  .map((answer) => (
+                {question.answerChoices.map((answer) => (
+                  <div
+                    key={answer.id}
+                    className={`flex items-center gap-3 p-3 border rounded-lg transition-colors ${
+                      answer.isCorrect
+                        ? "border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/20"
+                        : "border bg-card"
+                    }`}
+                  >
+                    {/* Correct Answer Indicator */}
                     <div
-                      key={answer.id}
-                      className={`flex items-center gap-3 p-3 border rounded-lg transition-colors ${
+                      className={`w-4 h-4 rounded-full flex items-center justify-center ${
                         answer.isCorrect
-                          ? "border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/20"
-                          : "border bg-card"
+                          ? "bg-green-500"
+                          : "border-2 border-gray-300 dark:border-gray-500"
                       }`}
                     >
-                      {/* Correct Answer Indicator */}
-                      <div
-                        className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                          answer.isCorrect
-                            ? "bg-green-500"
-                            : "border-2 border-gray-300 dark:border-gray-500"
-                        }`}
-                      >
-                        {answer.isCorrect && (
-                          <div className="w-2 h-2 bg-white rounded-full"></div>
-                        )}
-                      </div>
-
-                      {/* Answer Text */}
-                      <div
-                        className={`text-sm flex-1 ${
-                          answer.isCorrect
-                            ? "text-green-800 dark:text-green-200 font-medium"
-                            : "text-gray-900 dark:text-white"
-                        }`}
-                      >
-                        {/* A{index + 1}: {answer.text} */}
-                        {answer.text}
-                      </div>
-
-                      {/* Correct Badge */}
                       {answer.isCorrect && (
-                        <Badge className="bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 text-xs">
-                          Correct
-                        </Badge>
+                        <div className="w-2 h-2 bg-white rounded-full"></div>
                       )}
                     </div>
-                  )) || (
+
+                    {/* Answer Text */}
+                    <div
+                      className={`text-sm flex-1 ${
+                        answer.isCorrect
+                          ? "text-green-800 dark:text-green-200 font-medium"
+                          : "text-gray-900 dark:text-white"
+                      }`}
+                    >
+                      {/* A{index + 1}: {answer.text} */}
+                      {answer.text}
+                    </div>
+
+                    {/* Correct Badge */}
+                    {answer.isCorrect && (
+                      <Badge className="bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 text-xs">
+                        Correct
+                      </Badge>
+                    )}
+                  </div>
+                )) || (
                   <div className="text-center text-gray-500 dark:text-gray-400 py-4">
                     No answer choices available
                   </div>

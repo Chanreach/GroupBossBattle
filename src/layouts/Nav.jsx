@@ -61,9 +61,10 @@ export function NavSidebar({ ...props }) {
     try {
       logout();
       localStorage.removeItem("viewAsPlayer");
-      navigate("/auth");
     } catch (error) {
       console.error("Logout failed:", error);
+    } finally {
+      navigate("/landing", { replace: true });
     }
   }, [logout, navigate]);
 

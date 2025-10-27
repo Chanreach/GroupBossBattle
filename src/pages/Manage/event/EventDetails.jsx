@@ -255,7 +255,7 @@ const EventDetails = () => {
   };
 
   const handlePlayerBadges = () => {
-    navigate(`/manage/events/${eventId}/player_badges2`);
+    navigate(`/manage/events/${eventId}/player-badges`);
   };
 
   const handleEditEvent = () => {
@@ -360,7 +360,10 @@ const EventDetails = () => {
                 <>
                   <Button
                     size="sm"
-                    onClick={() => setSelectionMode(false)}
+                    onClick={() => {
+                      setSelectionMode(false);
+                      setSelectedBosses([]);
+                    }}
                     className="flex items-center gap-2"
                   >
                     <X className="w-4 h-4" />
@@ -437,15 +440,15 @@ const EventDetails = () => {
                         <BadgeIcon className="w-4 h-4" />
                         <span className="hidden sm:inline">Manage Badges</span>
                       </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleEditEvent}
-                          className="flex items-center gap-2"
-                        >
-                          <Edit className="h-4 w-4" />
-                          <span className="hidden sm:inline">Edit Event</span>
-                        </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleEditEvent}
+                        className="flex items-center gap-2"
+                      >
+                        <Edit className="h-4 w-4" />
+                        <span className="hidden sm:inline">Edit Event</span>
+                      </Button>
                     </div>
                   </div>
 

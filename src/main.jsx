@@ -35,9 +35,9 @@ import Error from "./pages/Error";
 import Loading from "./pages/Loading";
 import PlayerHome from "./pages/player/Home";
 import PlayerEventBosses from "./pages/player/EventBosses";
-import PlayerBadges from "./pages/player/Badges2";
+import PlayerBadges from "./pages/player/Badges";
 import PlayerLeaderboard from "./pages/AllTimeLeaderboard";
-import PlayerProfile from "./pages/player/Profile";
+import PlayerProfile from "./pages/Profile";
 import PlayerQR from "./pages/player/QR";
 import BossPreview from "./pages/player/BossPreview";
 import BossBattle from "./pages/player/BossBattle";
@@ -54,9 +54,7 @@ import EventDetails from "./pages/manage/event/EventDetails";
 import AssignBoss from "./pages/manage/event/AssignBoss";
 import CreateEvent from "./pages/manage/event/CreateEvent";
 import EditEvent from "./pages/manage/event/EditEvent";
-import ManageEventsPlayerbadges from "./pages/manage/event/Playerbadges";
-import ManageEventsPlayerBadges from "./pages/manage/event/PlayerBadges2";
-import ManageEventsPlayerBadgesEdit from "./pages/manage/event/Playerbadgesedit";
+import ManageEventsPlayerBadges from "./pages/manage/event/PlayerBadges";
 import ManageEventsLeaderboard from "./pages/manage/event/Leaderboard2";
 import ManageEventsAllLeaderboard from "./pages/AllTimeLeaderboard";
 // Users
@@ -72,7 +70,7 @@ import QuestionDetails from "./pages/manage/questionbank/question/QuestionDetail
 import CreateQuestion from "./pages/manage/questionbank/question/CreateQuestion";
 import EditQuestion from "./pages/manage/questionbank/question/EditQuestion";
 // Profile
-import OpProfile from "./pages/manage/profile/Profile";
+import OpProfile from "./pages/Profile";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -241,23 +239,15 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                     element={<AssignBoss />}
                   />
                   <Route
-                    path="events/:eventId/player_badges"
-                    element={<ManageEventsPlayerbadges />}
-                  />
-                  <Route
-                    path="events/:eventId/player_badges2"
+                    path="events/:eventId/player-badges"
                     element={<ManageEventsPlayerBadges />}
-                  />
-                  <Route
-                    path="events/:eventId/player_badges_edit"
-                    element={<ManageEventsPlayerBadgesEdit />}
                   />
                   <Route
                     path="events/:eventId/:eventBossId/leaderboard"
                     element={<ManageEventsLeaderboard />}
                   />
                   <Route
-                    path="all_leaderboard"
+                    path="all-leaderboard"
                     element={<ManageEventsAllLeaderboard />}
                   />
 

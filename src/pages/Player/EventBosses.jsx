@@ -1,11 +1,12 @@
 // ===== LIBRARIES ===== //
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Trophy, Clock, Zap } from "lucide-react";
+import { ArrowLeft, Trophy, Clock, Zap, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 // ===== COMPONENTS ===== //
 import { Button } from "@/components/ui/button";
+import { SVG_Checkmark } from "@/components/SVG";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -61,6 +62,60 @@ const EventBosses = () => {
   const handleJoinBoss = (boss) => {
     const joinUrl = `/boss-preview/${boss.id}/${boss.joinCode}`;
     navigate(joinUrl);
+  };
+
+  // Get status badge style
+  const getStatusBadgeStyle = (status) => {
+    switch (status?.toLowerCase()) {
+      case "upcoming":
+        return "bg-yellow-50 dark:bg-yellow-950 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800";
+      case "ongoing":
+        return "bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800";
+      case "completed":
+        return "bg-muted text-muted-foreground border-border";
+      default:
+        return "bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800";
+    }
+  };
+
+  const getBossStatusBadge = (status) => {
+    switch (status?.toLowerCase()) {
+      case "pending":
+        return (
+          <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+            <AlertTriangle className="w-3 h-3 mr-1" />
+            Pending
+          </Badge>
+        );
+      case "active":
+        return (
+          <Badge className="bg-green-500 hover:bg-green-600">
+            <Zap className="w-3 h-3 mr-1" />
+            Active
+          </Badge>
+        );
+      case "in battle":
+        return (
+          <Badge className="bg-red-500 hover:bg-red-600">
+            <Zap className="w-3 h-3 mr-1" />
+            In Battle
+          </Badge>
+        );
+      case "cooldown":
+        return (
+          <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+            <Clock className="w-3 h-3 mr-1" />
+            Cooldown
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+            <AlertTriangle className="w-3 h-3 mr-1" />
+            Unknown
+          </Badge>
+        );
+    }
   };
 
   if (loading) {
@@ -144,10 +199,20 @@ const EventBosses = () => {
               <div className="flex flex-col items-end gap-2 flex-shrink-0">
                 <Badge
                   variant="outline"
-                  className="bg-green-50 text-green-700 border-green-200"
+                  className={`mt-[4px] self-start capitalize ${getStatusBadgeStyle(
+                    event.status
+                  )}`}
                 >
-                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                  {event.status || "Ready"}
+                  {event.status?.toLowerCase() === "upcoming" ? (
+                    <Clock className="w-3 h-3 mr-1" />
+                  ) : event.status?.toLowerCase() === "ongoing" ? (
+                    <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full animate-pulse mr-1"></div>
+                  ) : event.status?.toLowerCase() === "completed" ? (
+                    <SVG_Checkmark className="w-3 h-3 mr-1" />
+                  ) : (
+                    <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full animate-pulse mr-1"></div>
+                  )}
+                  {event.status || "--"}
                 </Badge>
               </div>
             </div>
@@ -181,18 +246,11 @@ const EventBosses = () => {
             <div className="flex items-center justify-between">
               <Label className="text-lg font-semibold">Available Bosses</Label>
               <div className="text-sm text-muted-foreground">
-                {
-                  eventBosses.filter(
-                    (boss) =>
-                      !boss.status || boss.status.toLowerCase() === "active"
-                  ).length
-                }{" "}
+                {eventBosses.filter((boss) => boss.status === "active").length}{" "}
                 Ready •{" "}
                 {
-                  eventBosses.filter(
-                    (boss) =>
-                      boss.status && boss.status.toLowerCase() !== "active"
-                  ).length
+                  eventBosses.filter((boss) => boss.status === "cooldown")
+                    .length
                 }{" "}
                 On Cooldown
               </div>
@@ -217,25 +275,7 @@ const EventBosses = () => {
                         className="w-full h-[270px] object-cover"
                       />
                       <div className="absolute top-2 left-2">
-                        {(() => {
-                          const isActive =
-                            !boss.status ||
-                            boss.status.toLowerCase() === "active";
-                          return isActive ? (
-                            <Badge className="bg-green-500 hover:bg-green-600">
-                              <Zap className="w-3 h-3 mr-1" />
-                              Ready
-                            </Badge>
-                          ) : (
-                            <Badge
-                              variant="secondary"
-                              className="bg-orange-100 text-orange-800"
-                            >
-                              <Clock className="w-3 h-3 mr-1" />
-                              {boss.status || "Cooldown"}
-                            </Badge>
-                          );
-                        })()}
+                        {getBossStatusBadge(boss.status)}
                       </div>
                     </div>
 

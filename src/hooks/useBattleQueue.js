@@ -26,7 +26,7 @@ const useBattleQueue = (eventBossId, joinCode) => {
   const [hasJoinedQueue, setHasJoinedQueue] = useState(false);
   const [hasJoinedMidGame, setHasJoinedMidGame] = useState(false);
   const [isBattleStarted, setIsBattleStarted] = useState(false);
-  const [isLoading, setIsLoading] = useState({
+  const [loading, setLoading] = useState({
     join: false,
     leave: false,
   });
@@ -34,7 +34,7 @@ const useBattleQueue = (eventBossId, joinCode) => {
   // Join the battle queue
   const joinQueue = useCallback(
     (playerInfo) => {
-      if (!socket || !eventBossId || !joinCode || !playerInfo || isLoading.join)
+      if (!socket || !eventBossId || !joinCode || !playerInfo || loading.join)
         return;
 
       if (!playerInfo.nickname || !playerInfo.nickname.trim()) {
@@ -47,23 +47,23 @@ const useBattleQueue = (eventBossId, joinCode) => {
         playerInfo,
       });
     },
-    [socket, eventBossId, joinCode, isLoading]
+    [socket, eventBossId, joinCode, loading]
   );
 
   // Leave the battle queue
   const leaveQueue = useCallback(
     (playerId) => {
-      if (!socket || !playerId || isLoading.leave) return;
+      if (!socket || !playerId || loading.leave) return;
 
       socket.emit(SOCKET_EVENTS.BATTLE_QUEUE.LEAVE, { eventBossId, playerId });
     },
-    [socket, eventBossId, isLoading]
+    [socket, eventBossId, loading]
   );
 
   // Join mid-game
   const joinMidGame = useCallback(
     (playerInfo) => {
-      if (!socket || !eventBossId || !joinCode || !playerInfo || isLoading.join)
+      if (!socket || !eventBossId || !joinCode || !playerInfo || loading.join)
         return;
 
       if (!playerInfo.nickname || !playerInfo.nickname.trim()) {
@@ -71,13 +71,13 @@ const useBattleQueue = (eventBossId, joinCode) => {
         return;
       }
 
-      setIsLoading((prev) => ({ ...prev, join: true }));
+      setLoading((prev) => ({ ...prev, join: true }));
       socket.emit(SOCKET_EVENTS.BATTLE_SESSION.MID_GAME.JOIN, {
         eventBossId,
         playerInfo,
       });
     },
-    [socket, eventBossId, joinCode, isLoading]
+    [socket, eventBossId, joinCode, loading]
   );
 
   useEffect(() => {
@@ -125,7 +125,7 @@ const useBattleQueue = (eventBossId, joinCode) => {
     };
 
     const handleBattleQueueJoined = (payload) => {
-      setIsLoading((prev) => ({ ...prev, join: false }));
+      setLoading((prev) => ({ ...prev, join: false }));
       setHasJoinedQueue(true);
       setQueueSize(payload.data.queueSize);
       setIsBattleStarted(payload.data.isBattleStarted);
@@ -134,7 +134,7 @@ const useBattleQueue = (eventBossId, joinCode) => {
     };
 
     const handleBattleQueueLeft = (payload) => {
-      setIsLoading((prev) => ({ ...prev, leave: false }));
+      setLoading((prev) => ({ ...prev, leave: false }));
       setHasJoinedQueue(false);
       setQueueSize(payload.queueSize);
       setIsBattleStarted(payload.isBattleStarted);
@@ -148,7 +148,7 @@ const useBattleQueue = (eventBossId, joinCode) => {
     };
 
     const handleMidGameJoined = (payload) => {
-      setIsLoading((prev) => ({ ...prev, join: false }));
+      setLoading((prev) => ({ ...prev, join: false }));
       setHasJoinedMidGame(true);
       setIsBattleStarted(true);
       savePlayerState(eventBossId, payload.data.player);
@@ -201,7 +201,7 @@ const useBattleQueue = (eventBossId, joinCode) => {
       );
       socket.off(SOCKET_EVENTS.BATTLE_SESSION.COUNTDOWN, handleBattleCountdown);
     };
-  }, [socket, eventBossId, joinCode]);
+  }, [socket, eventBossId, joinCode, playerContextStatus]);
 
   return {
     playerContextStatus,
@@ -211,7 +211,7 @@ const useBattleQueue = (eventBossId, joinCode) => {
     queueSize,
     isBattleStarted,
     countdownTimer,
-    isLoading,
+    loading,
     joinQueue,
     leaveQueue,
     joinMidGame,

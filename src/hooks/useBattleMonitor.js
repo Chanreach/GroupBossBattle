@@ -6,16 +6,12 @@ import { toast } from "sonner";
 import useBossBattle from "./useBossBattle";
 import { useAuth } from "@/context/useAuth";
 
-// ===== SERVICES ===== //
-// import { fetchEventBossById } from "@/services/eventBossService";
-
 // ===== UTILITIES ===== //
 import { SOCKET_EVENTS } from "@/utils/socketConstants";
-import { getUserInfo } from "@/utils/userUtils";
 
 const useBattleMonitor = (eventId, eventBossId) => {
   const { socket } = useBossBattle();
-  const { user } = useAuth();
+  const { auth } = useAuth();
 
   const [event, setEvent] = useState(null);
   const [eventBoss, setEventBoss] = useState(null);
@@ -54,8 +50,8 @@ const useBattleMonitor = (eventId, eventBossId) => {
   useEffect(() => {
     if (!socket || !eventId || !eventBossId || hasJoinedMonitor) return;
 
-    joinBattleMonitor(getUserInfo(user).id || null);
-  }, [socket, eventId, eventBossId, hasJoinedMonitor, user, joinBattleMonitor]);
+    joinBattleMonitor(auth?.user?.id || null);
+  }, [socket, eventId, eventBossId, hasJoinedMonitor, auth, joinBattleMonitor]);
 
   useEffect(() => {
     if (!socket || !eventId || !eventBossId) return;

@@ -1,5 +1,5 @@
 // ===== LIBRARIES ===== //
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   User,
@@ -14,8 +14,9 @@ import {
   ArrowLeft,
   LogOut,
 } from "lucide-react";
+import { toast } from "sonner";
 
-// ===== COMPONENTS (Shadcn.ui) ===== //
+// ===== COMPONENTS ===== //
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -24,23 +25,18 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import AlertLogout from "@/layouts/AlertLogout";
+import { StatusOverlay } from "@/components/StatusOverlay";
 
-// ===== CONTEXTS ===== //
+// ===== HOOKS ===== //
 import { useAuth } from "@/context/useAuth";
+
+// ===== API CLIENT ===== //
 import { apiClient } from "@/api/apiClient";
-import { toast } from "sonner";
 
-const HostProfile = () => {
+const Profile = () => {
+  const { auth, setAuth, logout } = useAuth();
   const navigate = useNavigate();
-  const { user, logout, setAuth } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [profileData, setProfileData] = useState(null);
-
   const [editData, setEditData] = useState({
     username: "",
     email: "",
@@ -48,32 +44,43 @@ const HostProfile = () => {
     confirmPassword: "",
     profileImage: null,
   });
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Fetch profile data on component mount
-  useEffect(() => {
-    fetchProfile();
-  }, []);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       const response = await apiClient.get("/users/profile");
       setProfileData(response.data);
-      console.log(response.data);
       setEditData({
         username: response.data.username,
         email: response.data.email,
         password: "",
         confirmPassword: "",
-        profileImage: null,
+        profileImage: response.data.profileImage,
       });
     } catch (error) {
       console.error("Error fetching profile:", error);
-      toast.error("Failed to load profile data");
+      const data = error.response?.data;
+      if (data?.errors && Array.isArray(data.errors)) {
+        data.errors.forEach((errMsg) => toast.error(errMsg));
+      } else {
+        toast.error(data?.message || "Failed to load profile data.");
+      }
+      setError(data?.message || "Failed to load profile data.");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -87,25 +94,13 @@ const HostProfile = () => {
   };
 
   const handleSave = async () => {
+    if (editData.password && editData.password !== editData.confirmPassword) {
+      toast.error("Passwords do not match!");
+      return;
+    }
+
+    setIsSaving(true);
     try {
-      // Validation
-      if (editData.password && editData.password !== editData.confirmPassword) {
-        toast.error("Passwords do not match!");
-        return;
-      }
-
-      if (
-        editData.password &&
-        editData.password.length > 0 &&
-        editData.password.length < 8
-      ) {
-        toast.error("Password must be at least 8 characters long!");
-        return;
-      }
-
-      setSaving(true);
-
-      // Create FormData for file upload
       const formData = new FormData();
       formData.append("username", editData.username);
       formData.append("email", editData.email);
@@ -123,8 +118,15 @@ const HostProfile = () => {
       });
 
       // Update local state and auth context
-      setProfileData(response.data.user);
-      setAuth({ ...user, ...response.data.user });
+      const updatedUser = response.data.user;
+      setProfileData(updatedUser);
+      setAuth({ ...auth, user: { ...updatedUser } });
+
+      const storedAuth = JSON.parse(localStorage.getItem("auth"));
+      if (storedAuth) {
+        storedAuth.user = { ...updatedUser };
+        localStorage.setItem("auth", JSON.stringify(storedAuth));
+      }
 
       setIsEditing(false);
       setShowPassword(false);
@@ -132,24 +134,29 @@ const HostProfile = () => {
       toast.success("Profile updated successfully");
     } catch (error) {
       console.error("Error updating profile:", error);
-      const errorMessage =
-        error.response?.data?.message || "Failed to update profile";
-      toast.error(errorMessage);
+      const data = error.response?.data;
+      if (data?.errors && Array.isArray(data.errors)) {
+        data.errors.forEach((errMsg) => toast.error(errMsg));
+      } else {
+        toast.error(data?.message || "Failed to update profile.");
+      }
     } finally {
-      setSaving(false);
+      setIsSaving(false);
     }
   };
 
   const handleBack = () => {
-    navigate("/host/events/view");
+    navigate(-1);
   };
 
   const handleLogout = async () => {
     try {
       logout();
-      navigate("/landing");
+      localStorage.removeItem("viewAsPlayer");
     } catch (error) {
       console.error("Logout failed:", error);
+    } finally {
+      navigate("/landing", { replace: true });
     }
   };
 
@@ -166,10 +173,11 @@ const HostProfile = () => {
     });
   };
 
-  const handleInputChange = (field, value) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
     setEditData((prev) => ({
       ...prev,
-      [field]: value,
+      [name]: value,
     }));
   };
 
@@ -202,32 +210,38 @@ const HostProfile = () => {
     }
   };
 
+  const isSaveEnabled = () => {
+    if (!isEditing) return false;
+    if (
+      editData.username === profileData.username &&
+      editData.email === profileData.email &&
+      !editData.password &&
+      !editData.profileImage
+    ) {
+      return false;
+    }
+
+    if (editData.password || editData.confirmPassword) {
+      if (editData.password !== editData.confirmPassword) {
+        return false;
+      }
+    }
+    return true;
+  };
+
   // Show loading state
   if (loading) {
     return (
       <div className="container mx-auto p-3 sm:p-6 max-w-4xl">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading profile...</p>
-          </div>
-        </div>
+        <StatusOverlay type="loading" message="Loading profile..." />
       </div>
     );
   }
 
-  // Show error state if no profile data
-  if (!profileData) {
+  if (error) {
     return (
       <div className="container mx-auto p-3 sm:p-6 max-w-4xl">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <p className="text-destructive mb-4">Failed to load profile data</p>
-            <Button onClick={fetchProfile} variant="outline">
-              Try Again
-            </Button>
-          </div>
-        </div>
+        <StatusOverlay type="error" message={error} onRetry={fetchProfile} />
       </div>
     );
   }
@@ -270,7 +284,7 @@ const HostProfile = () => {
                 <Avatar className="w-32 h-32 sm:w-40 sm:h-40">
                   <AvatarImage
                     src={
-                      editData.profileImage
+                      editData.profileImage instanceof File
                         ? URL.createObjectURL(editData.profileImage)
                         : profileData.profileImage
                         ? `${profileData.profileImage}`
@@ -330,10 +344,9 @@ const HostProfile = () => {
                 {isEditing ? (
                   <Input
                     id="username"
+                    name="username"
                     value={editData.username}
-                    onChange={(e) =>
-                      handleInputChange("username", e.target.value)
-                    }
+                    onChange={handleChange}
                     placeholder="Enter your username"
                   />
                 ) : (
@@ -355,9 +368,10 @@ const HostProfile = () => {
                 {isEditing ? (
                   <Input
                     id="email"
+                    name="email"
                     type="email"
                     value={editData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    onChange={handleChange}
                     placeholder="Enter your email"
                   />
                 ) : (
@@ -383,11 +397,10 @@ const HostProfile = () => {
                     <div className="relative">
                       <Input
                         id="password"
+                        name="password"
                         type={showPassword ? "text" : "password"}
                         value={editData.password}
-                        onChange={(e) =>
-                          handleInputChange("password", e.target.value)
-                        }
+                        onChange={handleChange}
                         placeholder="Enter new password"
                       />
                       <Button
@@ -417,11 +430,10 @@ const HostProfile = () => {
                       <div className="relative">
                         <Input
                           id="confirmPassword"
+                          name="confirmPassword"
                           type={showConfirmPassword ? "text" : "password"}
                           value={editData.confirmPassword}
-                          onChange={(e) =>
-                            handleInputChange("confirmPassword", e.target.value)
-                          }
+                          onChange={handleChange}
                           placeholder="Confirm your new password"
                         />
                         <Button
@@ -454,7 +466,7 @@ const HostProfile = () => {
                   <Input
                     id="password"
                     type="password"
-                    value="••••••••"
+                    value="••••••••••••"
                     readOnly
                     className="bg-muted/60 border-muted text-muted-foreground cursor-default font-mono tracking-wider"
                   />
@@ -468,7 +480,7 @@ const HostProfile = () => {
                       Password Requirements:
                     </h4>
                     <ul className="text-sm text-muted-foreground space-y-1">
-                      <li>• At least 8 characters long</li>
+                      <li>• At least 12 characters long</li>
                       <li>• Leave blank to keep current password</li>
                       <li>• Confirm password must match</li>
                     </ul>
@@ -491,9 +503,9 @@ const HostProfile = () => {
                     <Button
                       onClick={handleSave}
                       className="flex-1 flex items-center justify-center gap-2"
-                      disabled={saving}
+                      disabled={isSaving || !isSaveEnabled()}
                     >
-                      {saving ? (
+                      {isSaving ? (
                         <>
                           <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                           Saving...
@@ -541,4 +553,4 @@ const HostProfile = () => {
   );
 };
 
-export default HostProfile;
+export default Profile;

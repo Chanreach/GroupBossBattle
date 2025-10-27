@@ -7,17 +7,10 @@ import { QrCode, Camera, X, ArrowLeft, CheckCircle } from "lucide-react";
 import {
   Card,
   CardHeader,
-  CardTitle,
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-
-// ===== API ===== //
-import { apiClient } from "@/api/apiClient";
-import { eventBossAPI } from "@/services/api";
-
-// ===== QR SCANNER LOGIC ===== //
 import { QRScanner } from "@/lib/QR.js";
 
 // ===== STYLES ===== //
@@ -28,8 +21,6 @@ const QR = () => {
   const [qrResult, setQrResult] = useState("");
   const [detectedUrl, setDetectedUrl] = useState("");
   const [cameraError, setCameraError] = useState("");
-  const [bossCode, setBossCode] = useState("");
-  const [isJoining, setIsJoining] = useState(false);
   const [scannerState, setScannerState] = useState({
     isCameraActive: false,
     isProcessing: false,
@@ -89,14 +80,6 @@ const QR = () => {
     navigate("/");
   };
 
-  const handleStartCamera = () => {
-    qrScannerRef.current?.startCamera();
-  };
-
-  const handleStopCamera = () => {
-    qrScannerRef.current?.stopCamera();
-  };
-
   const handleToggleCamera = () => {
     qrScannerRef.current?.toggleCamera();
   };
@@ -121,34 +104,10 @@ const QR = () => {
     setCameraError("");
   };
 
-  const handleJoinWithCode = async () => {
-    if (!bossCode || !bossCode.trim()) return;
-
-    setIsJoining(true);
-    setCameraError(""); // Clear any previous errors
-
-    try {
-      // Fetch eventBossId using the join code
-      const response = await eventBossAPI.getEventBossByJoinCode(
-        bossCode.trim()
-      );
-      const eventBossId = response.id;
-
-      // Navigate to the new URL format with eventBossId and join code
-      navigate(`/boss-preview/${eventBossId}/${bossCode.trim()}`);
-    } catch (error) {
-      console.error("Error fetching boss by join code:", error);
-      setCameraError("Invalid join code. Please check and try again.");
-    } finally {
-      setIsJoining(false);
-    }
-  };
-
   // ===== RENDER ===== //
   return (
     <>
       {/* Main container for the entire page */}
-      {/* <main className="flex-grow min-h-screen bg-background"> */}
       <main className="flex-grow min-h-screen">
         <div className="container mx-auto p-3 sm:p-6 max-w-4xl">
           {/* Header */}
@@ -330,33 +289,6 @@ const QR = () => {
                 )}
               </CardContent>
             </Card>
-
-            {/* INPUT BOSS CODE */}
-            {/* <Card className="mt-6">
-              <CardHeader className="text-center">
-                <CardTitle className="text-foreground text-xl">Join with Code</CardTitle>
-                <CardDescription className="text-muted-foregrounad">
-                  If you have a boss code instead, enter it below to join the battle.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <input
-                  type="text"
-                  placeholder="Enter Boss Code"
-                  className="w-full p-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  value={bossCode}
-                  onChange={(e) => setBossCode(e.target.value)}
-                />
-                
-                <Button 
-                  onClick={handleJoinWithCode} 
-                  className="w-full" 
-                  disabled={!bossCode.trim() || isJoining}
-                >
-                  {isJoining ? "Joining..." : "Join Battle"}
-                </Button>
-              </CardContent>
-            </Card> */}
           </div>
         </div>
       </main>

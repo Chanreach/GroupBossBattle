@@ -19,6 +19,8 @@ const useBossPreview = (eventBossId, joinCode) => {
   const [eventBossStatus, setEventBossStatus] = useState("pending");
   const [cooldownTimer, setCooldownTimer] = useState(0);
   const [cooldownEndAt, setCooldownEndAt] = useState(null);
+  const [event, setEvent] = useState(null);
+  const [eventStatus, setEventStatus] = useState("upcoming");
   const [sessionSize, setSessionSize] = useState(0);
   const [leaderboard, setLeaderboard] = useState(null);
 
@@ -88,6 +90,9 @@ const useBossPreview = (eventBossId, joinCode) => {
     const handleBossNotFound = (payload) => {
       setLoading((prev) => ({ ...prev, eventBoss: false }));
       setEventBoss(null);
+      setEventBossStatus("pending");
+      setEvent(null);
+      setEventStatus("upcoming");
       toast.error(payload.message || "Event boss not found.");
     };
 
@@ -100,6 +105,8 @@ const useBossPreview = (eventBossId, joinCode) => {
       setCooldownEndAt(
         new Date(payload.data.eventBoss.cooldownEndAt).getTime() || null
       );
+      setEvent(payload.data.eventBoss.event);
+      setEventStatus(payload.data.eventBoss.event.status);
     };
 
     const handleJoinedRestrictionResponse = (payload) => {
@@ -117,7 +124,6 @@ const useBossPreview = (eventBossId, joinCode) => {
     };
 
     const handleSessionSizeResponse = (payload) => {
-      console.log("Session size response:", payload.data.sessionSize);
       setSessionSize(payload.data.sessionSize);
     };
 
@@ -220,11 +226,17 @@ const useBossPreview = (eventBossId, joinCode) => {
       setEventBoss(response.data);
       setEventBossStatus(response.data.status);
       setCooldownEndAt(new Date(response.data.cooldownEndAt).getTime() || null);
+      setEvent(response.data.eventBoss.event);
+      setEventStatus(response.data.eventBoss.event.status);
 
-      const event = response.data.event;
+      const event = response.data.eventBoss.event;
       if (event?.status !== "ongoing") {
         setIsJoinable(false);
-        setJoinRestrictionReason("Event is not currently ongoing.");
+        const reason =
+          event?.status === "completed"
+            ? "The event has ended. \nThank you for participating."
+            : "You cannot join the battle right now. \nThe event is not currently ongoing.";
+        setJoinRestrictionReason(reason);
         return;
       }
 
@@ -284,6 +296,8 @@ const useBossPreview = (eventBossId, joinCode) => {
     eventBoss,
     eventBossStatus,
     cooldownTimer,
+    event,
+    eventStatus,
     sessionSize,
     leaderboard,
     hasJoinedPreview,

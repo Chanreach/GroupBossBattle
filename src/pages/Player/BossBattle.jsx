@@ -73,8 +73,9 @@ const BossBattle = () => {
     currentPlayerBadge,
     isBadgeDisplaying,
     isDataNotFound,
+    NotFoundMessage,
     hasSubmittedAnswerRef,
-    isLoading,
+    loading,
     leaveSession,
     submitAnswer,
     submitRevivalCode,
@@ -97,7 +98,7 @@ const BossBattle = () => {
     }
 
     if (!auth?.user?.id) {
-      toast.error("User not found, please refresh");
+      toast.error("User not found, please refresh.");
       return;
     }
 
@@ -118,7 +119,6 @@ const BossBattle = () => {
 
   const handleLiveLeaderboard = () => {
     setIsLeaderboardVisible((prev) => !prev);
-    console.log("Toggling live leaderboard");
   };
 
   // Handle OTP completion
@@ -126,12 +126,12 @@ const BossBattle = () => {
     const sanitizedCode = otpValue.trim().toUpperCase();
 
     if (!sanitizedCode) {
-      toast.error("Please enter a revival code");
+      toast.error("Please enter a revival code.");
       return;
     }
 
     if (sanitizedCode.length !== 6) {
-      toast.error("Revival code must be 6 characters");
+      toast.error("Revival code must be 6 characters.");
       return;
     }
     submitRevivalCode(otpValue);
@@ -154,8 +154,11 @@ const BossBattle = () => {
   useEffect(() => {
     if (isDataNotFound) {
       navigate(`/boss-preview/${eventBossId}/${joinCode}`);
+      setTimeout(() => {
+        toast.error(NotFoundMessage || "Requested data not found.");
+      }, 100);
     }
-  }, [isDataNotFound, navigate, eventBossId, joinCode]);
+  }, [isDataNotFound, navigate, eventBossId, joinCode, NotFoundMessage]);
 
   useEffect(() => {
     if (podiumTimer === 0 && isPodiumCountdownVisible) {
@@ -503,17 +506,17 @@ const BossBattle = () => {
             {/* Question Text */}
             <div className="mb-3 flex-shrink-0">
               <p className="text-sm font-medium">
-                {isLoading.question
-                  ? isLoading.result
+                {loading.question
+                  ? loading.result
                     ? "Processing your answer..."
-                    : "isLoading question..."
+                    : "Loading question..."
                   : currentQuestion?.text}
               </p>
             </div>
 
             {/* Answer Options */}
             <div className="grid grid-cols-2 gap-2 flex-1 min-h-0 -mb-3">
-              {isLoading.question
+              {loading.question
                 ? [...Array(4)].map((_, index) => (
                     <Button
                       key={index}
@@ -521,7 +524,7 @@ const BossBattle = () => {
                       className="w-full p-2 h-full text-center whitespace-normal font-medium text-sm bg-muted animate-pulse"
                       disabled
                     >
-                      isLoading...
+                      Loading...
                     </Button>
                   ))
                 : currentQuestion?.answerChoices.map((choice, index) => {
@@ -543,8 +546,8 @@ const BossBattle = () => {
                       isEventBossDefeated ||
                       isPlayerDead ||
                       isPlayerKnockedOut ||
-                      isLoading.question ||
-                      isLoading.result ||
+                      loading.question ||
+                      loading.result ||
                       hasSubmittedAnswerRef.current;
 
                     return (
