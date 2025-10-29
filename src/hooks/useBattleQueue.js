@@ -18,6 +18,7 @@ const useBattleQueue = (eventBossId, joinCode) => {
   const [countdownTimer, setCountdownTimer] = useState(null);
   const [countdownEndAt, setCountdownEndAt] = useState(null);
   const [playerSession, setPlayerSession] = useState(null);
+  const [isPlayerDead, setIsPlayerDead] = useState(false);
 
   const [hasJoinedQueue, setHasJoinedQueue] = useState(false);
   const [hasJoinedMidGame, setHasJoinedMidGame] = useState(false);
@@ -106,6 +107,9 @@ const useBattleQueue = (eventBossId, joinCode) => {
 
     const handlePlayerSessionResponse = (payload) => {
       setPlayerSession(payload.data.playerSession);
+      if (payload.data.playerSession?.battleState === "dead") {
+        setIsPlayerDead(true);
+      }
 
       const playerContextStatus = payload.data.playerSession?.contextStatus;
       if (playerContextStatus === "in-queue") {
@@ -124,12 +128,6 @@ const useBattleQueue = (eventBossId, joinCode) => {
         setCountdownEndAt(null);
         setCountdownTimer(null);
       }
-
-      console.log("Countdown End At:", countdownEndAt);
-      console.log(
-        "Countdown Timer:",
-        countdownEndAt ? Math.ceil((countdownEndAt - Date.now()) / 1000) : null
-      );
     };
 
     const handlePlayerSessionUpdated = (payload) => {
@@ -179,6 +177,11 @@ const useBattleQueue = (eventBossId, joinCode) => {
       );
     };
 
+    const handlePlayerDead = (payload) => {
+      setIsPlayerDead(true);
+      toast.info(payload.message || "You have died! Better luck next time.");
+    };
+
     socket.on(
       SOCKET_EVENTS.PLAYER_SESSION.RESPONSE,
       handlePlayerSessionResponse
@@ -200,6 +203,7 @@ const useBattleQueue = (eventBossId, joinCode) => {
       handleMidGameJoined
     );
     socket.on(SOCKET_EVENTS.BATTLE_SESSION.COUNTDOWN, handleBattleCountdown);
+    socket.on(SOCKET_EVENTS.BATTLE_SESSION.PLAYER.DEAD, handlePlayerDead);
 
     return () => {
       socket.off(
@@ -226,11 +230,13 @@ const useBattleQueue = (eventBossId, joinCode) => {
         handleMidGameJoined
       );
       socket.off(SOCKET_EVENTS.BATTLE_SESSION.COUNTDOWN, handleBattleCountdown);
+      socket.off(SOCKET_EVENTS.BATTLE_SESSION.PLAYER.DEAD, handlePlayerDead);
     };
   }, [socket, eventBossId, joinCode, playerSession]);
 
   return {
     playerSession,
+    isPlayerDead,
     hasJoinedQueue,
     hasJoinedMidGame,
     session,

@@ -148,16 +148,20 @@ const useBossPreview = (eventBossId, joinCode) => {
     const handlePlayersRemoved = (payload) => {
       setSessionSize(payload.data.sessionSize);
       setLeaderboard(payload.data.leaderboard);
-      toast.info(payload.message || "A player has been removed from the battle.");
+      toast.info(
+        payload.message || "A player has been removed from the battle."
+      );
     };
 
     const handleEventEnded = (payload) => {
       setIsJoinable(false);
-      setJoinRestrictionReason("The event has ended. \nThank you for participating.");
+      setJoinRestrictionReason(
+        "The event has ended. \nThank you for participating."
+      );
       setEventBossStatus("active");
       setSessionSize(0);
       toast.info(payload.message || "The event has ended.");
-    }
+    };
 
     const handleSocketError = (error) => {
       toast.error(error.message || "A socket error occurred.");
@@ -192,7 +196,10 @@ const useBossPreview = (eventBossId, joinCode) => {
       SOCKET_EVENTS.BOSS_PREVIEW.LEADERBOARD.UPDATED,
       handlePreviewLeaderboardUpdated
     );
-    socket.on(SOCKET_EVENTS.BATTLE_SESSION.PLAYERS.REMOVED, handlePlayersRemoved);
+    socket.on(
+      SOCKET_EVENTS.BATTLE_SESSION.PLAYERS.REMOVED,
+      handlePlayersRemoved
+    );
     socket.on(SOCKET_EVENTS.EVENT.ENDED, handleEventEnded);
     socket.on(SOCKET_EVENTS.ERROR, handleSocketError);
 

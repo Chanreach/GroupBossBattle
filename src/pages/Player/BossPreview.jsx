@@ -47,6 +47,7 @@ const BossPreview = () => {
 
   const {
     playerSession,
+    isPlayerDead,
     hasJoinedQueue,
     hasJoinedMidGame,
     queueSize,
@@ -59,7 +60,6 @@ const BossPreview = () => {
 
   const [nickname, setNickname] = useState("");
   const [isFocusedNickname, setIsFocusedNickname] = useState(false);
-  const [isPlayerDead, setIsPlayerDead] = useState(false);
 
   const goBack = () => {
     navigate(-1);
@@ -118,9 +118,6 @@ const BossPreview = () => {
 
     if (playerSession.nickname) {
       setNickname(playerSession.nickname);
-    }
-    if (playerSession.battleState === "dead") {
-      setIsPlayerDead(true);
     }
   }, [playerSession]);
 
