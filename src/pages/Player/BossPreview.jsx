@@ -21,7 +21,7 @@ import useBattleQueue from "@/hooks/useBattleQueue";
 import { useAuth } from "@/context/useAuth";
 
 // ===== UTILITIES ===== //
-import { getPlayerState, removePlayerState } from "@/utils/playerUtils";
+import { formatTime } from "@/utils/helper";
 
 const BossPreview = () => {
   const { eventBossId, joinCode } = useParams();
@@ -46,7 +46,7 @@ const BossPreview = () => {
   } = bossPreview;
 
   const {
-    playerContextStatus,
+    playerSession,
     hasJoinedQueue,
     hasJoinedMidGame,
     queueSize,
@@ -58,6 +58,7 @@ const BossPreview = () => {
   } = battleQueue;
 
   const [nickname, setNickname] = useState("");
+  const [isFocusedNickname, setIsFocusedNickname] = useState(false);
   const [isPlayerDead, setIsPlayerDead] = useState(false);
 
   const goBack = () => {
@@ -95,41 +96,33 @@ const BossPreview = () => {
     setNickname(value);
   };
 
-  const formatTime = (seconds) => {
-    const hours = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${hours > 0 ? `${hours}h ` : ""}${mins > 0 ? `${mins}m ` : ""}${secs
-      .toString()
-      .padStart(2, "0")}s`;
+  const handleNicknameFocus = () => {
+    setIsFocusedNickname(true);
+  };
+
+  const handleNicknameBlur = () => {
+    setIsFocusedNickname(false);
   };
 
   // Auto-fill nickname with username when user is available
   useEffect(() => {
-    if (!nickname) {
-      const name = auth?.user?.username || "";
+    const name = auth?.user?.username || "";
+
+    if (!nickname.trim() && !isFocusedNickname) {
       setNickname(name);
     }
-  }, [auth, nickname]);
+  }, [auth, nickname, isFocusedNickname]);
 
   useEffect(() => {
-    const storedPlayer = getPlayerState(eventBossId);
-    if (!storedPlayer) return;
+    if (!playerSession) return;
 
-    if (storedPlayer && storedPlayer.nickname) {
-      setNickname(storedPlayer.nickname);
+    if (playerSession.nickname) {
+      setNickname(playerSession.nickname);
     }
-    if (storedPlayer.battleState === "dead") {
+    if (playerSession.battleState === "dead") {
       setIsPlayerDead(true);
     }
-  }, [eventBossId]);
-
-  useEffect(() => {
-    if (eventBossStatus !== "cooldown") return;
-
-    setIsPlayerDead(false);
-    removePlayerState(eventBossId);
-  }, [eventBossStatus, eventBossId]);
+  }, [playerSession]);
 
   const handleJoin = () => {
     const validationError = validateNickname(nickname);
@@ -153,7 +146,7 @@ const BossPreview = () => {
 
   useEffect(() => {
     if (countdownTimer === 0) {
-      navigate(`/boss-battle/${eventBossId}/${joinCode}`);
+      navigate(`/boss-battle/${eventBossId}/${joinCode}`, { replace: true });
     }
   }, [countdownTimer, eventBossId, joinCode, navigate]);
 
@@ -300,21 +293,23 @@ const BossPreview = () => {
               </div>
 
               {/* Join/Waiting Button */}
-              {playerContextStatus === "in-battle" &&
+              {playerSession?.contextStatus === "in-battle" &&
               !isPlayerDead &&
               countdownTimer === null ? (
                 <Button
                   className="flex-1c w-full halftone-texture"
                   onClick={() =>
-                    navigate(`/boss-battle/${eventBossId}/${joinCode}`)
+                    navigate(`/boss-battle/${eventBossId}/${joinCode}`, {
+                      replace: true,
+                    })
                   }
                   variant="default"
                 >
                   Return to Battle
                 </Button>
-              ) : playerContextStatus !== "in-queue" &&
-                !hasJoinedQueue &&
-                !hasJoinedMidGame ? (
+              ) : !hasJoinedQueue &&
+                !hasJoinedMidGame &&
+                countdownTimer === null ? (
                 <Button
                   onClick={handleJoin}
                   className="w-full !bg-purple-500 hover:!bg-purple-600 !text-white !border-purple-500 halftone-texture"
@@ -375,12 +370,15 @@ const BossPreview = () => {
                   type="text"
                   value={nickname}
                   onChange={handleNicknameChange}
+                  onFocus={handleNicknameFocus}
+                  onBlur={handleNicknameBlur}
                   placeholder="Enter your nickname"
                   maxLength={20}
                   disabled={
                     hasJoinedQueue ||
                     hasJoinedMidGame ||
-                    (playerContextStatus === "in-battle" && !isPlayerDead) ||
+                    (playerSession?.contextStatus === "in-battle" &&
+                      !isPlayerDead) ||
                     !isJoinable
                   }
                 />

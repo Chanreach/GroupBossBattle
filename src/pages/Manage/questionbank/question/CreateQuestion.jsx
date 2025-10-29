@@ -38,14 +38,14 @@ const CreateQuestion = () => {
     timeLimit: "",
   });
   const [answerChoices, setAnswerChoices] = useState([
-    { id: "uuid1", text: "", isCorrect: false },
-    { id: "uuid2", text: "", isCorrect: false },
-    { id: "uuid3", text: "", isCorrect: false },
-    { id: "uuid4", text: "", isCorrect: false },
-    { id: "uuid5", text: "", isCorrect: false },
-    { id: "uuid6", text: "", isCorrect: false },
-    { id: "uuid7", text: "", isCorrect: false },
-    { id: "uuid8", text: "", isCorrect: false },
+    { id: "uuid1", text: "", isCorrect: false, order: 1 },
+    { id: "uuid2", text: "", isCorrect: false, order: 2 },
+    { id: "uuid3", text: "", isCorrect: false, order: 3 },
+    { id: "uuid4", text: "", isCorrect: false, order: 4 },
+    { id: "uuid5", text: "", isCorrect: false, order: 5 },
+    { id: "uuid6", text: "", isCorrect: false, order: 6 },
+    { id: "uuid7", text: "", isCorrect: false, order: 7 },
+    { id: "uuid8", text: "", isCorrect: false, order: 8 },
   ]);
   const [correctAnswerId, setCorrectAnswerId] = useState("uuid1");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -115,6 +115,7 @@ const CreateQuestion = () => {
       const choices = answerChoices.map((answer) => ({
         text: answer.text,
         isCorrect: answer.id === correctAnswerId,
+        order: answer.order,
       }));
 
       const response = await apiClient.post("/questions", {

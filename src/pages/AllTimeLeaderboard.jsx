@@ -1,6 +1,7 @@
 // ===== LIBRARIES ===== //
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Trophy, Medal, Award, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 // ===== COMPONENTS ===== //
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -23,56 +24,46 @@ import {
   PaginationPrevious,
   PaginationNext,
 } from "@/components/ui/pagination";
+import { StatusOverlay } from "@/components/StatusOverlay";
 
-// ===== API ===== //
+// ===== API CLIENT ===== //
 import { apiClient } from "@/api/apiClient";
 
 const AllTimeLeaderboard = () => {
-  const [currentPage, setCurrentPage] = useState(1);
   const [eventFilter, setEventFilter] = useState();
   const [events, setEvents] = useState([]);
   const [leaderboards, setLeaderboards] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 10;
 
-  useEffect(() => {
-    if (isLoading && (!leaderboards || leaderboards.length === 0)) {
-      const fetchAllTimeLeaderboards = async () => {
-        try {
-          setIsLoading(true);
-          const response = await apiClient.get("/leaderboards");
-          if (response.data) {
-            setEvents(response.data.events || []);
-            setLeaderboards(response.data.leaderboards || []);
-          }
-        } catch (error) {
-          setError("Error fetching leaderboard data");
-          console.error("Error fetching leaderboard data:", error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      fetchAllTimeLeaderboards();
-
-      // .then((data) => {
-      //   if (data) {
-      //     setEvents(data.events || []);
-      //     setLeaderboards(data.leaderboards || []);
-      //   } else {
-      //     setError("Failed to load leaderboard data");
-      //     console.error("Failed to load leaderboard data");
-      //   }
-      //   setIsLoading(false);
-      // })
-      // .catch((error) => {
-      //   setError("Error fetching leaderboard data");
-      //   setIsLoading(false);
-      //   console.error("Error fetching leaderboard data:", error);
-      // });
+  const fetchAllTimeLeaderboards = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await apiClient.get("/leaderboards");
+      if (response.data) {
+        setEvents(response.data.events || []);
+        setLeaderboards(response.data.leaderboards || []);
+      }
+    } catch (error) {
+      console.error("Error fetching leaderboard data:", error);
+      const data = error.response?.data;
+      if (data?.errors && Array.isArray(data.errors)) {
+        data.errors.forEach((errMsg) => toast.error(errMsg));
+      } else {
+        toast.error(data?.message || "Failed to fetch leaderboard data.");
+      }
+      setError(data?.message || "Failed to fetch leaderboard data.");
+    } finally {
+      setLoading(false);
     }
-  }, [leaderboards, isLoading]);
+  }, []);
+
+  useEffect(() => {
+    fetchAllTimeLeaderboards();
+  }, [fetchAllTimeLeaderboards]);
 
   useEffect(() => {
     if (events.length > 0 && !eventFilter) {
@@ -123,15 +114,10 @@ const AllTimeLeaderboard = () => {
   // Top 3 only
   const podiumPlayers = currentLeaderboard.slice(0, 3);
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="container mx-auto p-3 sm:p-6 max-w-4xl">
-        <Card className="h-96 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading leaderboard...</p>
-          </div>
-        </Card>
+        <StatusOverlay message="Loading leaderboard..." type="loading"/>
       </div>
     );
   }
@@ -139,17 +125,7 @@ const AllTimeLeaderboard = () => {
   if (error) {
     return (
       <div className="container mx-auto p-3 sm:p-6 max-w-4xl">
-        <Card className="h-96 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-4 text-center">
-            <Trophy className="w-12 h-12 text-muted-foreground" />
-            <div>
-              <h3 className="text-lg font-semibold">
-                Unable to load leaderboard
-              </h3>
-              <p className="text-muted-foreground">{error}</p>
-            </div>
-          </div>
-        </Card>
+        <StatusOverlay message={error} type="error" onRetry={fetchAllTimeLeaderboards}/>
       </div>
     );
   }

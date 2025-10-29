@@ -61,3 +61,12 @@ export const formatUTCDateTimeForLocalInput = (dateString) => {
   const minutes = String(date.getMinutes()).padStart(2, "0");
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
+
+export const formatTime = (seconds) => {
+  const hours = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  return `${hours > 0 ? `${hours}h ` : ""}${mins > 0 ? `${mins}m ` : ""}${secs
+    .toString()
+    .padStart(2, "0")}s`;
+};

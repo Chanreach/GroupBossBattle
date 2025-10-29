@@ -24,7 +24,12 @@ import {
   PaginationNext,
 } from "@/components/ui/pagination";
 
-const LeaderboardOverview = ({ leaderboard, isLoading, isPreview, isFullWidth = false }) => {
+const LeaderboardOverview = ({
+  leaderboard,
+  isLoading,
+  isPreview,
+  isFullWidth = false,
+}) => {
   const [currentPage, setCurrentPage] = useState({
     teams: 1,
     individual: 1,
@@ -358,21 +363,18 @@ const LeaderboardOverview = ({ leaderboard, isLoading, isPreview, isFullWidth = 
                                 <AvatarImage
                                   src={
                                     item.avatar ||
+                                    item.profileImage ||
                                     `/src/assets/Placeholder/Profile${
                                       item.rank % 5
                                     }.jpg`
                                   }
                                   alt={
-                                    item.name ||
-                                    item.nickname ||
-                                    item.username
+                                    item.name || item.nickname || item.username
                                   }
                                 />
                                 <AvatarFallback className="uppercase">
                                   {getAvatarInitials(
-                                    item.name ||
-                                      item.nickname ||
-                                      item.username
+                                    item.name || item.nickname || item.username
                                   )}
                                 </AvatarFallback>
                               </Avatar>

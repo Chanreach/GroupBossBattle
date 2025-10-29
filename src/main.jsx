@@ -55,7 +55,7 @@ import AssignBoss from "./pages/manage/event/AssignBoss";
 import CreateEvent from "./pages/manage/event/CreateEvent";
 import EditEvent from "./pages/manage/event/EditEvent";
 import ManageEventsPlayerBadges from "./pages/manage/event/PlayerBadges";
-import ManageEventsLeaderboard from "./pages/manage/event/Leaderboard2";
+import BossBattleMonitor from "./pages/manage/event/BossBattleMonitor";
 import ManageEventsAllLeaderboard from "./pages/AllTimeLeaderboard";
 // Users
 import UserList from "./pages/manage/users/UserList";
@@ -243,8 +243,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                     element={<ManageEventsPlayerBadges />}
                   />
                   <Route
-                    path="events/:eventId/:eventBossId/leaderboard"
-                    element={<ManageEventsLeaderboard />}
+                    path="events/:eventId/:eventBossId/monitor"
+                    element={<BossBattleMonitor />}
                   />
                   <Route
                     path="all-leaderboard"

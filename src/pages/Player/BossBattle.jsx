@@ -72,6 +72,8 @@ const BossBattle = () => {
     podiumTimer,
     currentPlayerBadge,
     isBadgeDisplaying,
+    hasJoinedSession,
+    removedPlayerMessage,
     isDataNotFound,
     NotFoundMessage,
     hasSubmittedAnswerRef,
@@ -111,9 +113,9 @@ const BossBattle = () => {
 
     // Redirect back to boss preview with boss/event IDs if available
     if (eventBossId && joinCode) {
-      navigate(`/boss-preview/${eventBossId}/${joinCode}`);
+      navigate(`/boss-preview/${eventBossId}/${joinCode}`, { replace: true });
     } else {
-      navigate("/");
+      navigate("/", { replace: true });
     }
   };
 
@@ -152,8 +154,17 @@ const BossBattle = () => {
   };
 
   useEffect(() => {
+    if (!hasJoinedSession && removedPlayerMessage) {
+      toast.info(removedPlayerMessage);
+      setTimeout(() => {
+        window.location.replace("/auth");
+      }, 500);
+    }
+  }, [hasJoinedSession, removedPlayerMessage, navigate, eventBossId, joinCode]);
+
+  useEffect(() => {
     if (isDataNotFound) {
-      navigate(`/boss-preview/${eventBossId}/${joinCode}`);
+      navigate(`/boss-preview/${eventBossId}/${joinCode}`, { replace: true });
       setTimeout(() => {
         toast.error(NotFoundMessage || "Requested data not found.");
       }, 100);
@@ -162,7 +173,7 @@ const BossBattle = () => {
 
   useEffect(() => {
     if (podiumTimer === 0 && isPodiumCountdownVisible) {
-      navigate(`/boss-podium/${eventBossId}/${joinCode}`);
+      navigate(`/boss-podium/${eventBossId}/${joinCode}`, { replace: true });
     }
   }, [podiumTimer, isPodiumCountdownVisible, eventBossId, joinCode, navigate]);
 
@@ -675,7 +686,9 @@ const BossBattle = () => {
               maxLength={6}
               value={revivalOtpInput}
               inputMode="text"
+              className="uppercase"
               onChange={(value) => {
+                value = value.toUpperCase();
                 setRevivalOtpInput(value);
                 if (value.length === 6) {
                   handleRevivalOtpComplete(value);

@@ -165,6 +165,7 @@ const EditQuestion = () => {
       const choices = answerChoices.map((answer) => ({
         text: answer.text,
         isCorrect: answer.id === correctAnswerId,
+        order: answer.order,
       }));
 
       const response = await apiClient.put(`/questions/${questionId}`, {
@@ -215,7 +216,7 @@ const EditQuestion = () => {
   };
 
   const handleCancel = () => {
-    navigate(-1);
+    navigate(`/manage/questionbank/questions/${questionId}`);
   };
 
   if (loading) {

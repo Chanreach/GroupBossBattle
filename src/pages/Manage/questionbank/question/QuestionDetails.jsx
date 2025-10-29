@@ -63,7 +63,7 @@ const QuestionDetails = () => {
   }, [questionId, fetchQuestion]);
 
   const handleBackClick = () => {
-    navigate(-1);
+    navigate("/manage/questionbank/questions");
   };
 
   const handleEditClick = () => {

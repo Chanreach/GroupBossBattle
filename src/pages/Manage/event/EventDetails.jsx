@@ -292,7 +292,7 @@ const EventDetails = () => {
             Active
           </Badge>
         );
-      case "in battle":
+      case "in-battle":
         return (
           <Badge className="bg-red-500 hover:bg-red-600">
             <Zap className="w-3 h-3 mr-1" />
@@ -709,7 +709,7 @@ const EventDetails = () => {
                                 className="w-8 h-8 p-0"
                                 onClick={() =>
                                   navigate(
-                                    `/manage/events/${eventId}/${boss.eventBossId}/leaderboard`
+                                    `/manage/events/${eventId}/${boss.id}/monitor`
                                   )
                                 }
                               >
@@ -717,7 +717,7 @@ const EventDetails = () => {
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                              View Boss Leaderboard
+                              View Boss Battle Monitor
                             </TooltipContent>
                           </Tooltip>
                         </div>

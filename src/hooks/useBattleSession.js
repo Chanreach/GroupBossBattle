@@ -8,7 +8,6 @@ import { useAuth } from "@/context/useAuth";
 
 // ===== UTILITIES ===== //
 import { SOCKET_EVENTS } from "@/utils/socketConstants";
-import { updatePlayerState, removePlayerState } from "@/utils/playerUtils";
 
 // ===== AUDIOS ===== //
 import punchSound from "@/assets/Audio/punch1.mp3";
@@ -53,6 +52,7 @@ const useBattleSession = (eventBossId, joinCode) => {
   const [isBadgeDisplaying, setIsBadgeDisplaying] = useState(false);
 
   const [hasJoinedSession, setHasJoinedSession] = useState(false);
+  const [removedPlayerMessage, setRemovedPlayerMessage] = useState("");
   const [isDataNotFound, setIsDataNotFound] = useState(false);
   const [NotFoundMessage, setNotFoundMessage] = useState("");
   const hasSubmittedAnswerRef = useRef(false);
@@ -338,8 +338,9 @@ const useBattleSession = (eventBossId, joinCode) => {
         setPodiumEndAt(Date.now() + 3000);
         setPodiumTimer(3);
       }
-      removePlayerState(eventBossId);
-      toast.info(payload.message || "The event has ended. Thank you for participating!");
+      toast.info(
+        payload.message || "The event has ended. Thank you for participating!"
+      );
 
       // Play victory sound
       if (punchAudioRef.current) {
@@ -459,7 +460,6 @@ const useBattleSession = (eventBossId, joinCode) => {
       setRevivalTimer(
         Math.ceil((payload.data.knockoutInfo.revivalEndAt - Date.now()) / 1000)
       );
-      updatePlayerState(eventBossId, { battleState: "knocked-out" });
       toast.info(
         payload.message ||
           "You have been knocked out! Share your revival code with teammates."
@@ -482,7 +482,6 @@ const useBattleSession = (eventBossId, joinCode) => {
       setIsPlayerDead(true);
       setIsPlayerKnockedOut(false);
       setPlayerRevivalCode("");
-      updatePlayerState(eventBossId, { battleState: "dead" });
       toast.info(payload.message || "You have died! Better luck next time.");
 
       playHurtSound();
@@ -547,7 +546,6 @@ const useBattleSession = (eventBossId, joinCode) => {
         setPodiumEndAt(Date.now() + 3000);
         setPodiumTimer(3);
       }
-      removePlayerState(eventBossId);
       toast.info(payload.message || "The battle has ended.");
 
       // Play victory sound
@@ -565,6 +563,11 @@ const useBattleSession = (eventBossId, joinCode) => {
 
     const handleLeftSession = (payload) => {
       console.log("Left session:", payload.message);
+    };
+
+    const handlePlayerRemoved = (payload) => {
+      setHasJoinedSession(false);
+      setRemovedPlayerMessage(payload.message || "You have been removed.");
     };
 
     const handleSocketError = (error) => {
@@ -618,6 +621,7 @@ const useBattleSession = (eventBossId, joinCode) => {
     socket.on(SOCKET_EVENTS.BATTLE_SESSION.ENDED, handleSessionEnded);
     socket.on(SOCKET_EVENTS.BADGE.EARNED, handleBadgeEarned);
     socket.on(SOCKET_EVENTS.BATTLE_SESSION.LEFT, handleLeftSession);
+    socket.on(SOCKET_EVENTS.BATTLE_SESSION.PLAYER.REMOVED, handlePlayerRemoved);
     socket.on(SOCKET_EVENTS.ERROR, handleSocketError);
 
     return () => {
@@ -675,6 +679,10 @@ const useBattleSession = (eventBossId, joinCode) => {
       socket.off(SOCKET_EVENTS.BATTLE_SESSION.ENDED, handleSessionEnded);
       socket.off(SOCKET_EVENTS.BADGE.EARNED, handleBadgeEarned);
       socket.off(SOCKET_EVENTS.BATTLE_SESSION.LEFT, handleLeftSession);
+      socket.off(
+        SOCKET_EVENTS.BATTLE_SESSION.PLAYER.REMOVED,
+        handlePlayerRemoved
+      );
       socket.off(SOCKET_EVENTS.ERROR, handleSocketError);
     };
   }, [
@@ -703,13 +711,8 @@ const useBattleSession = (eventBossId, joinCode) => {
         Math.ceil((revivalEndAt - Date.now()) / 1000)
       );
       setRevivalTimer(timeLeft);
-      console.log("Revival countdown:", timeLeft);
 
       if (timeLeft <= 0) {
-        socket.emit(SOCKET_EVENTS.BATTLE_SESSION.REVIVAL_CODE.EXPIRED, {
-          eventBossId,
-          playerId: auth?.user?.id || null,
-        });
         clearInterval(interval);
       }
     }, 1000);
@@ -773,6 +776,7 @@ const useBattleSession = (eventBossId, joinCode) => {
     currentPlayerBadge,
     isBadgeDisplaying,
     hasJoinedSession,
+    removedPlayerMessage,
     isDataNotFound,
     NotFoundMessage,
     hasSubmittedAnswerRef,

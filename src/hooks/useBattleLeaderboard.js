@@ -1,5 +1,6 @@
 // ===== LIBRARIES ===== //
 import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 
 // ===== HOOKS ===== //
 import useBossBattle from "./useBossBattle";
@@ -31,6 +32,11 @@ const useBattleLeaderboard = (eventBossId, joinCode) => {
       setLeaderboard(payload.data.leaderboard);
     };
 
+    const handlePlayersRemoved = (payload) => {
+      toast.info(payload.message || "One or more players have been removed from the battle.");
+      setLeaderboard(payload.data.leaderboard);
+    };
+
     socket.on(
       SOCKET_EVENTS.BATTLE_SESSION.LEADERBOARD.RESPONSE,
       handleLeaderboardResponse
@@ -39,6 +45,7 @@ const useBattleLeaderboard = (eventBossId, joinCode) => {
       SOCKET_EVENTS.BATTLE_SESSION.LEADERBOARD.UPDATED,
       handleLeaderboardUpdated
     );
+    socket.on(SOCKET_EVENTS.BATTLE_SESSION.PLAYERS.REMOVED, handlePlayersRemoved);
 
     return () => {
       socket.off(
@@ -49,6 +56,7 @@ const useBattleLeaderboard = (eventBossId, joinCode) => {
         SOCKET_EVENTS.BATTLE_SESSION.LEADERBOARD.UPDATED,
         handleLeaderboardUpdated
       );
+      socket.off(SOCKET_EVENTS.BATTLE_SESSION.PLAYERS.REMOVED, handlePlayersRemoved);
     };
   }, [socket, eventBossId, joinCode]);
 

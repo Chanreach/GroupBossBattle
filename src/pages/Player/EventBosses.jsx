@@ -94,7 +94,7 @@ const EventBosses = () => {
             Active
           </Badge>
         );
-      case "in battle":
+      case "in-battle":
         return (
           <Badge className="bg-red-500 hover:bg-red-600">
             <Zap className="w-3 h-3 mr-1" />
