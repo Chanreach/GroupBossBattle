@@ -4,73 +4,73 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 // ===== COMPONENTS ===== //
-import { ProtectedRoute } from "./components/ProtectedRoute";
-import { AuthenticationCheck } from "./components/AuthenticationCheck";
-import { PreventAuthenticatedAccess } from "./components/PreventAuthenticatedAccess";
-import { PlayerViewGuard } from "./components/PlayerViewGuard";
-import { ScrollToTop } from "./components/ScrollToTop";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AuthenticationCheck } from "@/components/AuthenticationCheck";
+import { PreventAuthenticatedAccess } from "@/components/PreventAuthenticatedAccess";
+import { PlayerViewGuard } from "@/components/PlayerViewGuard";
+import { ScrollToTop } from "@/components/ScrollToTop";
 
 // ===== CONTEXT PROVIDERS ===== //
-import { ThemeProvider } from "./context/ThemeProvider";
-import { AuthProvider } from "./context/AuthProvider";
-import { BossBattleProvider } from "./context/BossBattleProvider";
+import { ThemeProvider } from "@/context/ThemeProvider";
+import { AuthProvider } from "@/context/AuthProvider";
+import { BossBattleProvider } from "@/context/BossBattleProvider";
 
 // ===== STYLES ===== //
 import "./index.css";
 
 // ===== MASTER PAGES ===== //
-import AppLanding from "./AppLanding";
-import App from "./App";
-import AppOP from "./AppOP";
-import AppBattle from "./AppBattle";
-import AppError from "./AppError";
+import AppLanding from "@/AppLanding";
+import App from "@/App";
+import AppOP from "@/AppOP";
+import AppBattle from "@/AppBattle";
+import AppError from "@/AppError";
 
 // ===== LANDING PAGES ===== //
-import Landing from "./pages/Landing";
-import About from "./pages/About";
-import Authentication from "./pages/Authentication";
+import Landing from "@/pages/Landing";
+import About from "@/pages/About";
+import Authentication from "@/pages/Authentication";
 
 // ===== PLAYER PAGES ===== //
-import Error from "./pages/Error";
-import Loading from "./pages/Loading";
-import PlayerHome from "./pages/player/Home";
-import PlayerEventBosses from "./pages/player/EventBosses";
-import PlayerBadges from "./pages/player/Badges";
-import PlayerLeaderboard from "./pages/AllTimeLeaderboard";
-import PlayerProfile from "./pages/Profile";
-import PlayerQR from "./pages/player/QR";
-import BossPreview from "./pages/player/BossPreview";
-import BossBattle from "./pages/player/BossBattle";
-import BossPodium from "./pages/player/BossPodium";
+import Error from "@/pages/Error";
+import Loading from "@/pages/Loading";
+import PlayerHome from "@/pages/player/Home";
+import PlayerEventBosses from "@/pages/player/EventBosses";
+import PlayerBadges from "@/pages/player/Badges";
+import PlayerLeaderboard from "@/pages/AllTimeLeaderboard";
+import PlayerProfile from "@/pages/Profile";
+import PlayerQR from "@/pages/player/QR";
+import BossPreview from "@/pages/player/BossPreview";
+import BossBattle from "@/pages/player/BossBattle";
+import BossPodium from "@/pages/player/BossPodium";
 
 // ===== Manage PAGES ===== //
 // Bosses
-import BossList from "./pages/manage/boss/BossList";
-import CreateBoss from "./pages/manage/boss/CreateBoss";
-import EditBoss from "./pages/manage/boss/EditBoss";
+import BossList from "@/pages/manage/boss/BossList";
+import CreateBoss from "@/pages/manage/boss/CreateBoss";
+import EditBoss from "@/pages/manage/boss/EditBoss";
 // Events
-import EventList from "./pages/manage/event/EventList";
-import EventDetails from "./pages/manage/event/EventDetails";
-import AssignBoss from "./pages/manage/event/AssignBoss";
-import CreateEvent from "./pages/manage/event/CreateEvent";
-import EditEvent from "./pages/manage/event/EditEvent";
-import ManageEventsPlayerBadges from "./pages/manage/event/PlayerBadges";
-import BossBattleMonitor from "./pages/manage/event/BossBattleMonitor";
-import ManageEventsAllLeaderboard from "./pages/AllTimeLeaderboard";
+import EventList from "@/pages/manage/event/EventList";
+import EventDetails from "@/pages/manage/event/EventDetails";
+import AssignBoss from "@/pages/manage/event/AssignBoss";
+import CreateEvent from "@/pages/manage/event/CreateEvent";
+import EditEvent from "@/pages/manage/event/EditEvent";
+import ManageEventsPlayerBadges from "@/pages/manage/event/PlayerBadges";
+import BossBattleMonitor from "@/pages/manage/event/BossBattleMonitor";
+import ManageEventsAllLeaderboard from "@/pages/AllTimeLeaderboard";
 // Users
-import UserList from "./pages/manage/users/UserList";
-import EditUser from "./pages/manage/users/EditUser";
+import UserList from "@/pages/manage/users/UserList";
+import EditUser from "@/pages/manage/users/EditUser";
 // QuestionBank
-import QuestionBankList from "./pages/manage/questionbank/QuestionBankList";
+import QuestionBankList from "@/pages/manage/questionbank/QuestionBankList";
 // QuestionBank - Categories
-import CreateCategory from "./pages/manage/questionbank/category/CreateCategory";
-import EditCategory from "./pages/manage/questionbank/category/EditCategory";
+import CreateCategory from "@/pages/manage/questionbank/category/CreateCategory";
+import EditCategory from "@/pages/manage/questionbank/category/EditCategory";
 // QuestionBank - Questions
-import QuestionDetails from "./pages/manage/questionbank/question/QuestionDetails";
-import CreateQuestion from "./pages/manage/questionbank/question/CreateQuestion";
-import EditQuestion from "./pages/manage/questionbank/question/EditQuestion";
+import QuestionDetails from "@/pages/manage/questionbank/question/QuestionDetails";
+import CreateQuestion from "@/pages/manage/questionbank/question/CreateQuestion";
+import EditQuestion from "@/pages/manage/questionbank/question/EditQuestion";
 // Profile
-import OpProfile from "./pages/Profile";
+import OpProfile from "@/pages/Profile";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
